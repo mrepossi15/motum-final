@@ -1,0 +1,15 @@
+/* public/css/app.css */
+body {
+    font-family: 'Rubik', sans-serif;
+}
+.fc-toolbar-title {
+    @apply text-xl font-bold text-orange-500;
+}
+
+.fc-daygrid-event {
+    @apply bg-orange-100 text-orange-600 rounded-lg px-2 py-1;
+}
+
+.fc-button {
+    @apply bg-orange-500 text-white rounded-lg px-3 py-1;
+}

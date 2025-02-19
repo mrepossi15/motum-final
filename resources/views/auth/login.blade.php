@@ -13,7 +13,7 @@
             </div>
         @endif
 
-        <form action="/login" method="POST" class="space-y-4">
+        <form action="/iniciar-sesion" method="POST" class="space-y-4">
             @csrf
 
             <!-- Email -->

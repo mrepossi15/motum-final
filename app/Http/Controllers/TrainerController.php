@@ -36,7 +36,6 @@ class TrainerController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'mercado_pago_email' => 'required|email|unique:users',
-            'collector_id' => 'required|string|max:255|unique:users', // Validar Collector ID
             'password' => 'required|min:6|confirmed',
             'certification' => 'required|string|max:255',
             'biography' => 'nullable|string|max:500',
@@ -61,7 +60,7 @@ class TrainerController extends Controller
         ]);
         // dd('Validación realizada correctamente');
         $userData = $request->only([
-            'name', 'email',  'mercado_pago_email','password', 'certification', 'biography', 'especialty', 'birth','collector_id'
+            'name', 'email',  'mercado_pago_email','password', 'certification', 'biography', 'especialty', 'birth',
         ]);
         $userData['role'] = 'entrenador';
         $userData['password'] = Hash::make($request->password);
@@ -76,66 +75,139 @@ class TrainerController extends Controller
         }
        
      // Convertir `photo_references` de JSON a array
-    $photoReferences = json_decode($request->photo_references, true);
+        $photoReferences = json_decode($request->photo_references, true);
 
-    if (!is_array($photoReferences)) {
-        $photoReferences = [];
-    }
-
-    // Descargar y guardar hasta 4 fotos
-    $photoUrls = [];
-    foreach (array_slice($photoReferences, 0, 4) as $photoReference) {
-        try {
-            // Descargar la imagen desde la URL proporcionada
-            $imageContents = Http::get($photoReference)->body();
-
-            // Generar un nombre único para la imagen
-            $imageName = 'parks/' . uniqid() . '.jpg';
-
-            // Guardar la imagen en storage/app/public/parks
-            Storage::disk('public')->put($imageName, $imageContents);
-
-            // Guardar la ruta pública
-            $photoUrls[] = Storage::url($imageName);
-        } catch (\Exception $e) {
-            \Log::error("❌ Error al guardar imagen: " . $e->getMessage());
+        if (!is_array($photoReferences)) {
+            $photoReferences = [];
         }
-    }
 
-    
-        // Guardar parque con fotos en la base de datos
-        $park = Park::firstOrCreate(
-            ['name' => $request->park_name],
-            [
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-                'location' => $request->location,
-                'opening_hours' => $request->opening_hours,
-                'photo_urls' => json_encode($photoUrls), // Guardar como JSON
-            ]
-        );
-    
-    
-        $user = User::create($userData);
-        
-        Mail::to($user->email)->send(new WelcomeMail($user));
+        // Descargar y guardar hasta 4 fotos
+        $photoUrls = [];
+        foreach (array_slice($photoReferences, 0, 4) as $photoReference) {
+            try {
+                // Descargar la imagen desde la URL proporcionada
+                $imageContents = Http::get($photoReference)->body();
 
-        Auth::login($user);
-    
-        $user->parks()->attach($park->id);
-        if ($request->has('experiences')) {
-            foreach ($request->experiences as $experience) {
-                $user->experiences()->create([
-                    'role' => $experience['role'],
-                    'company' => $experience['company'] ?? null,
-                    'year_start' => $experience['year_start'],
-                    'year_end' => $experience['currently_working'] ? null : $experience['year_end'],
-                    'currently_working' => $experience['currently_working'] ?? false,
-                ]);
+                // Generar un nombre único para la imagen
+                $imageName = 'parks/' . uniqid() . '.jpg';
+
+                // Guardar la imagen en storage/app/public/parks
+                Storage::disk('public')->put($imageName, $imageContents);
+
+                // Guardar la ruta pública
+                $photoUrls[] = Storage::url($imageName);
+                } catch (\Exception $e) {
+                    \Log::error("❌ Error al guardar imagen: " . $e->getMessage());
+                }
             }
+
+        
+            // Guardar parque con fotos en la base de datos
+            $park = Park::firstOrCreate(
+                ['name' => $request->park_name],
+                [
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'location' => $request->location,
+                    'opening_hours' => $request->opening_hours,
+                    'photo_urls' => json_encode($photoUrls), // Guardar como JSON
+                ]
+            );
+        
+        
+            $user = User::create($userData);
+            
+            Mail::to($user->email)->send(new WelcomeMail($user));
+
+            Auth::login($user);
+        
+            $user->parks()->attach($park->id);
+            if ($request->has('experiences')) {
+                foreach ($request->experiences as $experience) {
+                    $user->experiences()->create([
+                        'role' => $experience['role'],
+                        'company' => $experience['company'] ?? null,
+                        'year_start' => $experience['year_start'],
+                        'year_end' => $experience['currently_working'] ? null : $experience['year_end'],
+                        'currently_working' => $experience['currently_working'] ?? false,
+                    ]);
+                }
+            }
+    
+        return redirect('/entrenador/calendario')->with('success', 'Entrenador registrado exitosamente.');
+    }
+
+    public function calendar(Request $request)
+    {
+        $user = auth()->user();
+
+        // Verifica si el usuario tiene parques asociados
+        $parks = $user->parks;
+
+        if ($parks->isEmpty()) {
+            return redirect()->route('trainer.calendar')->with('error', 'No tienes parques asociados.');
+        }
+
+        // Lógica del calendario
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $groupedTrainings = []; // Carga aquí los entrenamientos agrupados si es necesario
+
+        return view('trainer.calendar', compact('user', 'startOfWeek', 'groupedTrainings', 'parks'));
+    }
+
+    // Filtrar el calendario por parques
+    public function getTrainingsByPark(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'park_id' => 'nullable|exists:parks,id'
+        ]);
+    
+        $query = Training::with(['activity', 'schedules', 'prices'])
+            ->where('trainer_id', auth()->id())
+            ->whereDate('start_time', $request->date);
+    
+        if ($request->park_id && $request->park_id !== 'all') {
+            $query->where('park_id', $request->park_id);
         }
     
-        return redirect('/trainer/calendar')->with('success', 'Entrenador registrado exitosamente.');
+        $trainings = $query->orderBy('start_time')->get();
+    
+        return response()->json($trainings);
+    }
+
+    public function showTrainerProfile()
+    {
+        // Usuario autenticado
+        $trainer = auth()->user();
+    
+        // Parques asociados al entrenador
+        $parks = $trainer->parks()->get();
+        
+    
+        // Entrenamientos asociados al entrenador
+        $trainings = $trainer->trainings()->with(['park', 'activity', 'schedules'])->get();
+    
+        // Fotos asociadas a los entrenamientos del entrenador
+        $trainingPhotos = $trainer->trainingPhotos;
+    
+        return view('trainer.profile', compact('trainer', 'parks', 'trainings', 'trainingPhotos'));
+    }
+
+    public function showTrainerTrainings()
+    {
+        $trainings = Training::where('trainer_id', Auth::id())
+            ->with(['schedules', 'photos', 'park', 'activity'])
+            ->get()
+            ->map(function ($training) {
+                // Contar cuántos usuarios distintos compraron este entrenamiento
+                $training->student_count = Payment::where('training_id', $training->id)
+                    ->distinct('user_id') // Evitar contar múltiples compras del mismo usuario
+                    ->count('user_id');
+                return $training;
+            });
+
+        return view('trainer.index', compact('trainings'));
     }
     
   

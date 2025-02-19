@@ -74,7 +74,7 @@
 
                         <!-- Cerrar sesión -->
                         <li>
-                            <form action="{{ route('auth.logout.process') }}" method="POST" class="inline">
+                            <form action="{{ route('logout.process') }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit" class="text-orange-500 hover:underline bg-transparent border-0 cursor-pointer">
                                     {{ auth()->user()->email }} (Cerrar sesión)

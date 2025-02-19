@@ -74,3 +74,39 @@ Route::get('/registro/entrenador', [TrainerController::class, 'registerTrainer']
     ->name('register.trainer');
 Route::post('/registro/entrenador', [TrainerController::class, 'storeTrainer'])
     ->name('store.trainer');
+
+// Calendario de entrenamientos
+Route::get('/entrenador/calendario', [TrainerController::class, 'calendar'])
+    ->name('trainer.calendar')
+    ->middleware(['auth']);
+
+Route::get('/api/trainings', [TrainerController::class, 'getTrainingsByPark']);
+
+// Perfil del entrenador
+Route::get('/entrenador/perfil', [TrainerController::class, 'showTrainerProfile'])
+    ->name('trainer.profile')
+    ->middleware(['auth', 'role:entrenador']);
+
+// Todos los entrenamientos del entrenador
+Route::get('/mis-entrenamientos', [TrainerController::class, 'showTrainerTrainings'])
+    ->name('trainer.index')
+    ->middleware(['auth', 'role:entrenador']);
+
+
+    /*
+|--------------------------------------------------------------------------
+| Rutas para ParkController 
+|--------------------------------------------------------------------------
+*/
+
+        
+ Route::get('/entrenador/agregar-parque', [ParkController::class, 'create'])
+    ->name('trainer.add.park')
+    ->middleware(['auth', 'role:entrenador']);
+Route::post('/entrenador/agregar-parque', [ParkController::class, 'store'])
+    ->name('trainer.store.park')
+    ->middleware(['auth', 'role:entrenador']);
+    
+Route::get('/parques/{id}', [ParkController::class, 'show'])->name('parks.show');
+
+

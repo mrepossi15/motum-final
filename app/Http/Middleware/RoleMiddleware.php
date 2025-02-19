@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -12,7 +13,7 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, $role)
     {
-        // Verifica si el usuario tiene el rol requerido
+        // Verifica si el usuario está autenticado y tiene el rol requerido
         if (Auth::check() && Auth::user()->role === $role) {
             return $next($request);
         }
