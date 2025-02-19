@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 
 
@@ -85,21 +86,22 @@ class TrainerController extends Controller
         $photoUrls = [];
         foreach (array_slice($photoReferences, 0, 4) as $photoReference) {
             try {
-                // Descargar la imagen desde la URL proporcionada
+                
+        
                 $imageContents = Http::get($photoReference)->body();
-
-                // Generar un nombre único para la imagen
-                $imageName = 'parks/' . uniqid() . '.jpg';
-
-                // Guardar la imagen en storage/app/public/parks
-                Storage::disk('public')->put($imageName, $imageContents);
-
-                // Guardar la ruta pública
-                $photoUrls[] = Storage::url($imageName);
-                } catch (\Exception $e) {
-                    \Log::error("❌ Error al guardar imagen: " . $e->getMessage());
+        
+                if (empty($imageContents)) {
+                    continue;
                 }
+        
+                $imageName = 'parks/' . uniqid() . '.jpg';
+                Storage::disk('public')->put($imageName, $imageContents);
+        
+                $photoUrls[] = Storage::url($imageName);
+            } catch (\Exception $e) {
+                
             }
+        }
 
         
             // Guardar parque con fotos en la base de datos
@@ -155,7 +157,7 @@ class TrainerController extends Controller
         return view('trainer.calendar', compact('user', 'startOfWeek', 'groupedTrainings', 'parks'));
     }
 
-    // Filtrar el calendario por parques
+    // Filtrar el calendario por parque
     public function getTrainingsByPark(Request $request)
     {
         $request->validate([

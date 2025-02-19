@@ -2,8 +2,11 @@
 
 namespace App\Traits;
 
-use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\ImageManager;
+use Illuminate\Support\Facades\Log;
+
 
 trait HandlesImages
 {
@@ -14,28 +17,31 @@ trait HandlesImages
      * @param string $path
      * @param int $width
      * @param int|null $height
-     * @return string Ruta de la imagen guardada.
+     * @return string
      */
     public function resizeAndSaveImage($image, $path, $width, $height = null)
     {
+        // Instanciar ImageManager con el driver GD
+        $imageManager = new ImageManager(new GdDriver());
+    
+        // Leer la imagen y redimensionar
+        $resizedImage = $imageManager->read($image->getRealPath())->scale(width: $width);
+    
+        if ($height) {
+            $resizedImage = $resizedImage->scale(height: $height);
+        }
+    
+        // Generar nombre único y guardar la imagen
         $imagePath = $path . '/' . uniqid() . '.' . $image->getClientOriginalExtension();
-
-        $resizedImage = Image::make($image)->resize($width, $height, function ($constraint) {
-            $constraint->aspectRatio(); // Mantener la relación de aspecto
-            $constraint->upsize(); // Evitar agrandar imágenes más pequeñas
-        });
-
-        // Guardar la imagen en el almacenamiento público
-        $resizedImage->save(storage_path('app/public/' . $imagePath));
-
-        return $imagePath;
+        Storage::disk('public')->put($imagePath, $resizedImage->encode());
+    
+        return 'storage/' . $imagePath;
     }
 
     /**
-     * Eliminar una imagen existente del almacenamiento.
+     * Eliminar una imagen existente.
      *
      * @param string $path
-     * @return void
      */
     public function deleteImageIfExists($path)
     {
