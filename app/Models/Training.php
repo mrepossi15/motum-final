@@ -48,27 +48,7 @@ class Training extends Model
         return $this->hasMany(TrainingPrice::class);
     }
 
-    /**
-     * Eventos de Eloquent para sincronizar Algolia.
-     */
-    protected static function booted()
-    {
-        // Al guardar un entrenamiento (crear o actualizar)
-        static::saved(function ($training) {
-            $park = $training->park; // Obtener el parque relacionado
-            if ($park) {
-                $park->searchable(); // Sincronizar el parque con Algolia
-            }
-        });
-
-        // Al eliminar un entrenamiento
-        static::deleted(function ($training) {
-            $park = $training->park; // Obtener el parque relacionado
-            if ($park) {
-                $park->searchable(); // Sincronizar el parque con Algolia
-            }
-        });
-    }
+  
     // Relación con las reseñas del entrenamiento
     public function reviews()
     {

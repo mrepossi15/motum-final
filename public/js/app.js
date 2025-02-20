@@ -31,3 +31,14 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
+// Spinner al enviar 
+document.querySelector('form').addEventListener('submit', function (event) {
+    const spinner = document.getElementById('loading-spinner');
+    spinner.classList.remove('hidden');
+
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Cargando...';
+});
+
+

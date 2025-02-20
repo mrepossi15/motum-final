@@ -99,6 +99,7 @@
             <div class="grid grid-cols-7 gap-2 px-6" id="calendar-container">
                 <!-- Los días y entrenamientos se renderizan dinámicamente -->
             </div>
+            
 
             <!-- Detalles de Entrenamientos -->
             <div class="mt-6 px-6">
@@ -112,6 +113,7 @@
         <div class="hidden md:block col-span-1"></div>
     </div>
 </div>
+
 
 @push('scripts')
 <script src="{{ asset('js/entrenador/calendar.js') }}"></script>

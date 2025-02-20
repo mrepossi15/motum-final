@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Botón para agregar entrenamiento
     addTrainingButton?.addEventListener('click', function () {
-        const url = `/trainings/create?park_id=${selectedParkId}`;
+        const url = `/entrenamientos/crear?park_id=${selectedParkId}`;
         window.location.href = url;
     });
 
@@ -105,47 +105,68 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Cargar entrenamientos del día seleccionado
-    function loadTrainings(date, parkId) {
-        trainingsList.innerHTML = `<p class="text-center text-gray-500">Cargando entrenamientos para el ${date}...</p>`;
+  // Cargar entrenamientos del día seleccionado
+function loadTrainings(date) {
+    trainingsList.innerHTML = `<p class="text-center text-gray-500">Cargando entrenamientos para el ${date}...</p>`;
+    
+    fetch(`/api/trainings/week?week_start_date=${date}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Respuesta no válida de la API');
+            return response.json();
+        })
+        .then(data => {
+            trainingsList.innerHTML = '';
 
-        fetch(`/api/trainings?date=${date}&park_id=${parkId}`)
-            .then(response => response.json())
-            .then(data => {
-                trainingsList.innerHTML = '';
-                if (data.length === 0) {
-                    trainingsList.innerHTML = '<p class="text-center text-gray-500">No hay entrenamientos para este día.</p>';
-                    return;
-                }
+            if (!data || data.length === 0) {
+                trainingsList.innerHTML = '<p class="text-center text-gray-500">No hay entrenamientos para este día.</p>';
+                return;
+            }
 
-                data.forEach(training => {
-                    const trainingDiv = document.createElement('div');
-                    trainingDiv.className = 'p-4 mb-3 border rounded-lg bg-white shadow-sm';
+            // Filtrar entrenamientos por la fecha seleccionada
+            const filteredTrainings = data.filter(training => training.date === date);
 
-                    trainingDiv.innerHTML = `
-                        <h3 class="text-lg font-semibold">${training.title ?? 'Entrenamiento'}</h3>
-                        <p class="text-sm text-gray-700">${training.activity?.name ?? 'Sin actividad'}</p>
-                        <p class="text-sm text-gray-600">${training.start_time} - ${training.end_time}</p>
-                    `;
+            if (filteredTrainings.length === 0) {
+                trainingsList.innerHTML = '<p class="text-center text-gray-500">No hay entrenamientos programados para esta fecha.</p>';
+                return;
+            }
 
-                    trainingDiv.addEventListener('click', () => {
-                        window.location.href = `/trainings/${training.id}`;
-                    });
+            filteredTrainings.forEach(training => {
+                const trainingDiv = document.createElement('div');
+                trainingDiv.className = 'p-4 mb-3 border rounded-lg bg-white shadow-sm';
 
-                    trainingsList.appendChild(trainingDiv);
+                trainingDiv.innerHTML = `
+                    <h3 class="text-lg font-semibold">Entrenamiento ID: ${training.training_id}</h3>
+                    <p class="text-sm text-gray-700"><strong>Día:</strong> ${training.day}</p>
+                    <p class="text-sm text-gray-600"><strong>Hora:</strong> ${training.start_time} - ${training.end_time}</p>
+                    <p class="text-sm ${training.status === 'active' ? 'text-green-500' : 'text-red-500'}">
+                        Estado: ${training.status}
+                    </p>
+                    <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 view-training"
+                            data-id="${training.training_id}">
+                        Ver Detalle
+                    </button>
+                `;
+
+                // 👉 Agregar evento para redirigir a la vista trainings.show
+                trainingDiv.querySelector('.view-training').addEventListener('click', function () {
+                    const trainingId = this.getAttribute('data-id');
+                    window.location.href = `/trainings/${trainingId}`;
                 });
-            })
-            .catch(error => {
-                console.error('Error al cargar entrenamientos:', error);
-                trainingsList.innerHTML = '<p class="text-center text-red-500">Error al cargar entrenamientos.</p>';
-            });
-    }
 
+                trainingsList.appendChild(trainingDiv);
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar entrenamientos:', error);
+            trainingsList.innerHTML = '<p class="text-center text-red-500">Error al cargar entrenamientos.</p>';
+        });
+}
     // Formatear fecha DD/MM/YYYY
     function formatDate(date) {
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     // Obtener nombre del mes

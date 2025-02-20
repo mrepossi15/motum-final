@@ -28,7 +28,6 @@ return new class extends Migration
             $table->string('profile_pic')->nullable();
             $table->string('profile_pic_description')->nullable();
             $table->string('mercado_pago_email')->nullable();
-            $table->string('collector_id')->nullable();
             $table->string('medical_fit')->nullable();
             $table->string('medical_fit_description')->nullable();
            

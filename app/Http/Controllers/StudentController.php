@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Park;
 use App\Models\Payment;
+use App\Models\Activity;
 use App\Models\Training;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -35,9 +36,11 @@ class StudentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
-            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg', // Validar imagen
+            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
+            'profile_pic_description' => 'nullable|string|max:255',
             'birth' => 'date', // Fecha de nacimiento
             'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
+            'medical_fit_description' => 'nullable|string|max:255',
             
             
         ]);
@@ -47,11 +50,11 @@ class StudentController extends Controller
         // Manejar la subida de la imagen de perfil
         if ($request->hasFile('profile_pic')) {
             $userData['profile_pic'] = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
-            $userData['profile_pic_description'] = 'Foto de portada del entrenador ' . $request->name;
+            $userData['profile_pic_description'] = 'Foto de portada del alumno ' . $request->name;
         }
         if ($request->hasFile('medical_fit')) {
             $userData['medical_fit'] = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 300, 300);
-            $userData['medical_fit_description'] = 'Foto de portada del entrenador ' . $request->name;
+            $userData['medical_fit_description'] = 'Apto medico del alumno ' . $request->name;
         }
     
         // Crear el usuario
@@ -96,55 +99,26 @@ class StudentController extends Controller
             'birth' => 'date',
             'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);
-
+    
         $user = Auth::user();
         $user->fill($request->only(['name', 'email', 'birth', 'biography']));
- 
+    
+        // 👉 Procesar la imagen de perfil usando el trait
         if ($request->hasFile('profile_pic')) {
-            // Eliminar la imagen anterior si existe
-            if ($user->profile_pic && Storage::disk('public')->exists($user->profile_pic)) {
-                Storage::disk('public')->delete($user->profile_pic);
-            }
-
-            // Procesar la nueva imagen
-            $image = $request->file('profile_pic');
-            $imagePath = 'profile_pics/' . uniqid() . '.' . $image->getClientOriginalExtension();
-
-            // Redimensionar la imagen con Intervention Image
-            $resizedImage = Image::make($image)->resize(300, 300, function ($constraint) {
-                $constraint->aspectRatio(); // Mantener la relación de aspecto
-                $constraint->upsize(); // Evitar agrandar imágenes más pequeñas
-            });
-
-            // Guardar la imagen redimensionada
-            $resizedImage->save(storage_path('app/public/' . $imagePath));
-
-            // Actualizar los datos en la base de datos
-            $user->profile_pic = $imagePath;
-            $user->profile_pic_description = 'Foto de portada del entrenador ' . $user->name;
+            $this->deleteImageIfExists($user->profile_pic);
+            $user->profile_pic = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
+            $user->profile_pic_description = 'Foto de perfil de ' . $user->name;
         }
+    
+        // 👉 Procesar la imagen del apto médico usando el trait
         if ($request->hasFile('medical_fit')) {
-            if ($user->medical_fit && Storage::disk('public')->exists($user->medical_fit)) {
-                Storage::disk('public')->delete($user->medical_fit);
-            }
-
-            $certImage = $request->file('medical_fit');
-            $certImagePath = 'medical_fits/' . uniqid() . '.' . $certImage->getClientOriginalExtension();
-
-            $resizedCertImage = Image::make($certImage)->resize(600, 400, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
-
-            $resizedCertImage->save(storage_path('app/public/' . $certImagePath));
-
-            $user->medical_fit = $certImagePath;
-            $user->medical_fit_description = 'Apto medico de ' . $user->name . ' actualizada';
+            $this->deleteImageIfExists($user->medical_fit);
+            $user->medical_fit = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 600, 400);
+            $user->medical_fit_description = 'Apto médico de ' . $user->name . ' actualizado';
         }
-
-
+    
         $user->save();
-
+    
         return redirect()->route('student.profile')->with('success', 'Perfil actualizado correctamente.');
     }
 
@@ -165,6 +139,13 @@ class StudentController extends Controller
             ->get();
     
         return view('student.training.my-trainings', compact('trainings', 'reservations'));
+    }
+
+    //Mapa principal
+    public function map()
+    {
+        $activities = Activity::all(); 
+        return view('students.map', compact('activities'));
     }
 
 

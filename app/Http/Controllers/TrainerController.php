@@ -16,7 +16,19 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
+
+
+use App\Models\Activity;
+
+use App\Models\TrainingPhoto;
+use App\Models\TrainingSchedule;
+use App\Models\TrainingPrice;
+use App\Models\TrainingStatus;
+use App\Models\TrainingReservation;
+use App\Mail\TrainingCreatedMail;
+use App\Mail\TrainingSuspendedMail;
+
+
 
 
 
@@ -48,15 +60,18 @@ class TrainerController extends Controller
             'especialty' => 'nullable|string|max:255',
             'birth' => 'required|date|before_or_equal:' . Carbon::now()->subYears(18)->format('Y-m-d'),
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
+            'profile_pic_description' => 'nullable|string|max:255',
             'certification_pic' => 'nullable|image|mimes:jpeg,png,jpg',
+            'certification_pic_description' => 'nullable|string|max:255',
             'experiences' => 'nullable|array',
             'experiences.*.role' => 'nullable|string|max:255',
             'experiences.*.company' => 'nullable|string|max:255',
             'experiences.*.year_start' => 'nullable|integer|min:1900|max:' . now()->year,
             'experiences.*.year_end' => 'nullable|integer|min:1900|max:' . now()->year,
-           'experiences.*.currently_working' => 'nullable|boolean',
-           'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
-           'photo_reference' => 'nullable|array',
+            'experiences.*.currently_working' => 'nullable|boolean',
+            'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
+            'medical_fit_description' => 'nullable|string|max:355',
+            'photo_reference' => 'nullable|array',
            
         ]);
         // dd('Validación realizada correctamente');
@@ -72,10 +87,14 @@ class TrainerController extends Controller
         }
         if ($request->hasFile('medical_fit')) {
             $userData['medical_fit'] = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 300, 300);
-            $userData['medical_fit_description'] = 'Foto de portada del entrenador ' . $request->name;
+            $userData['medical_fit_description'] = 'Apto medico del entrenador ' . $request->name;
+        }
+        if ($request->hasFile('certification_pic')) {
+            $userData['certification_pic'] = $this->resizeAndSaveImage($request->file('certification_pic'), 'certification_pics', 300, 300);
+            $userData['certification_pic_description'] = 'Certificación del entrenador ' . $request->name;
         }
        
-     // Convertir `photo_references` de JSON a array
+        // Convertir `photo_references` de JSON a array
         $photoReferences = json_decode($request->photo_references, true);
 
         if (!is_array($photoReferences)) {
@@ -161,19 +180,58 @@ class TrainerController extends Controller
     public function getTrainingsByPark(Request $request)
     {
         $request->validate([
-            'date' => 'required|date',
-            'park_id' => 'nullable|exists:parks,id'
+            'park_id' => 'nullable|exists:parks,id', // Hacer park_id opcional
         ]);
-    
-        $query = Training::with(['activity', 'schedules', 'prices'])
-            ->where('trainer_id', auth()->id())
-            ->whereDate('start_time', $request->date);
-    
-        if ($request->park_id && $request->park_id !== 'all') {
+
+        // Base de la consulta: entrenamientos del entrenador autenticado
+        $query = Training::with(['schedules', 'activity', 'prices'])
+            ->where('trainer_id', Auth::id());
+
+        // Filtrar por parque si park_id está presente
+        if ($request->park_id) {
             $query->where('park_id', $request->park_id);
         }
+
+        // Ejecutar la consulta y ordenar por fecha de creación
+        $trainings = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json($trainings);
+    }
+
+    // Filtrar el calendario por parque
+    public function getTrainingsForWeek(Request $request)
+    {
+        $weekStartDate = $request->query('week_start_date');
     
-        $trainings = $query->orderBy('start_time')->get();
+        if (!$weekStartDate || !strtotime($weekStartDate)) {
+            return response()->json(['error' => 'Fecha de inicio de semana inválida.'], 400);
+        }
+    
+        $daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+    
+        $trainings = TrainingSchedule::with('training')
+            ->whereHas('training', function ($query) {
+                $query->where('trainer_id', auth()->id());
+            })
+            ->get()
+            ->map(function ($schedule) use ($weekStartDate, $daysOfWeek) {
+                $dayIndex = array_search($schedule->day, $daysOfWeek);
+                if ($dayIndex === false) return null;
+    
+                $trainingDate = date('Y-m-d', strtotime("$weekStartDate +$dayIndex days"));
+    
+                return [
+                    'id'         => $schedule->id,
+                    'training_id'=> $schedule->training_id,
+                    'date'       => $trainingDate,
+                    'day'        => $schedule->day,
+                    'title'      => $schedule->training->title,
+                    'start_time' => $schedule->start_time,
+                    'end_time'   => $schedule->end_time,
+                ];
+            })
+            ->filter()
+            ->values();
     
         return response()->json($trainings);
     }

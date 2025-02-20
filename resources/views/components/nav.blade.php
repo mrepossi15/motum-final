@@ -46,30 +46,17 @@
                             </li>
                         @elseif (auth()->user()->role === 'alumno')
                             <li>
-                                <a href="{{ route('map') }}" class="text-orange-500 hover:underline {{ request()->routeIs('map') ? 'font-bold' : '' }}">
+                                <a href="{{ route('students.map') }}" class="text-orange-500 hover:underline {{ request()->routeIs('map') ? 'font-bold' : '' }}">
                                     Mapa
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('student.profile') }}" class="text-orange-500 hover:underline {{ request()->routeIs('student.profile') ? 'font-bold' : '' }}">
+                                <a href="{{ route('students.profile', ['id' => auth()->id()]) }}"
+                                class="text-orange-500 hover:underline {{ request()->routeIs('students.profile') ? 'font-bold' : '' }}">
                                     Mi Perfil
                                 </a>
                             </li>
-                            <li>
-                                <a href="{{ route('cart.view') }}" class="text-orange-500 hover:underline {{ request()->routeIs('cart.view') ? 'font-bold' : '' }}">
-                                    Mi Carrito
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('favorites.index') }}" class="text-orange-500 hover:underline {{ request()->routeIs('favorites.index') ? 'font-bold' : '' }}">
-                                    Favoritos
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('student.training.myTrainings') }}" class="text-orange-500 hover:underline {{ request()->routeIs('student.training.myTrainings') ? 'font-bold' : '' }}">
-                                    Mis Entrenamientos
-                                </a>
-                            </li>
+                            
                         @endif
 
                         <!-- Cerrar sesión -->

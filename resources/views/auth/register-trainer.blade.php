@@ -87,4 +87,7 @@
 <!-- Scripts -->
 <script src="/js/mapas/showMap.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places&callback=initAutocomplete" async defer></script>
+@push('scripts')
+<script src="{{ asset('js/app.js') }}"></script>
+@endpush
 @endsection
