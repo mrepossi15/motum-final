@@ -34,6 +34,7 @@ Route::post('/cerrar-sesion', [UserController::class, "logout"])
 | Rutas para restaurar contrasena
 |--------------------------------------------------------------------------
 */ 
+// Se puede usar la ñ? Preguntar
 
 Route::get('contraseña/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])
 ->name('password.request');
@@ -83,7 +84,7 @@ Route::post('/registro/entrenador', [TrainerController::class, 'storeTrainer'])
 // Calendario de entrenamientos
 Route::get('/entrenador/calendario', [TrainerController::class, 'calendar'])
     ->name('trainer.calendar')
-    ->middleware(['auth']);
+    ->middleware(['auth', 'role:entrenador']);
 
 // Obtener entrenamientos por parque
 Route::get('/api/trainings/park', [TrainerController::class, 'getTrainingsByPark']);
@@ -108,38 +109,47 @@ Route::get('/mis-entrenamientos', [TrainerController::class, 'showTrainerTrainin
 |--------------------------------------------------------------------------
 */
 
-        
+// Visat apra que el entrendor agregue un parque       
  Route::get('/entrenador/agregar-parque', [ParkController::class, 'create'])
-    ->name('trainer.add.park')
+    ->name('parks.create')
     ->middleware(['auth', 'role:entrenador']);
+// Agregar un parque  
 Route::post('/entrenador/agregar-parque', [ParkController::class, 'store'])
-    ->name('trainer.store.park')
+    ->name('parks.store')
     ->middleware(['auth', 'role:entrenador']);
-    
+
+// Trae todos los parques. No lo use yet.
 Route::get('/parques/{id}', [ParkController::class, 'show'])->name('parks.show');
 
 /*
 |--------------------------------------------------------------------------
-| Rutas para TrainerController 
+| Rutas para TrainingController 
 |--------------------------------------------------------------------------
 */
-// Crear, editar y gestionar entrenamientos
-Route::middleware(['auth', 'role:entrenador'])->group(function () {
-    Route::get('/entrenamientos/crear', [TrainingController::class, 'create'])
-        ->name('trainings.create');
-});
+// Crear entrenamientos
+Route::get('/entrenamientos/crear', [TrainingController::class, 'create'])
+    ->name('trainings.create')
+    ->middleware(['auth', 'role:entrenador']);
+// Guardar entrenamientos
 Route::post('/entrenamientos/agregar', [TrainingController::class, 'store'])
     ->name('trainings.store')
     ->middleware(['auth', 'role:entrenador']);
+
+// Vista por entrenamiento
 Route::get('/entrenamientos/{id}', [TrainingController::class, 'show'])
     ->name('ttrainings.show')
     ->middleware(['auth', 'role:entrenador']);
+
+// Vista editar entrenamientos   
 Route::get('/entrenamientos/{id}/editar', [TrainingController::class, 'edit'])
     ->name('trainings.edit')
     ->middleware(['auth', 'role:entrenador']);
+// Editar entrenamientos   
 Route::put('/entrenamientos/{id}', [TrainingController::class, 'update'])
     ->name('trainings.update')
     ->middleware(['auth', 'role:entrenador']);
+
+// Elimianr todo un entrenamiento
 Route::delete('/entrenamientos/{id}', [TrainingController::class, 'destroy'])
     ->name('trainings.destroy')
     ->middleware(['auth', 'role:entrenador']);

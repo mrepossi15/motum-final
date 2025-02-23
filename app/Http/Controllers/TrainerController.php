@@ -18,20 +18,6 @@ use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
 
 
-use App\Models\Activity;
-
-use App\Models\TrainingPhoto;
-use App\Models\TrainingSchedule;
-use App\Models\TrainingPrice;
-use App\Models\TrainingStatus;
-use App\Models\TrainingReservation;
-use App\Mail\TrainingCreatedMail;
-use App\Mail\TrainingSuspendedMail;
-
-
-
-
-
 class TrainerController extends Controller
 {
     use HandlesImages;

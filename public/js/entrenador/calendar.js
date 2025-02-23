@@ -8,168 +8,186 @@ document.addEventListener('DOMContentLoaded', function () {
     const weekRange = document.getElementById('week-range');
     const monthTitle = document.getElementById('month-title');
 
-    let selectedParkId = 'all';
-    let currentWeekStart = new Date();
-    currentWeekStart.setDate(currentWeekStart.getDate() - ((currentWeekStart.getDay() + 6) % 7));
+    const state = {
+        selectedParkId: 'all',
+        currentWeekStart: new Date(),
+        selectedDay: getDayName(new Date()),
+        cache: {} // Cache para almacenar resultados de la API
+    };
+
+    state.currentWeekStart.setDate(state.currentWeekStart.getDate() - ((state.currentWeekStart.getDay() + 6) % 7));
 
     // Cargar la semana inicial
-    loadWeek(currentWeekStart, selectedParkId);
+    loadWeek();
 
     // Dropdown de parques
-    parkDropdown?.addEventListener('click', function () {
-        parkDropdownMenu.classList.toggle('hidden');
-        dropdownIcon.classList.toggle('rotate-180');
-    });
+    parkDropdown?.addEventListener('click', () => toggleDropdown());
 
-    parkDropdownMenu?.addEventListener('click', function (event) {
+    parkDropdownMenu?.addEventListener('click', (event) => {
         if (event.target.tagName === 'A') {
+            event.preventDefault();  // Evita el #
             const selectedValue = event.target.dataset.value;
-            const dropdownText = parkDropdown.querySelector('#dropdownText');
-            dropdownText.textContent = event.target.textContent;
-
-            selectedParkId = selectedValue;
-            parkDropdownMenu.classList.add('hidden');
-            loadWeek(currentWeekStart, selectedParkId);
+            parkDropdown.querySelector('#dropdownText').textContent = event.target.textContent;
+    
+            state.selectedParkId = selectedValue;
+            toggleDropdown(true);
+            loadWeek();
         }
     });
 
     // Cerrar menú al hacer clic fuera
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', (e) => {
         if (!parkDropdown.contains(e.target) && !parkDropdownMenu.contains(e.target)) {
-            parkDropdownMenu.classList.add('hidden');
-            dropdownIcon.classList.remove('rotate-180');
+            toggleDropdown(true);
         }
     });
 
     // Botón para agregar entrenamiento
-    addTrainingButton?.addEventListener('click', function () {
-        const url = `/entrenamientos/crear?park_id=${selectedParkId}`;
-        window.location.href = url;
+    addTrainingButton?.addEventListener('click', () => {
+        window.location.href = `/entrenamientos/crear?park_id=${state.selectedParkId}`;
     });
 
     // Navegación semanal
-    document.getElementById('prev-week')?.addEventListener('click', function () {
-        currentWeekStart.setDate(currentWeekStart.getDate() - 7);
-        loadWeek(currentWeekStart, selectedParkId);
-    });
+    document.getElementById('prev-week')?.addEventListener('click', () => changeWeek(-7));
+    document.getElementById('next-week')?.addEventListener('click', () => changeWeek(7));
 
-    document.getElementById('next-week')?.addEventListener('click', function () {
-        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-        loadWeek(currentWeekStart, selectedParkId);
-    });
+    // Cambiar semana
+    function changeWeek(days) {
+        state.currentWeekStart.setDate(state.currentWeekStart.getDate() + days);
+        loadWeek();
+    }
 
-    // Cargar la semana y resaltar el día actual
-    function loadWeek(startDate, parkId) {
-        const today = new Date();
-        const todayFormatted = formatDate(today);
-
+    // Cargar la semana y entrenamientos
+    function loadWeek() {
         calendarContainer.innerHTML = '';
-        const endOfWeek = new Date(startDate);
-        endOfWeek.setDate(startDate.getDate() + 6);
+        const endOfWeek = new Date(state.currentWeekStart);
+        endOfWeek.setDate(state.currentWeekStart.getDate() + 6);
 
-        // Mostrar rango semanal y mes
-        weekRange.textContent = `${formatDate(startDate)} - ${formatDate(endOfWeek)}`;
-        monthTitle.textContent = `${getMonthName(startDate.getMonth())} ${startDate.getFullYear()}`;
+        weekRange.textContent = `${formatDateToArg(state.currentWeekStart)} - ${formatDateToArg(endOfWeek)}`;
+        monthTitle.textContent = `${getMonthName(state.currentWeekStart.getMonth())} ${state.currentWeekStart.getFullYear()}`;
 
         const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
         for (let i = 0; i < 7; i++) {
-            const currentDate = new Date(startDate);
+            const currentDate = new Date(state.currentWeekStart);
             currentDate.setDate(currentDate.getDate() + i);
-            const currentDateFormatted = formatDate(currentDate);
+            const dayName = dayNames[i];
 
             const dayColumn = document.createElement('div');
             dayColumn.className = 'p-3 text-center border rounded-lg day-column';
 
-            // **Resaltar el día actual**
-            if (currentDateFormatted === todayFormatted) {
+            if (dayName === state.selectedDay) {
                 dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold');
             }
 
             dayColumn.innerHTML = `
-                <div class="font-bold">${dayNames[i]}</div>
-                <div class="text-sm">${currentDateFormatted}</div>
+                <div class="font-bold">${dayName}</div>
+                <div class="text-sm">${formatDateToArg(currentDate)}</div>
             `;
 
-            // Clic para mostrar entrenamientos
             dayColumn.addEventListener('click', () => {
-                document.querySelectorAll('.day-column').forEach(day => {
-                    day.classList.remove('bg-orange-500', 'text-white', 'font-bold');
-                });
+                document.querySelectorAll('.day-column').forEach(day => day.classList.remove('bg-orange-500', 'text-white', 'font-bold'));
                 dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold');
-                loadTrainings(currentDateFormatted, parkId);
+                state.selectedDay = dayName;
+                loadTrainings();
             });
 
             calendarContainer.appendChild(dayColumn);
         }
+
+        loadTrainings();
     }
 
-    // Cargar entrenamientos del día seleccionado
-  // Cargar entrenamientos del día seleccionado
-function loadTrainings(date) {
-    trainingsList.innerHTML = `<p class="text-center text-gray-500">Cargando entrenamientos para el ${date}...</p>`;
-    
-    fetch(`/api/trainings/week?week_start_date=${date}`)
-        .then(response => {
-            if (!response.ok) throw new Error('Respuesta no válida de la API');
-            return response.json();
-        })
-        .then(data => {
-            trainingsList.innerHTML = '';
+    // Cargar entrenamientos del día y parque seleccionados
+    function loadTrainings() {
+        const cacheKey = `${state.selectedDay}_${state.selectedParkId}`;
+        trainingsList.innerHTML = `<p class="text-center text-gray-500">Cargando entrenamientos...</p>`;
 
-            if (!data || data.length === 0) {
-                trainingsList.innerHTML = '<p class="text-center text-gray-500">No hay entrenamientos para este día.</p>';
-                return;
-            }
+        if (state.cache[cacheKey]) {
+            renderTrainings(state.cache[cacheKey]);
+            return;
+        }
 
-            // Filtrar entrenamientos por la fecha seleccionada
-            const filteredTrainings = data.filter(training => training.date === date);
+        let url = `/api/trainings/park?day=${state.selectedDay}`;
+        if (state.selectedParkId !== 'all') {
+            url += `&park_id=${state.selectedParkId}`;
+        }
 
-            if (filteredTrainings.length === 0) {
-                trainingsList.innerHTML = '<p class="text-center text-gray-500">No hay entrenamientos programados para esta fecha.</p>';
-                return;
-            }
-
-            filteredTrainings.forEach(training => {
-                const trainingDiv = document.createElement('div');
-                trainingDiv.className = 'p-4 mb-3 border rounded-lg bg-white shadow-sm';
-
-                trainingDiv.innerHTML = `
-                    <h3 class="text-lg font-semibold">Entrenamiento ID: ${training.training_id}</h3>
-                    <p class="text-sm text-gray-700"><strong>Día:</strong> ${training.day}</p>
-                    <p class="text-sm text-gray-600"><strong>Hora:</strong> ${training.start_time} - ${training.end_time}</p>
-                    <p class="text-sm ${training.status === 'active' ? 'text-green-500' : 'text-red-500'}">
-                        Estado: ${training.status}
-                    </p>
-                    <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 view-training"
-                            data-id="${training.training_id}">
-                        Ver Detalle
-                    </button>
-                `;
-
-                // 👉 Agregar evento para redirigir a la vista trainings.show
-                trainingDiv.querySelector('.view-training').addEventListener('click', function () {
-                    const trainingId = this.getAttribute('data-id');
-                    window.location.href = `/trainings/${trainingId}`;
-                });
-
-                trainingsList.appendChild(trainingDiv);
+        fetch(url)
+            .then(response => response.ok ? response.json() : Promise.reject('Error en la API'))
+            .then(data => {
+                state.cache[cacheKey] = data;
+                renderTrainings(data);
+            })
+            .catch(error => {
+                console.error('Error al cargar entrenamientos:', error);
+                trainingsList.innerHTML = '<p class="text-center text-red-500">Error al cargar entrenamientos.</p>';
             });
-        })
-        .catch(error => {
-            console.error('Error al cargar entrenamientos:', error);
-            trainingsList.innerHTML = '<p class="text-center text-red-500">Error al cargar entrenamientos.</p>';
-        });
-}
-    // Formatear fecha DD/MM/YYYY
-    function formatDate(date) {
-        const year = date.getFullYear();
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        return `${year}-${month}-${day}`;
     }
 
-    // Obtener nombre del mes
+    // Renderizar entrenamientos
+    function renderTrainings(data) {
+        trainingsList.innerHTML = '';
+        let hasTrainings = false;
+
+        data.forEach(training => {
+            training.schedules.forEach(schedule => {
+                if (schedule.day === state.selectedDay) {
+                    hasTrainings = true;
+                    const trainingDiv = document.createElement('div');
+                    trainingDiv.className = 'p-4 mb-3 border rounded-lg bg-white shadow-sm';
+
+                    trainingDiv.innerHTML = `
+                        <h3 class="text-lg font-semibold">${training.title}</h3>
+                        <p><strong>Actividad:</strong> ${training.activity.name}</p>
+                        <p><strong>Parque:</strong> ${training.park_id}</p>
+                        <p><strong>Hora:</strong> ${schedule.start_time} - ${schedule.end_time}</p>
+                        <p class="${training.available_spots > 0 ? 'text-green-500' : 'text-red-500'}">
+                            Cupos disponibles: ${training.available_spots}
+                        </p>
+                        <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 view-training"
+                                data-id="${training.id}">
+                            Ver Detalle
+                        </button>
+                    `;
+
+                    trainingDiv.querySelector('.view-training').addEventListener('click', () => {
+                        window.location.href = `/trainings/${training.id}`;
+                    });
+
+                    trainingsList.appendChild(trainingDiv);
+                }
+            });
+        });
+
+        if (!hasTrainings) {
+            trainingsList.innerHTML = '<p class="text-center text-gray-500">Hoy no tienes clases.</p>';
+        }
+    }
+
+    // Helpers
+    function toggleDropdown(close = false) {
+        if (close) {
+            parkDropdownMenu.classList.add('hidden');
+            dropdownIcon.classList.remove('rotate-180');
+        } else {
+            parkDropdownMenu.classList.toggle('hidden');
+            dropdownIcon.classList.toggle('rotate-180');
+        }
+    }
+
+    function getDayName(date) {
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        return days[date.getDay()];
+    }
+
+    function formatDateToArg(date) {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+
     function getMonthName(monthIndex) {
         const monthNames = [
             'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',

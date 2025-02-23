@@ -55,7 +55,7 @@
                         </li>
                         <li><hr class="border-gray-300 my-1"></li>
                         <li>
-                            <a href="{{ route('trainer.add.park') }}" class="block px-4 py-2 text-orange-500 hover:bg-orange-500 hover:text-white">
+                            <a href="{{ route('parks.create') }}" class="block px-4 py-2 text-orange-500 hover:bg-orange-500 hover:text-white">
                                 Agregar Parque
                             </a>
                         </li>

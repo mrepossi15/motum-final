@@ -13,19 +13,20 @@ use Intervention\Image\Facades\Image;
 
 class ParkController extends Controller
 {
-    /**
-     * Muestra la vista para agregar un parque.
-     */
+   
+    //Vista Mapa prinicipal. POV alumno
     public function map()
     {
         $activities = Activity::all(); // 🔥 Obtener todas las actividades
         return view('mapa', compact('activities'));
     }
+
+    // Vista para agregar un parque. POV entrenador
     public function create()
     {
-        return view('trainer.add-park'); // Vista para agregar un parque
+        return view('parks.create'); // Vista para agregar un parque
     }
-
+    //Agregar un parque. POV entrenador
     public function store(Request $request)
     {
         $request->validate([
