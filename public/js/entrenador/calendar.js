@@ -152,7 +152,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     `;
 
                     trainingDiv.querySelector('.view-training').addEventListener('click', () => {
-                        window.location.href = `/trainings/${training.id}`;
+                        const trainingId = training.id;
+                        const selectedDate = formatDateToArg(new Date(state.currentWeekStart)); // Usar la fecha seleccionada
+                    
+                        // Redireccionar con el ID del entrenamiento y la fecha
+                        window.location.href = `/entrenamientos/${trainingId}?date=${selectedDate}`;
                     });
 
                     trainingsList.appendChild(trainingDiv);
@@ -182,10 +186,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function formatDateToArg(date) {
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;  // Formato correcto para MySQL
     }
 
     function getMonthName(monthIndex) {

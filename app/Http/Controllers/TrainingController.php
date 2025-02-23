@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Models\Training;
 use App\Models\Activity;
@@ -49,7 +49,7 @@ class TrainingController extends Controller
             'park_id'            => 'required|exists:parks,id',
             'activity_id'        => 'required|exists:activities,id',
             'level'              => 'required|in:Principiante,Intermedio,Avanzado',
-            'photos.*'           => 'nullable|image|mimes:jpeg,png,jpg',
+            'photos.*'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'photos_description.*' => 'nullable|string|max:255',
             'schedule.days'      => 'required|array',
             'schedule.days.*'    => 'required|array|min:1',
@@ -59,15 +59,16 @@ class TrainingController extends Controller
             'prices.price.*'       => 'required|numeric|min:0',
             'available_spots'    => 'required|integer|min:1',
         ]);
+    
+        // Verificar horarios válidos
         foreach ($request->schedule['start_time'] as $index => $startTime) {
             $endTime = $request->schedule['end_time'][$index];
-        
             if (strtotime($startTime) >= strtotime($endTime)) {
-                return redirect()->back()->with('error', "La hora de fin debe ser posterior a la hora de inicio en el horario #".($index + 1));
+                return redirect()->back()->with('error', "La hora de fin debe ser posterior a la hora de inicio en el horario #" . ($index + 1));
             }
         }
     
-        // Crear entrenamiento primero
+        // Crear el entrenamiento
         $training = Training::create([
             'trainer_id'      => Auth::id(),
             'park_id'         => $request->park_id,
@@ -82,56 +83,54 @@ class TrainingController extends Controller
             return redirect()->back()->with('error', 'Error al crear el entrenamiento.');
         }
     
-        // **1. Manejar la subida de imágenes**
+        // Manejo de imágenes
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $index => $photo) {
                 if ($photo->isValid()) {
+                    Log::info("📸 Procesando imagen: {$photo->getClientOriginalName()}");
+        
                     $imagePath = $this->resizeAndSaveImage($photo, 'training_photos', 800, 600);
+                    Log::info("✅ Imagen guardada en: $imagePath");
         
-                    // Descripción personalizada o por defecto
-                    $description = $request->input('photos_description')[$index] ?? 'Foto de entrenamiento';
-        
-                    // Registrar en la base de datos
                     TrainingPhoto::create([
-                        'training_id'              => $training->id,
-                        'photo_path'               => $imagePath,
-                        'training_photos_description' => $description,
+                        'training_id' => $training->id,
+                        'photo_path'  => str_replace('storage/', '', $imagePath),
+                        'training_photos_description' => $request->input('photos_description')[$index] ?? 'Foto de entrenamiento',
+                    ]);
+                } else {
+                    Log::error("🚫 Imagen no válida: {$photo->getClientOriginalName()}");
+                }
+            }
+        } else {
+            Log::warning("⚠️ No se detectaron imágenes en la solicitud.");
+        }
+    
+        // Guardar horarios
+        foreach ($request->schedule['days'] as $index => $dayGroups) {
+            foreach ($dayGroups as $days) {
+                foreach ($days as $day) {
+                    TrainingSchedule::create([
+                        'training_id' => $training->id,
+                        'day'         => $day,
+                        'start_time'  => $request->schedule['start_time'][$index] ?? '00:00',
+                        'end_time'    => $request->schedule['end_time'][$index] ?? '00:00',
                     ]);
                 }
             }
         }
-      
-        // **2. Guardar horarios**
-        if (!empty($request->schedule['days'])) {
-            foreach ($request->schedule['days'] as $index => $dayGroups) {
-                foreach ($dayGroups as $days) {  // Este bucle extra es clave
-                    foreach ($days as $day) {
-                        TrainingSchedule::create([
-                            'training_id' => $training->id,
-                            'day'         => $day,
-                            'start_time'  => $request->schedule['start_time'][$index] ?? '00:00',
-                            'end_time'    => $request->schedule['end_time'][$index] ?? '00:00',
-                        ]);
-                    }
-                }
-            }
+    
+        // Guardar precios
+        foreach ($request->prices['weekly_sessions'] as $index => $sessions) {
+            TrainingPrice::create([
+                'training_id'     => $training->id,
+                'weekly_sessions' => $sessions,
+                'price'           => $request->prices['price'][$index],
+            ]);
         }
     
-        // **3. Guardar precios**
-        if (!empty($request->prices['weekly_sessions'])) {
-            foreach ($request->prices['weekly_sessions'] as $index => $sessions) {
-                TrainingPrice::create([
-                    'training_id'     => $training->id,
-                    'weekly_sessions' => $sessions,
-                    'price'           => $request->prices['price'][$index],
-                ]);
-            }
-        }
-    
-        // **4. Enviar correo de confirmación**
+        // Enviar correo de confirmación
         Mail::to(Auth::user()->email)->send(new TrainingCreatedMail(Auth::user(), $training));
     
-        // Redirección con éxito
         return redirect()->route('trainer.calendar')->with('success', 'Entrenamiento creado exitosamente.');
     }
 

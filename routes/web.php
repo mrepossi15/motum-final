@@ -86,8 +86,9 @@ Route::get('/entrenador/calendario', [TrainerController::class, 'calendar'])
     ->name('trainer.calendar')
     ->middleware(['auth', 'role:entrenador']);
 
-// Obtener entrenamientos por parque
+// Obtener entrenamientos por parque. POV calendar
 Route::get('/api/trainings/park', [TrainerController::class, 'getTrainingsByPark']);
+
 
 // Obtener entrenamientos por semana
 Route::get('/api/trainings/week', [TrainingController::class, 'getTrainingsForWeek'])->name('api.trainings');
@@ -101,6 +102,8 @@ Route::get('/entrenador/perfil', [TrainerController::class, 'showTrainerProfile'
 Route::get('/mis-entrenamientos', [TrainerController::class, 'showTrainerTrainings'])
     ->name('trainer.index')
     ->middleware(['auth', 'role:entrenador']);
+
+
 
 
 /*
@@ -137,7 +140,7 @@ Route::post('/entrenamientos/agregar', [TrainingController::class, 'store'])
 
 // Vista por entrenamiento
 Route::get('/entrenamientos/{id}', [TrainingController::class, 'show'])
-    ->name('ttrainings.show')
+    ->name('trainings.show')
     ->middleware(['auth', 'role:entrenador']);
 
 // Vista editar entrenamientos   
@@ -158,4 +161,36 @@ Route::delete('/entrenamientos/{id}/todos', [TrainingController::class, 'destroy
     ->name('destroy.all')
     ->middleware(['auth', 'role:entrenador']);
 
+//Suspender una clase
+Route::post('/trainings/suspend', [TrainingController::class, 'suspendClass'])
+    ->name('trainings.suspend')
+    ->middleware(['auth', 'role:entrenador']);
+/*
+|--------------------------------------------------------------------------
+| Rutas de ReservationController
+|--------------------------------------------------------------------------
+*/
 
+Route::get('/entrenamiento/{id}/reserva', [ReservationController::class, 'reserveTrainingView'])
+    ->middleware('auth')
+    ->name('reserve.training.view');
+
+Route::post('/entrenamiento/{id}/reserva', [ReservationController::class, 'storeReservation'])
+    ->middleware('auth')
+    ->name('store.reservation');
+
+Route::delete('/entrenamiento/{id}/delete', [ReservationController::class, 'cancelReservation'])
+    ->middleware('auth')
+    ->name('cancel.reservation');
+
+Route::get('/entrenamiento/{id}/available-times', [ReservationController::class, 'getAvailableTimes'])
+    ->middleware('auth')
+    ->name('trainings.available-times');
+
+  
+    Route::get('/entrenamiento/{id}/detalle-reserva/{date}', [ReservationController::class, 'reservationDetail'])
+->name('trainings.reservation-detail');
+
+Route::patch('/reservations/{id}/update-status', [ReservationController::class, 'updateReservationStatus'])
+    ->name('reservations.updateStatus')
+    ->middleware('auth');
