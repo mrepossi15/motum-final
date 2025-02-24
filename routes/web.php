@@ -165,6 +165,7 @@ Route::delete('/entrenamientos/{id}/todos', [TrainingController::class, 'destroy
 Route::post('/trainings/suspend', [TrainingController::class, 'suspendClass'])
     ->name('trainings.suspend')
     ->middleware(['auth', 'role:entrenador']);
+    Route::get('/trainings/{training}/gallery', [TrainingController::class, 'gallery'])->name('trainings.gallery');
 /*
 |--------------------------------------------------------------------------
 | Rutas de ReservationController

@@ -161,7 +161,6 @@ class TrainerController extends Controller
 
         return view('trainer.calendar', compact('user', 'startOfWeek', 'groupedTrainings', 'parks'));
     }
-
     // Filtrar el calendario por parque
     public function getTrainingsByPark(Request $request)
     {
@@ -221,6 +220,13 @@ class TrainerController extends Controller
     
         return response()->json($trainings);
     }
+
+    
+
+
+
+
+
 
     public function showTrainerProfile()
     {

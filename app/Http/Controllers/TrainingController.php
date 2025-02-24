@@ -655,6 +655,12 @@ class TrainingController extends Controller
         return view('parks.trainings', compact('park', 'activity', 'trainings', 'daysOfWeek', 'levels', 'selectedDays', 'selectedHours', 'selectedLevels'));
     }
 
+    public function gallery($trainingId)
+    {
+        $training = Training::findOrFail($trainingId);
+        return view('trainings.gallery', compact('training'));
+    }
+
 }
 
 

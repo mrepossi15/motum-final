@@ -25,47 +25,76 @@
             </ul>
         </div>
     </div>
-
-    <!-- Galería de Imágenes -->
-    <div class="grid grid-cols-1 gap-4 mb-6">
-        @if($training->photos->count() == 2)
-            <div class="grid grid-cols-2 gap-4">
-                @foreach($training->photos as $photo)
-                    <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto de entrenamiento" class="rounded-lg w-full h-64 object-cover">
-                @endforeach
-            </div>
-        @elseif($training->photos->count() == 3)
-            <div class="grid grid-cols-4 gap-4">
-                <div class="col-span-3">
-                    <img src="{{ asset('storage/training_photos/' . basename($training->photos[0]->photo_path)) }}" alt="Foto principal" class="rounded-lg w-full h-64 object-cover">
+<!-- Galería de Imágenes -->
+<div class="mb-6">
+    <div class="hidden md:block">
+        <!-- Enlace general para la galería -->
+        <a href="{{ route('trainings.gallery', ['training' => $training->id]) }}" class="block">
+            @if($training->photos->count() == 2)
+                <div class="grid grid-cols-2 gap-4">
+                    @foreach($training->photos as $photo)
+                        <div class="overflow-hidden rounded-lg cursor-pointer">
+                            <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto de entrenamiento" class="w-full h-[300px] object-cover">
+                        </div>
+                    @endforeach
                 </div>
-                <div class="grid grid-rows-2 gap-4">
-                    @foreach($training->photos->slice(1, 2) as $photo)
-                        <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto adicional" class="rounded-lg w-full h-32 object-cover">
+            @elseif($training->photos->count() == 3)
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="col-span-3 overflow-hidden rounded-lg cursor-pointer">
+                        <img src="{{ asset('storage/training_photos/' . basename($training->photos[0]->photo_path)) }}" alt="Foto principal" class="w-full h-[300px] object-cover">
+                    </div>
+                    <div class="grid grid-rows-2 gap-4">
+                        @foreach($training->photos->slice(1, 2) as $photo)
+                            <div class="overflow-hidden rounded-lg cursor-pointer">
+                                <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto adicional" class="w-full h-[140px] object-cover">
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @elseif($training->photos->count() >= 4)
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="col-span-3 overflow-hidden rounded-lg cursor-pointer">
+                        <img src="{{ asset('storage/training_photos/' . basename($training->photos[0]->photo_path)) }}" alt="Foto principal" class="w-full h-[300px] object-cover">
+                    </div>
+                    <div class="grid grid-rows-2 gap-4">
+                        <div class="overflow-hidden rounded-lg">
+                            <img src="{{ asset('storage/training_photos/' . basename($training->photos[1]->photo_path)) }}" alt="Foto adicional 1" class="w-full h-[140px] object-cover">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            @foreach($training->photos->slice(2, 2) as $photo)
+                                <div class="overflow-hidden rounded-lg">
+                                    <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto adicional" class="w-full h-[140px] object-cover">
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="overflow-hidden rounded-lg cursor-pointer">
+                    <img src="{{ asset('storage/training_photos/' . ($training->photos->first() ? basename($training->photos->first()->photo_path) : 'images/default-training.jpg')) }}" alt="Foto de entrenamiento" class="w-full h-[300px] object-cover">
+                </div>
+            @endif
+        </a>
+    </div>
+
+    <!-- Carrusel en dispositivos móviles -->
+    <div class="block md:hidden" x-data="{ activeSlide: 0 }">
+    <a href="{{ route('trainings.gallery', ['training' => $training->id]) }}" class="block">
+            <div class="relative w-full overflow-hidden">
+                <div class="flex transition-transform duration-500" x-ref="carousel" :style="'transform: translateX(-' + activeSlide * 100 + '%)'">
+                    @foreach($training->photos as $photo)
+                        <div class="w-full flex-shrink-0">
+                            <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto de entrenamiento" class="w-full h-[300px] object-cover rounded-lg">
+                        </div>
                     @endforeach
                 </div>
             </div>
-        @elseif($training->photos->count() >= 4)
-            <div class="grid grid-cols-4 gap-4">
-                <div class="col-span-3">
-                    <img src="{{ asset('storage/training_photos/' . basename($training->photos[0]->photo_path)) }}" alt="Foto principal" class="rounded-lg w-full h-64 object-cover">
-                </div>
-                <div class="grid grid-rows-2 gap-4">
-                    <img src="{{ asset('storage/training_photos/' . basename($training->photos[1]->photo_path)) }}" alt="Foto adicional 1" class="rounded-lg w-full h-32 object-cover">
-                    <div class="grid grid-cols-2 gap-4">
-                        <img src="{{ asset('storage/training_photos/' . basename($training->photos[2]->photo_path)) }}" alt="Foto adicional 2" class="rounded-lg w-full h-32 object-cover">
-                        <img src="{{ asset('storage/training_photos/' . basename($training->photos[3]->photo_path)) }}" alt="Foto adicional 3" class="rounded-lg w-full h-32 object-cover">
-                    </div>
-                </div>
-            </div>
-        @else
-            <img src="{{ asset('storage/training_photos/' . ($training->photos->first() ? basename($training->photos->first()->photo_path) : 'images/default-training.jpg')) }}" alt="Foto de entrenamiento" class="rounded-lg w-full h-64 object-cover">
-        @endif
+        </a>
     </div>
+</div>
 
     <!-- Sección de Detalles y Acción -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <!-- Columna de Detalles (75%) -->
         <div class="lg:col-span-3 bg-white rounded-lg shadow p-6">
             <h2 class="text-2xl font-semibold mb-4">Detalles del Entrenamiento</h2>
             <ul class="space-y-2">
@@ -79,52 +108,31 @@
                 <li><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('l d \d\e F Y') }}</li>
                 <li><strong>Horario:</strong> {{ $selectedTime }} - {{ $filteredSchedules->first()->end_time ?? 'No disponible' }}</li>
             </ul>
-
-            <!-- Participantes -->
-            <div class="mt-6">
-                <h3 class="text-xl font-semibold mb-2">Participantes Inscritos</h3>
-                @if($filteredReservations->has($selectedTime) && $filteredReservations[$selectedTime]->isNotEmpty())
-                    <ul class="space-y-1">
-                        @foreach($filteredReservations[$selectedTime] as $reservation)
-                            <li>{{ $reservation->user->name }} ({{ $reservation->user->email }})</li>
-                        @endforeach
-                    </ul>
-                @else
-                    <p class="text-gray-500">No hay participantes registrados para este horario.</p>
-                @endif
-            </div>
         </div>
 
-        <!-- Columna de Acción (25%) -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold mb-4">Acción Principal</h2>
-            <div>
-                @if($filteredReservations->has($selectedTime) && $filteredReservations[$selectedTime]->isNotEmpty())
-                    @if($isClassAccessible)
-                        <a href="{{ $reservationDetailUrl }}" class="block text-center bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
-                            Tomar Lista
-                        </a>
-                    @else
-                        <button class="block text-center bg-yellow-500 text-black px-4 py-2 rounded-md" disabled>
-                            Podrás tomar lista el día de la clase
-                        </button>
-                    @endif
-                @else
-                    <button class="block text-center bg-gray-400 text-white px-4 py-2 rounded-md" disabled>
-                        No hay reservas para tomar lista
-                    </button>
-                @endif
-            </div>
-        </div>
+       <!-- Columna de Acción (25%) -->
+<div class="bg-white rounded-lg shadow p-6 lg:static fixed inset-x-0 bottom-0 z-10 md:static">
+    <h2 class="text-xl font-semibold mb-4">Acción Principal</h2>
+    <div>
+        @if($filteredReservations->has($selectedTime) && $filteredReservations[$selectedTime]->isNotEmpty())
+            @if($isClassAccessible)
+                <a href="{{ $reservationDetailUrl }}" class="block text-center bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
+                    Tomar Lista
+                </a>
+            @else
+                <button class="block text-center bg-yellow-500 text-black px-4 py-2 rounded-md" disabled>
+                    Podrás tomar lista el día de la clase
+                </button>
+            @endif
+        @else
+            <button class="block text-center bg-gray-400 text-white px-4 py-2 rounded-md" disabled>
+                No hay reservas para tomar lista
+            </button>
+        @endif
     </div>
 </div>
-
-<!-- Modal para Eliminar Entrenamiento -->
-<x-modal id="deleteTrainingModal" title="Confirmar Eliminación" confirmText="Eliminar" confirmAction="{{ route('trainings.suspend') }}">
-    <p>¿Estás seguro de que deseas eliminar este entrenamiento? Esta acción no se puede deshacer.</p>
-    <input type="hidden" name="training_id" value="{{ $training->id }}">
-    <input type="hidden" name="date" value="{{ $selectedDate }}">
-</x-modal>
+    </div>
+</div>
 
 <script>
 function toggleDropdown() {
