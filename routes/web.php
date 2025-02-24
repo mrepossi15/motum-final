@@ -165,7 +165,11 @@ Route::delete('/entrenamientos/{id}/todos', [TrainingController::class, 'destroy
 Route::post('/trainings/suspend', [TrainingController::class, 'suspendClass'])
     ->name('trainings.suspend')
     ->middleware(['auth', 'role:entrenador']);
-    Route::get('/trainings/{training}/gallery', [TrainingController::class, 'gallery'])->name('trainings.gallery');
+
+//Maenjod e fotos. POV entrendor
+Route::get('/trainings/{training}/gallery', [TrainingController::class, 'gallery'])->name('trainings.gallery');
+Route::post('/trainings/{training}/photos', [TrainingController::class, 'storePhoto'])->name('trainings.photos.store');
+Route::delete('/trainings/photos/{photo}', [TrainingController::class, 'destroyPhoto'])->name('trainings.photos.destroy');
 /*
 |--------------------------------------------------------------------------
 | Rutas de ReservationController

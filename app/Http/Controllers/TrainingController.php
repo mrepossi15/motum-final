@@ -661,6 +661,55 @@ class TrainingController extends Controller
         return view('trainings.gallery', compact('training'));
     }
 
+    public function storePhoto(Request $request, $trainingId)
+    {
+        $request->validate([
+            'photos.*'           => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'photos_description.*' => 'nullable|string|max:255',
+        ]);
+
+        $training = Training::findOrFail($trainingId);
+
+        foreach ($request->file('photos') as $index => $photo) {
+            if ($photo->isValid()) {
+                Log::info("📸 Procesando imagen: {$photo->getClientOriginalName()}");
+
+                // Redimensionar y guardar la imagen
+                $imagePath = $this->resizeAndSaveImage($photo, 'training_photos', 800, 600);
+                Log::info("✅ Imagen redimensionada y guardada en: $imagePath");
+
+                // Capturar la descripción de la imagen
+                $description = $request->input('photos_description')[$index] ?? 'Foto de entrenamiento';
+
+                // Guardar la imagen en la base de datos
+                TrainingPhoto::create([
+                    'training_id'              => $training->id,
+                    'photo_path'               => str_replace('storage/', '', $imagePath),
+                    'training_photos_description' => $description,
+                ]);
+            } else {
+                Log::error("🚫 Imagen no válida: {$photo->getClientOriginalName()}");
+            }
+        }
+
+        return redirect()->back()->with('success', 'Fotos agregadas exitosamente con redimensionamiento y descripción.');
+    }
+
+    // Eliminar una foto
+    public function destroyPhoto($photoId)
+    {
+        $photo = TrainingPhoto::findOrFail($photoId);
+
+        // Eliminar el archivo físico si existe
+        if (Storage::disk('public')->exists($photo->photo_path)) {
+            Storage::disk('public')->delete($photo->photo_path);
+        }
+
+        $photo->delete();
+
+        return redirect()->back()->with('success', 'Foto eliminada exitosamente.');
+    }
+
 }
 
 

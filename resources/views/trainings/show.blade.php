@@ -33,19 +33,19 @@
             @if($training->photos->count() == 2)
                 <div class="grid grid-cols-2 gap-4">
                     @foreach($training->photos as $photo)
-                        <div class="overflow-hidden rounded-lg cursor-pointer">
+                        <div class="overflow-hidden  cursor-pointer">
                             <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto de entrenamiento" class="w-full h-[300px] object-cover">
                         </div>
                     @endforeach
                 </div>
             @elseif($training->photos->count() == 3)
                 <div class="grid grid-cols-4 gap-4">
-                    <div class="col-span-3 overflow-hidden rounded-lg cursor-pointer">
+                    <div class="col-span-3 overflow-hidden  cursor-pointer">
                         <img src="{{ asset('storage/training_photos/' . basename($training->photos[0]->photo_path)) }}" alt="Foto principal" class="w-full h-[300px] object-cover">
                     </div>
                     <div class="grid grid-rows-2 gap-4">
                         @foreach($training->photos->slice(1, 2) as $photo)
-                            <div class="overflow-hidden rounded-lg cursor-pointer">
+                            <div class="overflow-hidden  cursor-pointer">
                                 <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto adicional" class="w-full h-[140px] object-cover">
                             </div>
                         @endforeach
@@ -53,16 +53,16 @@
                 </div>
             @elseif($training->photos->count() >= 4)
                 <div class="grid grid-cols-4 gap-4">
-                    <div class="col-span-3 overflow-hidden rounded-lg cursor-pointer">
+                    <div class="col-span-3 overflow-hidden  cursor-pointer">
                         <img src="{{ asset('storage/training_photos/' . basename($training->photos[0]->photo_path)) }}" alt="Foto principal" class="w-full h-[300px] object-cover">
                     </div>
                     <div class="grid grid-rows-2 gap-4">
-                        <div class="overflow-hidden rounded-lg">
+                        <div class="overflow-hidden ">
                             <img src="{{ asset('storage/training_photos/' . basename($training->photos[1]->photo_path)) }}" alt="Foto adicional 1" class="w-full h-[140px] object-cover">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             @foreach($training->photos->slice(2, 2) as $photo)
-                                <div class="overflow-hidden rounded-lg">
+                                <div class="overflow-hidden ">
                                     <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto adicional" class="w-full h-[140px] object-cover">
                                 </div>
                             @endforeach
@@ -70,7 +70,7 @@
                     </div>
                 </div>
             @else
-                <div class="overflow-hidden rounded-lg cursor-pointer">
+                <div class="overflow-hidden  cursor-pointer">
                     <img src="{{ asset('storage/training_photos/' . ($training->photos->first() ? basename($training->photos->first()->photo_path) : 'images/default-training.jpg')) }}" alt="Foto de entrenamiento" class="w-full h-[300px] object-cover">
                 </div>
             @endif
@@ -84,7 +84,7 @@
                 <div class="flex transition-transform duration-500" x-ref="carousel" :style="'transform: translateX(-' + activeSlide * 100 + '%)'">
                     @foreach($training->photos as $photo)
                         <div class="w-full flex-shrink-0">
-                            <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto de entrenamiento" class="w-full h-[300px] object-cover rounded-lg">
+                            <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}" alt="Foto de entrenamiento" class="w-full h-[300px] object-cover ">
                         </div>
                     @endforeach
                 </div>
@@ -95,7 +95,7 @@
 
     <!-- Sección de Detalles y Acción -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div class="lg:col-span-3 bg-white rounded-lg shadow p-6">
+        <div class="lg:col-span-3 bg-white  shadow p-6">
             <h2 class="text-2xl font-semibold mb-4">Detalles del Entrenamiento</h2>
             <ul class="space-y-2">
                 <li><strong>Parque:</strong> {{ $training->park->name }}</li>
@@ -111,7 +111,7 @@
         </div>
 
        <!-- Columna de Acción (25%) -->
-<div class="bg-white rounded-lg shadow p-6 lg:static fixed inset-x-0 bottom-0 z-10 md:static">
+<div class="bg-white  shadow p-6 lg:static fixed inset-x-0 bottom-0 z-10 md:static">
     <h2 class="text-xl font-semibold mb-4">Acción Principal</h2>
     <div>
         @if($filteredReservations->has($selectedTime) && $filteredReservations[$selectedTime]->isNotEmpty())
