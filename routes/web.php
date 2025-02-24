@@ -170,6 +170,7 @@ Route::post('/trainings/suspend', [TrainingController::class, 'suspendClass'])
 Route::get('/trainings/{training}/gallery', [TrainingController::class, 'gallery'])->name('trainings.gallery');
 Route::post('/trainings/{training}/photos', [TrainingController::class, 'storePhoto'])->name('trainings.photos.store');
 Route::delete('/trainings/photos/{photo}', [TrainingController::class, 'destroyPhoto'])->name('trainings.photos.destroy');
+
 /*
 |--------------------------------------------------------------------------
 | Rutas de ReservationController
@@ -198,4 +199,18 @@ Route::get('/entrenamiento/{id}/available-times', [ReservationController::class,
 
 Route::patch('/reservations/{id}/update-status', [ReservationController::class, 'updateReservationStatus'])
     ->name('reservations.updateStatus')
+    ->middleware('auth');
+
+    /*
+|--------------------------------------------------------------------------
+| Rutas de ReviewController
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/reviews', [ReviewController::class, 'store'])
+    ->name('reviews.store')
+    ->middleware(['auth', 'role:alumno']);
+
+Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])
+    ->name('reviews.destroy')
     ->middleware('auth');

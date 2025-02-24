@@ -74,5 +74,9 @@ class Training extends Model
     {
         return $this->morphMany(Favorite::class, 'favoritable');
     }
+    public function averageRating()
+{
+    return $this->reviews()->avg('rating') ?? 0;
+}
  
 }
