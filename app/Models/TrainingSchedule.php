@@ -24,5 +24,10 @@ class TrainingSchedule extends Model
 {
     return $this->hasMany(TrainingStatus::class);
 }
+
+public function exceptions()
+{
+    return $this->hasMany(TrainingException::class, 'training_schedule_id');
+}
     
 }

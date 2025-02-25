@@ -102,71 +102,96 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadTrainings() {
         const cacheKey = `${state.selectedDay}_${state.selectedParkId}`;
         trainingsList.innerHTML = `<p class="text-center text-gray-500">Cargando entrenamientos...</p>`;
-
+    
         if (state.cache[cacheKey]) {
+            console.log(`✅ Usando caché para ${cacheKey}:`, state.cache[cacheKey]);
             renderTrainings(state.cache[cacheKey]);
             return;
         }
-
-        let url = `/api/trainings/park?day=${state.selectedDay}`;
+    
+        const startDate = formatDateToArg(state.currentWeekStart);
+        let url = `/api/trainings/week?week_start_date=${startDate}&day=${state.selectedDay}`;
+    
         if (state.selectedParkId !== 'all') {
             url += `&park_id=${state.selectedParkId}`;
         }
-
+    
+        console.log("🌐 URL de la API:", url);
+    
         fetch(url)
-            .then(response => response.ok ? response.json() : Promise.reject('Error en la API'))
+            .then(response => {
+                if (!response.ok) throw new Error(`Error en la API: ${response.status}`);
+                return response.json();
+            })
             .then(data => {
-                state.cache[cacheKey] = data;
-                renderTrainings(data);
+                console.log("📦 Respuesta de la API:", data);
+    
+                if (!Array.isArray(data)) {
+                    console.error("❌ La respuesta no es un array válido:", data);
+                    throw new Error("Respuesta no válida.");
+                }
+    
+                // Filtrar por el día seleccionado
+                const filteredData = data.filter(training => training.day === state.selectedDay);
+    
+                console.log(`🎯 Entrenamientos filtrados para ${state.selectedDay}:`, filteredData);
+    
+                if (!filteredData.length) {
+                    trainingsList.innerHTML = `<p class="text-center text-gray-500">No hay entrenamientos para ${state.selectedDay}.</p>`;
+                    return;
+                }
+    
+                // Guardar en caché y renderizar
+                state.cache[cacheKey] = filteredData;
+                renderTrainings(filteredData);
             })
             .catch(error => {
-                console.error('Error al cargar entrenamientos:', error);
-                trainingsList.innerHTML = '<p class="text-center text-red-500">Error al cargar entrenamientos.</p>';
+                console.error('🚨 Error al cargar entrenamientos:', error);
+                trainingsList.innerHTML = `<p class="text-center text-red-500">Error: ${error.message}</p>`;
             });
     }
-
-    // Renderizar entrenamientos
+    
     function renderTrainings(data) {
         trainingsList.innerHTML = '';
-        let hasTrainings = false;
-
-        data.forEach(training => {
-            training.schedules.forEach(schedule => {
-                if (schedule.day === state.selectedDay) {
-                    hasTrainings = true;
-                    const trainingDiv = document.createElement('div');
-                    trainingDiv.className = 'p-4 mb-3 border rounded-lg bg-white shadow-sm';
-
-                    trainingDiv.innerHTML = `
-                        <h3 class="text-lg font-semibold">${training.title}</h3>
-                        <p><strong>Actividad:</strong> ${training.activity.name}</p>
-                        <p><strong>Parque:</strong> ${training.park_id}</p>
-                        <p><strong>Hora:</strong> ${schedule.start_time} - ${schedule.end_time}</p>
-                        <p class="${training.available_spots > 0 ? 'text-green-500' : 'text-red-500'}">
-                            Cupos disponibles: ${training.available_spots}
-                        </p>
-                        <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 view-training"
-                                data-id="${training.id}">
-                            Ver Detalle
-                        </button>
-                    `;
-
-                    trainingDiv.querySelector('.view-training').addEventListener('click', () => {
-                        const trainingId = training.id;
-                        const selectedDate = formatDateToArg(new Date(state.currentWeekStart)); // Usar la fecha seleccionada
-                    
-                        // Redireccionar con el ID del entrenamiento y la fecha
-                        window.location.href = `/entrenamientos/${trainingId}?date=${selectedDate}`;
-                    });
-
-                    trainingsList.appendChild(trainingDiv);
-                }
-            });
-        });
-
-        if (!hasTrainings) {
-            trainingsList.innerHTML = '<p class="text-center text-gray-500">Hoy no tienes clases.</p>';
+    
+        if (!data || data.length === 0) {
+            trainingsList.innerHTML = '<p class="text-center text-gray-500">No hay entrenamientos disponibles.</p>';
+            return;
         }
+    
+        // Ordenar por hora de inicio considerando excepciones
+        const sortedTrainings = data.sort((a, b) => {
+            const timeA = a.start_time || '23:59:59';
+            const timeB = b.start_time || '23:59:59';
+            return timeA.localeCompare(timeB);
+        });
+    
+        console.log("📏 Entrenamientos ordenados:", sortedTrainings);
+    
+        sortedTrainings.forEach(training => {
+            const trainingDiv = document.createElement('div');
+            trainingDiv.className = 'p-4 mb-3 border rounded-lg bg-white shadow-sm';
+    
+            trainingDiv.innerHTML = `
+                <h3 class="text-lg font-semibold">${training.title}</h3>
+                <p><strong>Día:</strong> ${training.day} (${training.date})</p>
+                <p><strong>Hora:</strong> ${training.start_time} - ${training.end_time}</p>
+                <p><strong>Precio:</strong> $${training.price} por ${training.sessions} sesiones</p>
+                <p class="${training.status === 'cancelled' ? 'text-red-500' : 'text-green-500'}">
+                    Estado: ${training.is_exception ? 'Modificado' : 'Activo'}
+                </p>
+                <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 view-training"
+                        data-id="${training.training_id}" data-date="${training.date}">
+                    Ver Detalle
+                </button>
+            `;
+    
+            trainingDiv.querySelector('.view-training').addEventListener('click', () => {
+                window.location.href = `/entrenamientos/${training.training_id}?date=${training.date}`;
+            });
+    
+            trainingsList.appendChild(trainingDiv);
+        });
     }
 
     // Helpers

@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -8,6 +9,7 @@ use App\Traits\HandlesImages;
 use App\Models\User;
 use App\Models\Training;
 use App\Models\Payment;
+use App\Models\TrainingSchedule;
 use Illuminate\Support\Facades\Http;
 use App\Models\Park;
 use App\Models\UserExperience;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
+
 
 
 class TrainerController extends Controller
@@ -183,44 +186,59 @@ class TrainerController extends Controller
         return response()->json($trainings);
     }
 
-    // Filtrar el calendario por parque
+   
+
     public function getTrainingsForWeek(Request $request)
-    {
-        $weekStartDate = $request->query('week_start_date');
-    
-        if (!$weekStartDate || !strtotime($weekStartDate)) {
-            return response()->json(['error' => 'Fecha de inicio de semana inválida.'], 400);
-        }
-    
-        $daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-    
-        $trainings = TrainingSchedule::with('training')
-            ->whereHas('training', function ($query) {
-                $query->where('trainer_id', auth()->id());
-            })
-            ->get()
-            ->map(function ($schedule) use ($weekStartDate, $daysOfWeek) {
-                $dayIndex = array_search($schedule->day, $daysOfWeek);
-                if ($dayIndex === false) return null;
-    
-                $trainingDate = date('Y-m-d', strtotime("$weekStartDate +$dayIndex days"));
-    
-                return [
-                    'id'         => $schedule->id,
-                    'training_id'=> $schedule->training_id,
-                    'date'       => $trainingDate,
-                    'day'        => $schedule->day,
-                    'title'      => $schedule->training->title,
-                    'start_time' => $schedule->start_time,
-                    'end_time'   => $schedule->end_time,
-                ];
-            })
-            ->filter()
-            ->values();
-    
-        return response()->json($trainings);
+{
+    $weekStartDate = $request->query('week_start_date');
+    if (!$weekStartDate || !strtotime($weekStartDate)) {
+        return response()->json(['error' => 'Fecha de inicio de semana inválida.'], 400);
     }
 
+    $daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+    $trainings = TrainingSchedule::with(['training', 'exceptions'])
+        ->whereHas('training', function ($query) {
+            $query->where('trainer_id', auth()->id());
+        })
+        ->get()
+        ->map(function ($schedule) use ($weekStartDate, $daysOfWeek) {
+            $dayIndex = array_search($schedule->day, $daysOfWeek);
+            if ($dayIndex === false) return null;
+
+            $trainingDate = date('Y-m-d', strtotime("$weekStartDate +$dayIndex days"));
+
+            // Buscar excepción para la fecha específica
+            $exception = $schedule->exceptions->firstWhere('date', $trainingDate);
+
+            // Priorizar excepción si existe
+            $startTime = $exception ? $exception->start_time : $schedule->start_time;
+            $endTime   = $exception ? $exception->end_time   : $schedule->end_time;
+            $status    = $exception ? $exception->status     : 'active';
+
+            // Omitir entrenamientos cancelados
+            if ($status === 'cancelled') {
+                return null;
+            }
+
+            return [
+                'id'          => $schedule->id,
+                'training_id' => $schedule->training_id,
+                'date'        => $trainingDate,
+                'day'         => $schedule->day,
+                'title'       => $schedule->training->title,
+                'start_time'  => $startTime,
+                'end_time'    => $endTime,
+                'status'      => $status,
+                'is_exception'=> (bool)$exception,
+            ];
+        })
+        ->filter()
+        ->sortBy('start_time')  // 🔑 Ordenar por hora de inicio
+        ->values();
+
+    return response()->json($trainings);
+}
     
 
 
