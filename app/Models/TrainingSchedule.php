@@ -20,10 +20,10 @@ class TrainingSchedule extends Model
     {
         return $this->belongsTo(Training::class);
     }
-    public function statuses()
-{
-    return $this->hasMany(TrainingStatus::class);
-}
+    public function statuses() {
+        return $this->hasMany(TrainingStatus::class, 'training_schedule_id');
+    }
+    
 
 public function exceptions()
 {

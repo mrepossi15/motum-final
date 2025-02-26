@@ -14,17 +14,16 @@
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul id="dropdownMenu" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md hidden z-20">
-                    <li>
-    <a href="{{ route('trainings.edit', ['id' => $training->id, 'date' => $selectedDate ?? now()->toDateString()]) }}" 
-       class="block px-4 py-2 text-sm text-black hover:bg-gray-100">
-        Editar
-    </a>
-</li>
                         <li>
-                            <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100" onclick="openModal('deleteTrainingModal')">
-                                Eliminar
-                            </button>
+                            <a href="{{ route('trainings.edit', ['id' => $training->id, 'date' => $selectedDate ?? now()->toDateString()]) }}" 
+                            class="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                                Editar
+                            </a>
                         </li>
+                        <li>
+    <button class="dropdown-item text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" onclick="toggleModal()">Eliminar</button>
+</li>
+                       
                     </ul>
                 </div>
             </div>
@@ -152,7 +151,7 @@
 
                         <div class="text-left">
                             <p class="text-sm text-gray-500">🕒 Horario</p>
-                            <p class="text-gray-700">{{ $selectedTime }} - {{ $filteredSchedules->first()->end_time ?? 'No disponible' }}</p>
+                            <p class="text-gray-700">{{ $selectedTime }} - {{ $filteredSchedules->first()-> end_time ?? 'No disponible' }}</p>
                         </div>
 
                         <div class="text-left">
@@ -275,20 +274,46 @@
     </div>
 </div>
 
+<div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 hidden" id="deleteModal">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex justify-between items-center px-4 py-3 border-b">
+            <h5 class="text-lg font-semibold text-red-600" id="deleteModalLabel">Confirmar Eliminación</h5>
+            <button type="button" class="text-gray-500 hover:text-gray-700" onclick="toggleModal()">
+                <span class="sr-only">Cerrar</span>&times;
+            </button>
+        </div>
+        <div class="px-4 py-6">
+            <p class="text-gray-700">¿Estás seguro de que deseas suspender este entrenamiento? Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="flex justify-end px-4 py-3 border-t">
+            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500" onclick="toggleModal()">Cancelar</button>
+            <form action="{{ route('trainings.suspend') }}" method="POST" class="ml-3">
+                @csrf
+                <input type="hidden" name="training_id" value="{{ $training->id }}">
+                <input type="hidden" name="date" value="{{ $selectedDate }}">
+                <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    Suspender Clase
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.style.display = (modal.style.display === "none" || modal.style.display === "") ? "flex" : "none";
+    }
+</script>
+
+
 <script>
 function toggleDropdown() {
     document.getElementById('dropdownMenu').classList.toggle('hidden');
 }
 
-function openModal(id) {
-    document.getElementById(id)?.classList.remove('hidden');
-}
 
-function closeModal(id) {
-    document.getElementById(id)?.classList.add('hidden');
-}
-</script>
-<script>
+   
 function carousel(totalSlides) {
     return {
         activeSlide: 0,
@@ -336,4 +361,5 @@ function carousel(totalSlides) {
     };
 }
 </script>
+
 @endsection

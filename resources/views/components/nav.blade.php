@@ -40,7 +40,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('trainer.index') }}" class="text-orange-500 hover:underline {{ request()->routeIs('trainer.index') ? 'font-bold' : '' }}">
+                                <a href="{{ route('trainer.show-trainings') }}" class="text-orange-500 hover:underline {{ request()->routeIs('trainer.index') ? 'font-bold' : '' }}">
                                     Mis Entrenamientos
                                 </a>
                             </li>

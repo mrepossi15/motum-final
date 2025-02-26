@@ -15,7 +15,11 @@ document.addEventListener('DOMContentLoaded', function () {
         cache: {}
     };
 
-    state.currentWeekStart.setDate(state.currentWeekStart.getDate() - ((state.currentWeekStart.getDay() + 6) % 7));
+    // Set the currentWeekStart to the most recent Monday based on the local timezone
+    // This assumes the local timezone is America/Argentina/Buenos_Aires
+    state.currentWeekStart.setDate(state.currentWeekStart.getDate() - ((state.currentWeekStart.getDay() + 6) % 7));  // Find the most recent Monday
+    state.currentWeekStart.setHours(0, 0, 0, 0);  // Reset the time to midnight
+
     loadWeek();
 
     parkDropdown?.addEventListener('click', () => toggleDropdown());
@@ -24,25 +28,27 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.target.tagName === 'A') {
             const selectedValue = event.target.dataset.value;
             const href = event.target.getAttribute('href');
-
+    
             if (href && href.includes('/entrenador/agregar-parque')) return;
             
             event.preventDefault();
             parkDropdown.querySelector('#dropdownText').textContent = event.target.textContent;
             state.selectedParkId = selectedValue;
+            console.log("selectedParkId en state:", state.selectedParkId); // Verifica que se actualice correctamente
             toggleDropdown(true);
             loadWeek();
         }
     });
-
     document.addEventListener('click', (e) => {
         if (!parkDropdown.contains(e.target) && !parkDropdownMenu.contains(e.target)) {
             toggleDropdown(true);
         }
     });
 
-    addTrainingButton?.addEventListener('click', () => {
-        window.location.href = `/entrenamientos/crear?park_id=${state.selectedParkId}`;
+    addTrainingButton.addEventListener('click', function () {
+        console.log("selectedParkId en el botón:", state.selectedParkId); // Verifica el valor antes de redirigir
+        const url = `/trainings/create?park_id=${state.selectedParkId || ''}`;
+        window.location.href = url;
     });
 
     document.getElementById('prev-week')?.addEventListener('click', () => changeWeek(-7));
@@ -56,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadWeek() {
         calendarContainer.innerHTML = '';
         const endOfWeek = new Date(state.currentWeekStart);
-        endOfWeek.setDate(state.currentWeekStart.getDate() + 6);
+        endOfWeek.setDate(state.currentWeekStart.getDate() + 6); // Calculate end of the week
 
         weekRange.textContent = `${formatDateToArg(state.currentWeekStart)} - ${formatDateToArg(endOfWeek)}`;
         monthTitle.textContent = `${getMonthName(state.currentWeekStart.getMonth())} ${state.currentWeekStart.getFullYear()}`;
@@ -65,7 +71,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         for (let i = 0; i < 7; i++) {
             const currentDate = new Date(state.currentWeekStart);
-            currentDate.setDate(currentDate.getDate() + i);
+            currentDate.setDate(currentDate.getDate() + i); // Adjust each day based on start of the week
+
             const dayName = dayNames[i];
 
             const dayColumn = document.createElement('div');
@@ -133,7 +140,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const sortedTrainings = data.sort((a, b) => (a.start_time || '23:59:59').localeCompare(b.start_time || '23:59:59'));
+        const filteredTrainings = data.filter(training => {
+            return training.status !== 'suspended'; // Asegúrate de que no esté suspendida
+        });
+
+        const sortedTrainings = filteredTrainings.sort((a, b) => (a.start_time || '23:59:59').localeCompare(b.start_time || '23:59:59'));
 
         const trainingHtml = sortedTrainings.map(training => {
             const price = training.price !== undefined ? `$${training.price}` : 'No definido';
@@ -183,7 +194,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function formatDateToArg(date) {
         return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
     }
-
+    const formattedDate = formatDateToArg(state.currentWeekStart);
+    
     function getMonthName(monthIndex) {
         const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         return monthNames[monthIndex];

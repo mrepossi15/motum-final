@@ -10,13 +10,21 @@
         <!-- Formulario -->
         <form action="{{ route('trainings.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
+         
 
             <!-- Título -->
             <x-form.input name="title" label="Título *" placeholder="Ej: Clase de Yoga" />
+            
+            <input type="hidden" name="park_id" value="{{ $selectedParkId }}">
 
-            <!-- Seleccionar Parque -->
-            <x-form.select name="park_id" label="Parque *" :options="$parks->pluck('name', 'id')" :selected="old('park_id', $selectedParkId)" />
-
+<!-- Seleccionar Parque -->
+<x-form.select 
+    name="park_id" 
+    label="Parque *" 
+    :options="$parks->pluck('name', 'id')" 
+    :selected="old('park_id', $selectedParkId)" 
+/>
+            
             <!-- Tipo de Actividad -->
             <x-form.select name="activity_id" label="Tipo de Actividad *" :options="$activities->pluck('name', 'id')" :selected="old('activity_id')" />
 

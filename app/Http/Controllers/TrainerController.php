@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Traits\HandlesImages;
 use App\Models\User;
 use App\Models\Training;
+use App\Models\TrainingStatus;
 use App\Models\Payment;
 use App\Models\TrainingSchedule;
 use Illuminate\Support\Facades\Http;
@@ -165,112 +166,60 @@ class TrainerController extends Controller
 
         return view('trainer.calendar', compact('user', 'startOfWeek', 'groupedTrainings', 'parks'));
     }
-    // Filtrar el calendario por parque
+
     public function getTrainingsByPark(Request $request)
     {
+        // Validate the input
         $request->validate([
             'park_id' => 'required|exists:parks,id',
             'selected_day' => 'required|string',
             'selected_date' => 'required|date',
         ]);
     
+        // Get the park and day from the request
         $parkId = $request->query('park_id');
         $selectedDay = $request->query('selected_day');
-        $selectedDate = $request->query('selected_date');
-        $weekStartDate = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $selectedDate = $request->query('selected_date'); // selected date passed from the frontend
     
-        $daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-    
-        $trainings = TrainingSchedule::with([
-            'training:id,title,park_id',
-            'exceptions:id,training_schedule_id,date,start_time,end_time,status',
-            'training.prices:id,training_id,price,weekly_sessions'
-        ])
+        // We will use strtotime to calculate the correct date for the selected day based on selected_date
+        $trainings = TrainingSchedule::with(['training', 'exceptions', 'statuses'])
             ->whereHas('training', function ($query) use ($parkId) {
                 $query->where('trainer_id', auth()->id())
                       ->where('park_id', $parkId);
             })
             ->where('day', $selectedDay)
             ->get()
-            ->map(function ($schedule) use ($weekStartDate, $daysOfWeek, $selectedDate) {
+            ->map(function ($schedule) use ($selectedDate, $selectedDay) {
+                // Get the index of the day in the week (e.g., Lunes -> 0, Martes -> 1, etc.)
+                $daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
                 $dayIndex = array_search($schedule->day, $daysOfWeek);
+    
+                // If the day isn't found, skip it
                 if ($dayIndex === false) return null;
     
-                $trainingDate = date('Y-m-d', strtotime("$weekStartDate +$dayIndex days"));
+                // Calculate the date for this day of the selected week
+                $trainingDate = date('Y-m-d', strtotime("$selectedDate +$dayIndex days"));
     
-                // 🔍 Verificar si hay una excepción para la fecha exacta
-                $exception = $schedule->exceptions->where('date', $selectedDate)->first();
+                // Log the calculated training date for debugging
+                Log::info("Fecha de entrenamiento calculada: " . $trainingDate);
     
-                // 📌 Obtener el precio del entrenamiento
-                $priceInfo = $schedule->training->prices->first(); // Asumiendo que hay una única tarifa base
-                $price = $priceInfo->price ?? '0.00';
-                $sessions = $priceInfo->weekly_sessions ?? 1;
+                // Check if the class is suspended for the calculated date
+                $isSuspended = TrainingStatus::where('training_schedule_id', $schedule->id)
+                    ->where('date', $trainingDate)
+                    ->where('status', 'suspended')
+                    ->exists();
     
-                if ($exception) {
-                    return [
-                        'id'          => $schedule->id,
-                        'training_id' => $schedule->training_id,
-                        'date'        => $selectedDate,
-                        'day'         => $schedule->day,
-                        'title'       => $schedule->training->title,
-                        'start_time'  => $exception->start_time,
-                        'end_time'    => $exception->end_time,
-                        'price'       => $price,
-                        'sessions'    => $sessions,
-                        'status'      => $exception->status,
-                        'is_exception'=> true,
-                    ];
+                // If suspended, skip this class
+                if ($isSuspended) {
+                    return null;
                 }
     
-                return [
-                    'id'          => $schedule->id,
-                    'training_id' => $schedule->training_id,
-                    'date'        => $trainingDate,
-                    'day'         => $schedule->day,
-                    'title'       => $schedule->training->title,
-                    'start_time'  => $schedule->start_time,
-                    'end_time'    => $schedule->end_time,
-                    'price'       => $price,
-                    'sessions'    => $sessions,
-                    'status'      => 'active',
-                    'is_exception'=> false,
-                ];
-            })
-            ->filter()
-            ->sortByDesc('is_exception') // 🔥 Prioriza excepciones primero
-            ->sortBy('start_time')       // 🔥 Luego ordena por hora de inicio
-            ->values();
-    
-        return response()->json($trainings);
-    }
-
-    public function getTrainingsForWeek(Request $request)
-    {
-        $weekStartDate = $request->query('week_start_date');
-    
-        if (!$weekStartDate || !strtotime($weekStartDate)) {
-            return response()->json(['error' => 'Fecha de inicio de semana inválida.'], 400);
-        }
-    
-        $daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-    
-        $trainings = TrainingSchedule::with(['training', 'exceptions'])
-            ->whereHas('training', function ($query) {
-                $query->where('trainer_id', auth()->id());
-            })
-            ->get()
-            ->map(function ($schedule) use ($weekStartDate, $daysOfWeek) {
-                $dayIndex = array_search($schedule->day, $daysOfWeek);
-                if ($dayIndex === false) return null;
-    
-                // 🗓️ Calcular la fecha específica de esa semana
-                $trainingDate = date('Y-m-d', strtotime("$weekStartDate +$dayIndex days"));
-    
-                // 🔍 Buscar si hay una excepción para esa fecha específica
+                // Look for any exceptions for the calculated date
                 $exception = $schedule->exceptions->firstWhere('date', $trainingDate);
     
-                // 📌 Si hay excepción, mostrar solo la excepción en la fecha específica
                 if ($exception) {
+                    Log::info("Excepción encontrada para la clase en la fecha $trainingDate: "
+                        . "Inicio: " . $exception->start_time . ", Fin: " . $exception->end_time);
                     return [
                         'id'          => $schedule->id,
                         'training_id' => $schedule->training_id,
@@ -279,12 +228,14 @@ class TrainerController extends Controller
                         'title'       => $schedule->training->title,
                         'start_time'  => $exception->start_time,
                         'end_time'    => $exception->end_time,
-                        'status'      => $exception->status,
+                        'status'      => $exception->status, // 'modified' or 'cancelled'
                         'is_exception'=> true,
                     ];
                 }
     
-                // 📌 Si no hay excepción, mostrar el horario normal
+                // If no exception, return the original schedule
+                Log::info("Horario original para la clase en la fecha $trainingDate: "
+                    . "Inicio: " . $schedule->start_time . ", Fin: " . $schedule->end_time);
                 return [
                     'id'          => $schedule->id,
                     'training_id' => $schedule->training_id,
@@ -293,14 +244,15 @@ class TrainerController extends Controller
                     'title'       => $schedule->training->title,
                     'start_time'  => $schedule->start_time,
                     'end_time'    => $schedule->end_time,
-                    'status'      => 'active',
+                    'status'      => 'active', // Normal schedule
                     'is_exception'=> false,
                 ];
             })
-            ->filter()
-            ->sortByDesc('is_exception') // 🔥 Prioriza excepciones primero
-            ->sortBy('start_time')       // 🔥 Luego ordena por hora de inicio
-            ->values();
+            ->filter() // Filter out null values (suspended classes)
+            ->values(); // Reindex the results
+    
+        // Log the number of filtered trainings for debugging
+        Log::info("Entrenamientos obtenidos: " . $trainings->count() . " clases.");
     
         return response()->json($trainings);
     }
@@ -445,8 +397,9 @@ public function updateTrainer(Request $request)
                 return $training;
             });
 
-        return view('trainer.index', compact('trainings'));
+        return view('trainer.show-trainings', compact('trainings'));
     }
+    
     public function storeExperience(Request $request)
 {
     $request->validate([

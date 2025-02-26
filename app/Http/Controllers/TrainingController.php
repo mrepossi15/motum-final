@@ -29,12 +29,11 @@ class TrainingController extends Controller
   
     public function create(Request $request)
     {
-
-        $selectedParkId = $request->query('park_id'); // Obtén el parque seleccionado
-        $parks = Auth::user()->parks; // Obtén todos los parques del entrenador
+        $selectedParkId = $request->query('park_id'); // Obtén el parque seleccionado, si se pasa en la URL
+        $parks = Auth::user()->parks; // Obtener todos los parques del entrenador
         $activities = Activity::all(); // Todas las actividades disponibles
-        
-        return view('trainings.create', compact('parks', 'selectedParkId', 'activities',));
+
+        return view('trainings.create', compact('parks', 'selectedParkId', 'activities'));
     }
     public function store(Request $request)
     {
@@ -59,7 +58,12 @@ class TrainingController extends Controller
             'prices.price.*'       => 'required|numeric|min:0',
             'available_spots'    => 'required|integer|min:1',
         ]);
-    
+        // Validar si el parque existe y pertenece al usuario
+        $park = Park::find($request->park_id);
+        if (!$park || !$park->users->contains(Auth::user())) {
+            return redirect()->back()->with('error', 'El parque no es válido o no está asociado a tu cuenta.');
+        }
+            
         // Verificar horarios válidos
         foreach ($request->schedule['start_time'] as $index => $startTime) {
             $endTime = $request->schedule['end_time'][$index];
@@ -228,12 +232,7 @@ class TrainingController extends Controller
             'isClassAccessible', 'accessMessage', 'reservationDetailUrl'
         ));
     }
-    ///Mis entrenamientos del entrenador
-    public function showAll($id)
-    {
-        $training = Training::with(['schedules', 'photos', 'students'])->findOrFail($id);
-        return view('trainings.showAll', compact('training'));
-    }
+   
     public function edit(Request $request, $id)
     {
         $training = Training::with(['schedules.exceptions', 'prices'])->findOrFail($id);
@@ -303,6 +302,7 @@ class TrainingController extends Controller
     
     public function update(Request $request, $id)
     {
+        $training = Training::findOrFail($id);
         try {
             Log::info('🚀 Iniciando actualización del entrenamiento', ['training_id' => $id]);
             $selectedDate = $request->input('selected_date');
@@ -310,27 +310,13 @@ class TrainingController extends Controller
 
             // Validación
             $validated = $request->validate([
-                'title'              => 'required|string|max:255',
-                'description'        => 'nullable|string',
-                'level'              => 'required|in:Principiante,Intermedio,Avanzado',
-                'activity_id'        => 'required|exists:activities,id',
-                'park_id'            => 'required|exists:parks,id',
-                'available_spots'    => 'required|integer|min:1',
+               
                 'schedule.start_time.*' => 'required|date_format:H:i',
                 'schedule.end_time.*'   => 'required|date_format:H:i|after:schedule.start_time.*',
             ]);
 
             // Actualizar detalles generales del entrenamiento
-            $training = Training::findOrFail($id);
-            $training->update([
-                'title'           => $validated['title'],
-                'description'     => $request->input('description'),
-                'level'           => $validated['level'],
-                'activity_id'     => $validated['activity_id'],
-                'park_id'         => $validated['park_id'],
-                'available_spots' => $validated['available_spots'],
-            ]);
-
+            
             Log::info('✍️ Entrenamiento actualizado con éxito');
 
             // Crear excepciones por fecha específica, sin tocar el horario base
@@ -430,7 +416,7 @@ class TrainingController extends Controller
      //Cambia el estado de la clase a suspendida
      public function suspendClass(Request $request)
      {
-         \Log::info("🚀 Datos recibidos en suspendClass", [
+         Log::info("🚀 Datos recibidos en suspendClass", [
              'training_id' => $request->training_id,
              'date' => $request->date
          ]);
@@ -446,7 +432,7 @@ class TrainingController extends Controller
          // ✅ Obtener el nombre del día en español a partir de la fecha
          $dayOfWeek = ucfirst(\Carbon\Carbon::parse($trainingDate)->locale('es')->translatedFormat('l'));
  
-         \Log::info("📅 Día calculado para la fecha $trainingDate: $dayOfWeek");
+         Log::info("📅 Día calculado para la fecha $trainingDate: $dayOfWeek");
  
          // ✅ Buscar el horario (`training_schedule_id`) correspondiente al `training_id` en ese día
          $schedule = TrainingSchedule::where('training_id', $trainingId)
@@ -454,7 +440,7 @@ class TrainingController extends Controller
              ->first();
  
          if (!$schedule) {
-             \Log::error("🚨 No se encontró un training_schedule_id para training_id={$trainingId} en el día {$dayOfWeek}.");
+             Log::error("🚨 No se encontró un training_schedule_id para training_id={$trainingId} en el día {$dayOfWeek}.");
              return response()->json([
                  'error' => 'No se encontró el horario de entrenamiento para la fecha seleccionada',
                  'dayOfWeek' => $dayOfWeek,
@@ -473,14 +459,14 @@ class TrainingController extends Controller
              ]
          );
  
-         \Log::info("✅ Clase suspendida con éxito para training_schedule_id={$schedule->id} en fecha {$trainingDate}");
+         Log::info("✅ Clase suspendida con éxito para training_schedule_id={$schedule->id} en fecha {$trainingDate}");
         // ✅ Obtener alumnos inscritos
         $students = TrainingReservation::where('training_id', $trainingId)
         ->where('date', $trainingDate)
         ->pluck('user_id');
 
         if ($students->isEmpty()) {
-        \Log::info("🚨 No hay alumnos inscritos para notificar.");
+        Log::info("🚨 No hay alumnos inscritos para notificar.");
         } else {
         $emails = \App\Models\User::whereIn('id', $students)->pluck('email');
 
@@ -488,14 +474,14 @@ class TrainingController extends Controller
             Mail::to($email)->send(new TrainingSuspendedMail($schedule->training, $trainingDate));
         }
 
-        \Log::info("📩 Se enviaron correos a los alumnos inscritos.");
+        Log::info("📩 Se enviaron correos a los alumnos inscritos.");
         }
 
          $deletedReservations = TrainingReservation::where('training_id', $trainingId)
          ->where('date', $trainingDate)
          ->delete();
  
-         \Log::info("🗑️ Se eliminaron {$deletedReservations} reservas para training_id={$trainingId} en fecha {$trainingDate}");
+         Log::info("🗑️ Se eliminaron {$deletedReservations} reservas para training_id={$trainingId} en fecha {$trainingDate}");
  
          return response()->json([
              'message' => 'Clase suspendida con éxito y reservas eliminadas',
@@ -504,87 +490,94 @@ class TrainingController extends Controller
          ]);
      }
 
-     //Filtra las clases
      public function getTrainingsForWeek(Request $request)
      {
          $weekStartDate = $request->query('week_start_date');
-         
+     
          if (!$weekStartDate || !strtotime($weekStartDate)) {
-             Log::error('❌ Fecha de inicio de semana inválida.');
              return response()->json(['error' => 'Fecha de inicio de semana inválida.'], 400);
          }
-         
+     
          $daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
      
-         Log::info("📅 Semana de inicio: $weekStartDate");
+         // Obtener el filtro de parque si existe en la solicitud
+         $parkId = $request->query('park_id');
      
-         // Obtener entrenamientos con excepciones y precios
-         $trainings = TrainingSchedule::with(['training.prices', 'exceptions'])
-             ->whereHas('training', function ($query) {
+         // Obtener los entrenamientos de la semana con el filtro por parque (si existe)
+         $trainings = TrainingSchedule::with(['training', 'exceptions', 'statuses'])
+             ->whereHas('training', function ($query) use ($parkId) {
                  $query->where('trainer_id', auth()->id());
+     
+                 // Aplicar filtro por parque, si está presente
+                 if ($parkId) {
+                     $query->where('park_id', $parkId);
+                 }
              })
              ->get()
              ->map(function ($schedule) use ($weekStartDate, $daysOfWeek) {
                  $dayIndex = array_search($schedule->day, $daysOfWeek);
-                 if ($dayIndex === false) {
-                     Log::warning("⚠️ Día no encontrado: {$schedule->day}");
+                 if ($dayIndex === false) return null;
+     
+                 // Calcular la fecha de esa semana
+                 $trainingDate = date('Y-m-d', strtotime("$weekStartDate +$dayIndex days"));
+     
+                 // Log para verificar cómo se está calculando la fecha de la clase
+                 Log::info("Fecha de entrenamiento calculada: " . $trainingDate);
+     
+                 // Verificar si la clase está suspendida
+                 $isSuspended = TrainingStatus::where('training_schedule_id', $schedule->id)
+                     ->where('date', $trainingDate)
+                     ->where('status', 'suspended')
+                     ->exists();
+     
+                 // Si la clase está suspendida, no mostrarla
+                 if ($isSuspended) {
                      return null;
                  }
      
-                 // Calcular la fecha específica de la semana
-                 $trainingDate = date('Y-m-d', strtotime("$weekStartDate +$dayIndex days"));
-                 Log::info("📅 Fecha calculada: $trainingDate para {$schedule->day}");
-     
-                 // Buscar si hay una excepción para esa fecha específica
+                 // Buscar si hay una excepción para esa fecha
                  $exception = $schedule->exceptions->firstWhere('date', $trainingDate);
      
-                 // Log para depuración
-                 Log::info("🔍 Excepción encontrada para {$schedule->day} - {$trainingDate}: ", [
-                     'exception' => $exception ? $exception->toArray() : 'Ninguna'
-                 ]);
-     
-                 // Si la excepción es de tipo "cancelled", omitir la clase
-                 if ($exception && $exception->status === 'cancelled') {
-                     Log::info("❌ Clase cancelada para $trainingDate.");
-                     return null;
+                 // Si hay una excepción, mostrarla con el horario de la excepción
+                 if ($exception) {
+                     Log::info("Excepción encontrada para la clase en la fecha $trainingDate: "
+                         . "Inicio: " . $exception->start_time . ", Fin: " . $exception->end_time);
+                     return [
+                         'id'          => $schedule->id,
+                         'training_id' => $schedule->training_id,
+                         'date'        => $trainingDate,
+                         'day'         => $schedule->day,
+                         'title'       => $schedule->training->title,
+                         'start_time'  => $exception->start_time,
+                         'end_time'    => $exception->end_time,
+                         'status'      => $exception->status, // 'modified' o 'cancelled'
+                         'is_exception'=> true,
+                     ];
                  }
      
-                 // Determinar el horario a mostrar (priorizar excepción)
-                 $startTime = $exception && $exception->start_time ? $exception->start_time : $schedule->start_time;
-                 $endTime   = $exception && $exception->end_time   ? $exception->end_time   : $schedule->end_time;
-     
-                 Log::info("🕰️ Horario final para $trainingDate:", [
-                     'start_time' => $startTime,
-                     'end_time'   => $endTime,
-                     'exception'  => $exception ? 'Sí' : 'No',
-                 ]);
-     
-                 // Obtener el precio más bajo o el primero
-                 $price = $schedule->training->prices->first();
-     
-                 // Devolver datos del entrenamiento
+                 // Si no hay excepción, mostrar el horario original
+                 Log::info("Horario original para la clase en la fecha $trainingDate: "
+                     . "Inicio: " . $schedule->start_time . ", Fin: " . $schedule->end_time);
                  return [
-                     'id'           => $schedule->id,
-                     'training_id'  => $schedule->training_id,
-                     'date'         => $trainingDate,
-                     'day'          => $schedule->day,
-                     'title'        => $schedule->training->title,
-                     'start_time'   => $startTime,
-                     'end_time'     => $endTime,
-                     'price'        => $price ? $price->price : 0,
-                     'sessions'     => $price ? $price->weekly_sessions : 0,
-                     'status'       => $exception ? $exception->status : 'active',
-                     'is_exception' => $exception ? true : false,
+                     'id'          => $schedule->id,
+                     'training_id' => $schedule->training_id,
+                     'date'        => $trainingDate,
+                     'day'         => $schedule->day,
+                     'title'       => $schedule->training->title,
+                     'start_time'  => $schedule->start_time,
+                     'end_time'    => $schedule->end_time,
+                     'status'      => 'active', // Horario normal
+                     'is_exception'=> false,
                  ];
              })
-             ->filter()
-             ->values();
+             ->filter() // Filtrar clases que no deben mostrarse (suspendidas)
+             ->values(); // Reindexar los resultados
      
-         Log::info("🚀 Entrenamientos para la semana con horarios actualizados: ", $trainings->toArray());
+         // Log para verificar el número de entrenamientos obtenidos
+         Log::info("Entrenamientos obtenidos: " . $trainings->count() . " clases.");
      
          return response()->json($trainings);
      }
-
 
     ////////////// POV ALUMNOS 
 
@@ -698,7 +691,80 @@ class TrainingController extends Controller
     
         return view('parks.trainings', compact('park', 'activity', 'trainings', 'daysOfWeek', 'levels', 'selectedDays', 'selectedHours', 'selectedLevels'));
     }
-
+    public function showAll(Request $request, $id)
+    {   
+        $selectedDate = $request->query('date'); 
+        $selectedTime = $request->query('time');
+    
+        $training = Training::with([
+            'trainer',
+            'park',
+            'activity',
+            'schedules',
+            'prices',
+            'students',
+            'reservations.user' 
+        ])->findOrFail($id);
+    
+        $training->refresh();
+    
+        $selectedDay = $request->query('day');
+        $filteredSchedules = $training->schedules;
+    
+        if ($selectedDay) {
+            $filteredSchedules = $filteredSchedules->filter(fn($schedule) => $schedule->day === $selectedDay);
+        }
+    
+        if ($selectedDate) {
+            $filteredSchedules = $filteredSchedules->filter(function ($schedule) use ($selectedDate) {
+                return !TrainingStatus::where('training_schedule_id', $schedule->id)
+                    ->where('date', $selectedDate)
+                    ->where('status', 'suspended')
+                    ->exists();
+            });
+        }
+    
+        $filteredReservations = $selectedDate
+            ? $training->reservations->where('date', $selectedDate)->groupBy('time') 
+            : collect([]);
+    
+        if ($selectedTime) {
+            $filteredSchedules = $filteredSchedules->filter(fn($schedule) => $schedule->start_time == $selectedTime);
+        }
+    
+        // 📌 **Construir URL para tomar lista**
+        $reservationDetailUrl = route('trainings.reservation-detail', [
+            'id' => $training->id,
+            'date' => $selectedDate,
+            'time' => $selectedTime
+        ]);
+    
+        // 📌 **Determinar si el entrenador puede tomar lista**
+        $isClassAccessible = false;
+        $accessMessage = '';
+    
+        if ($selectedDate && $selectedTime) {
+            $classStartTime = Carbon::parse("$selectedDate $selectedTime");
+            $classEndTime = $classStartTime->copy()->addHours(24);
+            $now = now();
+    
+            if ($now->lessThan($classStartTime)) {
+                $accessMessage = "Disponible desde " . $classStartTime->format('H:i');
+            } elseif ($now->greaterThanOrEqualTo($classStartTime) && $now->lessThanOrEqualTo($classEndTime)) {
+                $isClassAccessible = true;
+            } else {
+                $accessMessage = "Acceso cerrado";
+            }
+        }
+    
+        $role = auth()->user()->role;
+        $view = ($role === 'entrenador' || $role === 'admin') ? 'trainer.training.show' : 'student.show-training';
+    
+        return view($view, compact(
+            'training', 'filteredSchedules', 'selectedDay', 'selectedTime', 'selectedDate', 'filteredReservations',
+            'isClassAccessible', 'accessMessage', 'reservationDetailUrl' // 📌 Se pasa la URL como variable
+        ));
+    }
     public function gallery($trainingId)
     {
         $training = Training::findOrFail($trainingId);

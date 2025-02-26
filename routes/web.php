@@ -110,9 +110,12 @@ Route::get('/trainer/profile/edit', [TrainerController::class, 'editTrainerProfi
 
 // Todos los entrenamientos del entrenador
 Route::get('/mis-entrenamientos', [TrainerController::class, 'showTrainerTrainings'])
-    ->name('trainer.index')
+    ->name('trainer.show-trainings')
     ->middleware(['auth', 'role:entrenador']);
-
+// Detalle del entrenamiento 
+Route::get('/entrenamientos/{id}', [TrainingController::class, 'showAll'])
+->name('trainer.showAll')
+->middleware(['auth', 'role:entrenador']);
 
 
 
@@ -140,7 +143,8 @@ Route::get('/parques/{id}', [ParkController::class, 'show'])->name('parks.show')
 |--------------------------------------------------------------------------
 */
 // Crear entrenamientos
-Route::get('/entrenamientos/crear', [TrainingController::class, 'create'])
+
+Route::get('/trainings/create', [TrainingController::class, 'create'])
     ->name('trainings.create')
     ->middleware(['auth', 'role:entrenador']);
 // Guardar entrenamientos
@@ -172,7 +176,7 @@ Route::delete('/entrenamientos/{id}/todos', [TrainingController::class, 'destroy
     ->middleware(['auth', 'role:entrenador']);
 
 //Suspender una clase
-Route::post('/trainings/suspend', [TrainingController::class, 'suspendClass'])
+Route::post('/entrenamiento/suspender', [TrainingController::class, 'suspendClass'])
     ->name('trainings.suspend')
     ->middleware(['auth', 'role:entrenador']);
 
