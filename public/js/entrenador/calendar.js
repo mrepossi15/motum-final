@@ -25,10 +25,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     parkDropdownMenu?.addEventListener('click', (event) => {
         if (event.target.tagName === 'A') {
-            event.preventDefault();  // Evita el #
             const selectedValue = event.target.dataset.value;
-            parkDropdown.querySelector('#dropdownText').textContent = event.target.textContent;
+            const href = event.target.getAttribute('href');
     
+            // 🛑 Si es el enlace de "Agregar Parque", permitir la navegación
+            if (href && href.includes('/entrenador/agregar-parque')) {
+                return; // Permitir la navegación sin interferir
+            }
+    
+            // 🚀 Para las demás opciones, bloquear la navegación y cambiar el parque seleccionado
+            event.preventDefault();
+            parkDropdown.querySelector('#dropdownText').textContent = event.target.textContent;
+        
             state.selectedParkId = selectedValue;
             toggleDropdown(true);
             loadWeek();
@@ -99,100 +107,92 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Cargar entrenamientos del día y parque seleccionados
-    function loadTrainings() {
-        const cacheKey = `${state.selectedDay}_${state.selectedParkId}`;
+    async function loadTrainings() {
+        const cacheKey = `${state.selectedDay}_${state.selectedParkId}_${formatDateToArg(state.currentWeekStart)}`;
         trainingsList.innerHTML = `<p class="text-center text-gray-500">Cargando entrenamientos...</p>`;
     
         if (state.cache[cacheKey]) {
-            console.log(`✅ Usando caché para ${cacheKey}:`, state.cache[cacheKey]);
+            console.log(`✅ Usando caché para ${cacheKey}`);
             renderTrainings(state.cache[cacheKey]);
             return;
+        } else {
+            console.log(`🌍 Cargando desde API para ${cacheKey}`);
         }
     
-        const startDate = formatDateToArg(state.currentWeekStart);
-        let url = `/api/trainings/week?week_start_date=${startDate}&day=${state.selectedDay}`;
-    
-        if (state.selectedParkId !== 'all') {
-            url += `&park_id=${state.selectedParkId}`;
-        }
+        let url = state.selectedParkId !== 'all'
+            ? `/api/trainings/park?park_id=${state.selectedParkId}&selected_day=${state.selectedDay}&selected_date=${formatDateToArg(state.currentWeekStart)}`
+            : `/api/trainings/week?week_start_date=${formatDateToArg(state.currentWeekStart)}&day=${state.selectedDay}`;
     
         console.log("🌐 URL de la API:", url);
     
-        fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error(`Error en la API: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                console.log("📦 Respuesta de la API:", data);
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Error en la API: ${response.status}`);
     
-                if (!Array.isArray(data)) {
-                    console.error("❌ La respuesta no es un array válido:", data);
-                    throw new Error("Respuesta no válida.");
-                }
+            const data = await response.json();
+            console.log("📦 Respuesta de la API:", data);
     
-                // Filtrar por el día seleccionado
-                const filteredData = data.filter(training => training.day === state.selectedDay);
+            if (!Array.isArray(data)) throw new Error("Respuesta no válida.");
     
-                console.log(`🎯 Entrenamientos filtrados para ${state.selectedDay}:`, filteredData);
+            const filteredData = data.filter(training => training.day === state.selectedDay);
     
-                if (!filteredData.length) {
-                    trainingsList.innerHTML = `<p class="text-center text-gray-500">No hay entrenamientos para ${state.selectedDay}.</p>`;
-                    return;
-                }
+            if (!filteredData.length) {
+                trainingsList.innerHTML = `<p class="text-center text-gray-500">No hay entrenamientos para ${state.selectedDay}.</p>`;
+                return;
+            }
     
-                // Guardar en caché y renderizar
-                state.cache[cacheKey] = filteredData;
-                renderTrainings(filteredData);
-            })
-            .catch(error => {
-                console.error('🚨 Error al cargar entrenamientos:', error);
-                trainingsList.innerHTML = `<p class="text-center text-red-500">Error: ${error.message}</p>`;
-            });
-    }
-    
-    function renderTrainings(data) {
-        trainingsList.innerHTML = '';
-    
-        if (!data || data.length === 0) {
-            trainingsList.innerHTML = '<p class="text-center text-gray-500">No hay entrenamientos disponibles.</p>';
-            return;
+            state.cache[cacheKey] = filteredData;
+            renderTrainings(filteredData);
+        } catch (error) {
+            console.error('🚨 Error al cargar entrenamientos:', error);
+            trainingsList.innerHTML = `<p class="text-center text-red-500">Error: ${error.message}</p>`;
         }
-    
-        // Ordenar por hora de inicio considerando excepciones
-        const sortedTrainings = data.sort((a, b) => {
-            const timeA = a.start_time || '23:59:59';
-            const timeB = b.start_time || '23:59:59';
-            return timeA.localeCompare(timeB);
-        });
-    
-        console.log("📏 Entrenamientos ordenados:", sortedTrainings);
-    
-        sortedTrainings.forEach(training => {
-            const trainingDiv = document.createElement('div');
-            trainingDiv.className = 'p-4 mb-3 border rounded-lg bg-white shadow-sm';
-    
-            trainingDiv.innerHTML = `
+    }
+
+   function renderTrainings(data) {
+    trainingsList.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        trainingsList.innerHTML = '<p class="text-center text-gray-500">No hay entrenamientos disponibles.</p>';
+        return;
+    }
+
+    // 📌 Ordenar entrenamientos por hora de inicio, considerando excepciones
+    const sortedTrainings = data.sort((a, b) => (a.start_time || '23:59:59').localeCompare(b.start_time || '23:59:59'));
+
+    console.log("📏 Entrenamientos ordenados:", sortedTrainings);
+
+    // Generar el HTML de todos los entrenamientos y agregarlos de una sola vez (mejor rendimiento)
+    const trainingHtml = sortedTrainings.map(training => {
+        const price = training.price !== undefined ? `$${training.price}` : 'No definido';
+        const sessions = training.sessions !== undefined ? `${training.sessions} sesiones` : 'No definido';
+        const statusClass = training.status === 'cancelled' ? 'text-red-500' : 'text-green-500';
+        const statusText = training.is_exception ? 'Modificado' : 'Activo';
+
+        return `
+            <div class="p-4 mb-3 border rounded-lg bg-white shadow-sm">
                 <h3 class="text-lg font-semibold">${training.title}</h3>
                 <p><strong>Día:</strong> ${training.day} (${training.date})</p>
                 <p><strong>Hora:</strong> ${training.start_time} - ${training.end_time}</p>
-                <p><strong>Precio:</strong> $${training.price} por ${training.sessions} sesiones</p>
-                <p class="${training.status === 'cancelled' ? 'text-red-500' : 'text-green-500'}">
-                    Estado: ${training.is_exception ? 'Modificado' : 'Activo'}
-                </p>
+                <p><strong>Precio:</strong> ${price} por ${sessions}</p>
+                <p class="${statusClass}">Estado: ${statusText}</p>
                 <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 view-training"
                         data-id="${training.training_id}" data-date="${training.date}">
                     Ver Detalle
                 </button>
-            `;
-    
-            trainingDiv.querySelector('.view-training').addEventListener('click', () => {
-                window.location.href = `/entrenamientos/${training.training_id}?date=${training.date}`;
-            });
-    
-            trainingsList.appendChild(trainingDiv);
+            </div>
+        `;
+    }).join(''); // Unir el array en un solo string para rendimiento
+
+    trainingsList.innerHTML = trainingHtml;
+
+    // Agregar event listeners a los botones "Ver Detalle"
+    document.querySelectorAll('.view-training').forEach(button => {
+        button.addEventListener('click', () => {
+            window.location.href = `/entrenamientos/${button.dataset.id}?date=${button.dataset.date}`;
         });
-    }
+    });
+}
 
     // Helpers
     function toggleDropdown(close = false) {
