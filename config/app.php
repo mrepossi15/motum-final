@@ -125,6 +125,7 @@ return [
     ],
     'aliases' => [
     'Storage' => Illuminate\Support\Facades\Storage::class,
+    'Image' => Intervention\Image\Facades\Image::class,
 ],
     
 

@@ -17,7 +17,6 @@ use Carbon\Carbon;
 use App\Traits\HandlesImages;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
 use App\Models\TrainingReservation;
 use App\Mail\TrainingCreatedMail;
 use Illuminate\Support\Facades\Mail;
@@ -303,66 +302,66 @@ class TrainingController extends Controller
     }
     
     public function update(Request $request, $id)
-{
-    try {
-        Log::info('🚀 Iniciando actualización del entrenamiento', ['training_id' => $id]);
-        $selectedDate = $request->input('selected_date');
-        Log::info('📅 Fecha seleccionada:', ['selected_date' => $selectedDate]);
+    {
+        try {
+            Log::info('🚀 Iniciando actualización del entrenamiento', ['training_id' => $id]);
+            $selectedDate = $request->input('selected_date');
+            Log::info('📅 Fecha seleccionada:', ['selected_date' => $selectedDate]);
 
-        // Validación
-        $validated = $request->validate([
-            'title'              => 'required|string|max:255',
-            'description'        => 'nullable|string',
-            'level'              => 'required|in:Principiante,Intermedio,Avanzado',
-            'activity_id'        => 'required|exists:activities,id',
-            'park_id'            => 'required|exists:parks,id',
-            'available_spots'    => 'required|integer|min:1',
-            'schedule.start_time.*' => 'required|date_format:H:i',
-            'schedule.end_time.*'   => 'required|date_format:H:i|after:schedule.start_time.*',
-        ]);
+            // Validación
+            $validated = $request->validate([
+                'title'              => 'required|string|max:255',
+                'description'        => 'nullable|string',
+                'level'              => 'required|in:Principiante,Intermedio,Avanzado',
+                'activity_id'        => 'required|exists:activities,id',
+                'park_id'            => 'required|exists:parks,id',
+                'available_spots'    => 'required|integer|min:1',
+                'schedule.start_time.*' => 'required|date_format:H:i',
+                'schedule.end_time.*'   => 'required|date_format:H:i|after:schedule.start_time.*',
+            ]);
 
-        // Actualizar detalles generales del entrenamiento
-        $training = Training::findOrFail($id);
-        $training->update([
-            'title'           => $validated['title'],
-            'description'     => $request->input('description'),
-            'level'           => $validated['level'],
-            'activity_id'     => $validated['activity_id'],
-            'park_id'         => $validated['park_id'],
-            'available_spots' => $validated['available_spots'],
-        ]);
+            // Actualizar detalles generales del entrenamiento
+            $training = Training::findOrFail($id);
+            $training->update([
+                'title'           => $validated['title'],
+                'description'     => $request->input('description'),
+                'level'           => $validated['level'],
+                'activity_id'     => $validated['activity_id'],
+                'park_id'         => $validated['park_id'],
+                'available_spots' => $validated['available_spots'],
+            ]);
 
-        Log::info('✍️ Entrenamiento actualizado con éxito');
+            Log::info('✍️ Entrenamiento actualizado con éxito');
 
-        // Crear excepciones por fecha específica, sin tocar el horario base
-        if ($request->has('schedule_id')) {
-            foreach ($request->input('schedule_id') as $index => $scheduleId) {
-                $startTime = $request->input("schedule.start_time.$index");
-                $endTime = $request->input("schedule.end_time.$index");
+            // Crear excepciones por fecha específica, sin tocar el horario base
+            if ($request->has('schedule_id')) {
+                foreach ($request->input('schedule_id') as $index => $scheduleId) {
+                    $startTime = $request->input("schedule.start_time.$index");
+                    $endTime = $request->input("schedule.end_time.$index");
 
-                TrainingException::updateOrCreate(
-                    [
-                        'training_schedule_id' => $scheduleId,
-                        'date' => $selectedDate,  // Excepción para la fecha específica
-                    ],
-                    [
-                        'start_time' => $startTime,
-                        'end_time'   => $endTime,
-                        'status'     => 'modified',
-                    ]
-                );
+                    TrainingException::updateOrCreate(
+                        [
+                            'training_schedule_id' => $scheduleId,
+                            'date' => $selectedDate,  // Excepción para la fecha específica
+                        ],
+                        [
+                            'start_time' => $startTime,
+                            'end_time'   => $endTime,
+                            'status'     => 'modified',
+                        ]
+                    );
 
-                Log::info("✅ Excepción creada para el $selectedDate: $startTime - $endTime");
+                    Log::info("✅ Excepción creada para el $selectedDate: $startTime - $endTime");
+                }
             }
-        }
 
-        return redirect()->route('trainings.show', ['id' => $training->id, 'date' => $selectedDate])
-            ->with('success', 'Entrenamiento actualizado solo para la fecha seleccionada.');
-    } catch (\Exception $e) {
-        Log::error('❌ Error durante la actualización', ['message' => $e->getMessage()]);
-        return redirect()->back()->with('error', 'Error al actualizar el entrenamiento.');
+            return redirect()->route('trainings.show', ['id' => $training->id, 'date' => $selectedDate])
+                ->with('success', 'Entrenamiento actualizado solo para la fecha seleccionada.');
+        } catch (\Exception $e) {
+            Log::error('❌ Error durante la actualización', ['message' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Error al actualizar el entrenamiento.');
+        }
     }
-}
 
     public function destroy(Request $request, $id)
     {

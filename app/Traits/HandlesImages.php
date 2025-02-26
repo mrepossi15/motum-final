@@ -23,19 +23,20 @@ trait HandlesImages
     {
         // Instanciar ImageManager con el driver GD
         $imageManager = new ImageManager(new GdDriver());
-    
+        
         // Leer la imagen y redimensionar
         $resizedImage = $imageManager->read($image->getRealPath())->scale(width: $width);
-    
+        
         if ($height) {
             $resizedImage = $resizedImage->scale(height: $height);
         }
-    
+        
         // Generar nombre único y guardar la imagen
         $imagePath = $path . '/' . uniqid() . '.' . $image->getClientOriginalExtension();
         Storage::disk('public')->put($imagePath, $resizedImage->encode());
-    
-        return 'storage/' . $imagePath;
+        
+        // Retornar solo la ruta relativa sin 'storage/'
+        return $imagePath;
     }
 
     /**

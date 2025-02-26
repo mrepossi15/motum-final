@@ -15,9 +15,10 @@ use App\Models\Park;
 use App\Models\UserExperience;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManagerStatic as Image;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
+
 
 
 
@@ -243,8 +244,6 @@ class TrainerController extends Controller
         return response()->json($trainings);
     }
 
-   
-
     public function getTrainingsForWeek(Request $request)
     {
         $weekStartDate = $request->query('week_start_date');
@@ -306,29 +305,132 @@ class TrainerController extends Controller
         return response()->json($trainings);
     }
     
-
-
-
-
-
-
     public function showTrainerProfile()
     {
-        // Usuario autenticado
-        $trainer = auth()->user();
+        $trainer = auth()->user();  // Obtener al entrenador autenticado
     
-        // Parques asociados al entrenador
+        // Recuperar parques asociados al entrenador
         $parks = $trainer->parks()->get();
-        
     
-        // Entrenamientos asociados al entrenador
+        // Obtener experiencias asociadas al entrenador desde el modelo UserExperience
+        $experiences = $trainer->experiences()->get();  // Usar el método correcto para obtener la colección
+    
+        // Recuperar otros datos como entrenamientos y fotos
         $trainings = $trainer->trainings()->with(['park', 'activity', 'schedules'])->get();
-    
-        // Fotos asociadas a los entrenamientos del entrenador
         $trainingPhotos = $trainer->trainingPhotos;
     
-        return view('trainer.profile', compact('trainer', 'parks', 'trainings', 'trainingPhotos'));
+        // Pasar todos los datos a la vista
+        return view('trainer.profile', compact('trainer', 'parks', 'trainings', 'trainingPhotos', 'experiences'));
     }
+   
+    public function editTrainerProfile()
+    {
+        $trainer = auth()->user(); // Obtener al entrenador autenticado
+        return view('trainer.edit', compact('trainer')); // Retornar la vista del formulario
+    }
+   
+
+public function updateTrainer(Request $request)
+{
+    try {
+        Log::info('Iniciando actualización del perfil del entrenador', ['user_id' => auth()->id()]);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
+            'mercado_pago_email' => 'nullable|email|unique:users',
+            'collector_id' => 'nullable|string|max:255|unique:users',
+            'certification' => 'nullable|string|max:255',
+            'biography' => 'nullable|string|max:500',
+            'especialty' => 'nullable|string|max:255',
+            'birth' => 'nullable|date',
+            'experiences' => 'nullable|array',
+            'experiences.*.role' => 'required|string|max:255',
+            'experiences.*.company' => 'nullable|string|max:255',
+            'experiences.*.year_start' => 'required|integer|min:1900|max:' . now()->year,
+            'experiences.*.year_end' => 'required|integer|min:1900|max:' . now()->year,
+            'experiences.*.details' => 'nullable|string',
+            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'certification_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        $user = auth()->user();
+
+        // Actualizar datos básicos
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'mercado_pago_email' => $request->mercado_pago_email,
+            'collector_id' => $request->collector_id,
+            'certification' => $request->certification,
+            'biography' => $request->biography,
+            'especialty' => $request->especialty,
+            'birth' => $request->birth
+        ]);
+
+        Log::info('Perfil del entrenador actualizado correctamente', ['user_id' => $user->id]);
+
+        // Manejar la subida de imágenes
+        if ($request->hasFile('profile_pic')) {
+            if ($user->profile_pic && Storage::disk('public')->exists($user->profile_pic)) {
+                Storage::disk('public')->delete($user->profile_pic);
+            }
+
+            $profilePicPath = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
+            $user->update([
+                'profile_pic' => $profilePicPath,
+                'profile_pic_description' => 'Foto de perfil actualizada'
+            ]);
+        }
+
+        if ($request->hasFile('medical_fit')) {
+            if ($user->medical_fit && Storage::disk('public')->exists($user->medical_fit)) {
+                Storage::disk('public')->delete($user->medical_fit);
+            }
+
+            $medicalFitPath = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 600, 400);
+            $user->update([
+                'medical_fit' => $medicalFitPath,
+                'medical_fit_description' => 'Apto médico actualizado'
+            ]);
+        }
+
+        if ($request->hasFile('certification_pic')) {
+            if ($user->certification_pic && Storage::disk('public')->exists($user->certification_pic)) {
+                Storage::disk('public')->delete($user->certification_pic);
+            }
+
+            $certificationPath = $this->resizeAndSaveImage($request->file('certification_pic'), 'certification_pics', 600, 400);
+            $user->update([
+                'certification_pic' => $certificationPath,
+                'certification_pic_description' => 'Certificado actualizado'
+            ]);
+        }
+
+        Log::info('Imágenes del perfil actualizadas correctamente');
+
+        // Actualizar experiencias laborales
+        if ($request->has('experiences')) {
+            $user->experiences()->delete();
+            foreach ($request->experiences as $experience) {
+                $user->experiences()->create([
+                    'role' => $experience['role'],
+                    'company' => $experience['company'] ?? null,
+                    'year_start' => $experience['year_start'],
+                    'year_end' => $experience['year_end'],
+                    'details' => $experience['details'] ?? null,
+                ]);
+            }
+        }
+
+        return redirect()->route('trainer.profile')->with('success', 'Perfil actualizado exitosamente.');
+    } catch (\Exception $e) {
+        Log::error('Error durante la actualización del perfil', ['message' => $e->getMessage()]);
+        return redirect()->back()->with('error', 'Error al actualizar el perfil.');
+    }
+}
+
 
     public function showTrainerTrainings()
     {
@@ -345,7 +447,33 @@ class TrainerController extends Controller
 
         return view('trainer.index', compact('trainings'));
     }
+    public function storeExperience(Request $request)
+{
+    $request->validate([
+        'experiences' => 'nullable|array',
+        'experiences.*.role' => 'nullable|string|max:255',
+        'experiences.*.company' => 'nullable|string|max:255',
+        'experiences.*.year_start' => 'nullable|integer|min:1900|max:' . now()->year,
+        'experiences.*.year_end' => 'nullable|integer|min:1900|max:' . now()->year,
+        'experiences.*.currently_working' => 'nullable|boolean',
+    ]);
+
+    $user = auth()->user();  // El usuario autenticado
     
-  
+    // Guardar experiencias
+    if ($request->has('experiences')) {
+        foreach ($request->experiences as $experience) {
+            $user->experiences()->create([
+                'role' => $experience['role'],
+                'company' => $experience['company'] ?? null,
+                'year_start' => $experience['year_start'],
+                'year_end' => $experience['currently_working'] ? null : $experience['year_end'],
+                'currently_working' => $experience['currently_working'] ?? false,
+            ]);
+        }
+    }
+
+    return redirect()->route('trainer.profile')->with('success', 'Experiencia registrada exitosamente.');
+}
     
 }

@@ -89,7 +89,6 @@ Route::get('/entrenador/calendario', [TrainerController::class, 'calendar'])
 // Obtener entrenamientos por parque. POV calendar
 Route::get('/api/trainings/park', [TrainerController::class, 'getTrainingsByPark']);
 
-
 // Obtener entrenamientos por semana
 Route::get('/api/trainings/week', [TrainingController::class, 'getTrainingsForWeek'])->name('api.trainings');
 
@@ -97,6 +96,17 @@ Route::get('/api/trainings/week', [TrainingController::class, 'getTrainingsForWe
 Route::get('/entrenador/perfil', [TrainerController::class, 'showTrainerProfile'])
     ->name('trainer.profile')
     ->middleware(['auth', 'role:entrenador']);
+//Vista Editar perfil
+Route::get('/trainer/profile/edit', [TrainerController::class, 'editTrainerProfile'])
+    ->name('trainer.edit')
+    ->middleware(['auth', 'role:entrenador']);
+//Modificar perfil entrenador
+ Route::put('/trainer/profile/update', [TrainerController::class, 'updateTrainer'])
+    ->name('trainer.update')
+    ->middleware(['auth', 'role:entrenador']);
+    Route::post('/store/experience', [TrainerController::class, 'storeExperience'])
+    ->name('trainer.storeExperience');
+
 
 // Todos los entrenamientos del entrenador
 Route::get('/mis-entrenamientos', [TrainerController::class, 'showTrainerTrainings'])
