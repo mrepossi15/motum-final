@@ -109,19 +109,24 @@
     </div>
 
     <!-- Mostrar Experiencias -->
-    <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
-        <div class="bg-orange-500 text-white px-6 py-4">
-            <h2 class="text-xl font-bold">Experiencias</h2>
-        </div>
-        <div class="p-6">
-            @if ($experiences->isEmpty())
-                <p class="text-gray-500">No hay experiencias registradas.</p>
-            @else
-                <ul>
-                    @foreach ($experiences as $experience)
-                        <li class="border-b border-gray-200 py-4">
+  <!-- Mostrar Experiencias -->
+<div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+    <div class="bg-orange-500 text-white px-6 py-4 flex justify-between items-center">
+        <h2 class="text-xl font-bold">Experiencias</h2>
+        <button onclick="toggleAddExperience()" class="bg-white text-orange-600 px-3 py-1 text-sm rounded-md">
+    ➕ Agregar
+</button>
+    </div>
+    <div class="p-6">
+        @if ($experiences->isEmpty())
+            <p class="text-gray-500">No hay experiencias registradas.</p>
+        @else
+            <ul>
+                @foreach ($experiences as $experience)
+                    <li class="border-b border-gray-200 py-4 flex justify-between items-center">
+                        <div>
                             <strong>{{ $experience->role }}</strong>
-                            <p class="text-gray-700"><strong>Empresa/Gimnasio:</strong> {{ $experience->company }}</p>
+                            <p class="text-gray-700"><strong>Empresa/Gimnasio:</strong> {{ $experience->company ?? 'Freelance' }}</p>
                             <p class="text-gray-700"><strong>Periodo:</strong> {{ $experience->year_start }} - 
                                 @if($experience->currently_working)
                                     Actualmente
@@ -129,55 +134,116 @@
                                     {{ $experience->year_end }}
                                 @endif
                             </p>
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
-        </div>
-    </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <!-- Botón para Editar -->
+                            <button onclick="toggleEditModal({{ $experience->id }})"
+                                    class="text-blue-600 hover:underline">✏️ Editar</button>
 
-    <!-- Formulario para agregar experiencias -->
-    <h5 class="mt-5 text-lg font-semibold">Agregar Experiencias (Opcional)</h5>
-    <form action="{{ route('trainer.storeExperience') }}" method="POST">
-        @csrf
-        <div id="experience-container">
-            <div class="experience-item border rounded p-3 mb-3">
-                <h6>Experiencia #1</h6>
-                @foreach(['role', 'company', 'year_start', 'year_end'] as $field)
-                    <label for="{{ $field }}-0" class="form-label">{{ ucfirst(str_replace('_', ' ', $field)) }}:</label>
-                    <input 
-                        type="text" 
-                        name="experiences[0][{{ $field }}]" 
-                        class="form-control @error('experiences.0.' . $field) is-invalid @enderror" 
-                        value="{{ old('experiences.0.' . $field) }}">
-                    @error('experiences.0.' . $field)
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                            <!-- Formulario para Eliminar -->
+                            <form action="{{ route('trainer.experience.destroy', $experience->id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline">🗑️ Eliminar</button>
+                            </form>
+                        </div>
+                    </li>
                 @endforeach
-
-                <div class="form-check mt-2">
-                    <input 
-                        type="hidden" 
-                        name="experiences[0][currently_working]" 
-                        value="0">
-                    <input 
-                        type="checkbox" 
-                        name="experiences[0][currently_working]" 
-                        class="form-check-input" 
-                        id="currently-working-0" 
-                        value="1">
-                    <label for="currently-working-0" class="form-check-label">Actualmente trabajando aquí</label>
-                </div>
-            </div>
-        </div>
-
-        <button type="button" id="add-experience" class="btn btn-primary btn-sm">Agregar Otra Experiencia</button>
-
-        <!-- Botón para enviar -->
-        <button type="submit" class="btn btn-success mt-4">Guardar Experiencias</button>
-    </form>
+            </ul>
+        @endif
+    </div>
 </div>
 
+
+  
+</div>
+<!-- Modal Agregar Experiencia -->
+
+<div id="addExperienceModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <h5 class="text-lg font-semibold text-gray-800">Agregar Experiencia</h5>
+        
+        <form action="{{ route('trainer.storeExperience') }}" method="POST">
+            @csrf
+
+            <label class="block font-medium text-gray-700 mt-2">Rol</label>
+            <input type="text" name="experiences[0][role]"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm">
+
+            <label class="block font-medium text-gray-700 mt-2">Empresa</label>
+            <input type="text" name="experiences[0][company]"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm">
+
+            <label class="block font-medium text-gray-700 mt-2">Año de Inicio</label>
+            <input type="number" name="experiences[0][year_start]"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm">
+
+            <label class="block font-medium text-gray-700 mt-2">Año de Fin</label>
+            <input type="number" name="experiences[0][year_end]"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm">
+                   <div class="flex items-center mt-3">
+    <!-- Campo oculto para que siempre se envíe un valor -->
+    <input type="hidden" name="experiences[0][currently_working]" value="0">
+    
+    <input type="checkbox" id="currently_working_0" name="experiences[0][currently_working]" value="1"
+           class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+    <label for="currently_working_0" class="ml-2 text-gray-700">Actualmente trabajando aquí</label>
+</div>
+
+            <div class="flex justify-end space-x-4 mt-4">
+                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                        onclick="toggleAddExperience()">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- 🔥 Modal Editar Experiencia -->
+<div id="editExperienceModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <h5 class="text-lg font-semibold text-gray-800">Editar Experiencia</h5>
+        
+        <form id="editExperienceForm" method="POST">
+            @csrf
+            @method('PUT')
+
+            <input type="hidden" id="editExperienceId">
+
+            <label class="block font-medium text-gray-700 mt-2">Rol</label>
+            <input type="text" id="editRole" name="role"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+            <label class="block font-medium text-gray-700 mt-2">Empresa</label>
+            <input type="text" id="editCompany" name="company"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+            <label class="block font-medium text-gray-700 mt-2">Año de Inicio</label>
+            <input type="number" id="editYearStart" name="year_start"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+            <label class="block font-medium text-gray-700 mt-2">Año de Fin</label>
+            <input type="number" id="editYearEnd" name="year_end"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+
+            <!-- ✅ Checkbox "Actualmente Trabajando Aquí" -->
+            <div class="flex items-center mt-3">
+                <input type="checkbox" id="editCurrentlyWorking" name="currently_working"
+                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                <label for="editCurrentlyWorking" class="ml-2 text-gray-700">Actualmente trabajando aquí</label>
+            </div>
+
+            <div class="flex justify-end space-x-4 mt-4">
+                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                        onclick="toggleEditModal()">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 <script>
     // Add Experience functionality
     document.getElementById('add-experience').addEventListener('click', () => {
@@ -204,6 +270,51 @@
         template.querySelector('.remove-experience').addEventListener('click', function () {
             template.remove();
         });
+    });
+    function toggleAddExperience() {
+    const modal = document.getElementById('addExperienceModal');
+    modal.classList.toggle('hidden');
+}
+</script>
+<script>
+    function toggleYearEnd(checkbox) {
+        let yearEndInput = checkbox.closest('form').querySelector(`#year_end_0`);
+        
+        if (checkbox.checked) {
+            yearEndInput.disabled = true;
+            yearEndInput.value = ''; // Vaciar el campo para evitar errores
+        } else {
+            yearEndInput.disabled = false;
+        }
+    }
+</script>
+<script>
+    function toggleEditModal(id = null) {
+        const modal = document.getElementById('editExperienceModal');
+        modal.classList.toggle('hidden');
+
+        if (id) {
+            const experiences = @json(auth()->user()->experiences);
+            const experience = experiences.find(exp => exp.id == id);
+
+            if (experience) {
+                document.getElementById('editExperienceId').value = experience.id;
+                document.getElementById('editRole').value = experience.role;
+                document.getElementById('editCompany').value = experience.company ?? '';
+                document.getElementById('editYearStart').value = experience.year_start;
+                document.getElementById('editYearEnd').value = experience.year_end ?? '';
+
+                document.getElementById('editCurrentlyWorking').checked = experience.currently_working;
+                document.getElementById('editYearEnd').disabled = experience.currently_working;
+
+                document.getElementById('editExperienceForm').action = `/trainer/experience/${experience.id}`;
+            }
+        }
+    }
+
+    // Deshabilitar "Año de Fin" si "Actualmente Trabajando" está marcado
+    document.getElementById('editCurrentlyWorking').addEventListener('change', function () {
+        document.getElementById('editYearEnd').disabled = this.checked;
     });
 </script>
 

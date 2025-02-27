@@ -3,47 +3,47 @@
 @section('title', 'Mis Entrenamientos')
 
 @section('content')
-<main class="container mt-4">
-    <h2 class="mb-4">Mis Entrenamientos</h2>
+<div class="container mx-auto mt-5 px-4">
+    <h2 class="mb-4 text-2xl font-bold text-gray-800">Mis Entrenamientos</h2>
 
     @if ($trainings->count() > 0)
-        <div class="row">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($trainings as $training)
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card shadow-sm">
-                        @if ($training->photos->isNotEmpty())
-                            <img src="{{ asset('storage/' . $training->photos->first()->photo_path) }}" 
-                                 class="card-img-top" 
-                                 alt="Foto de entrenamiento" 
-                                 style="height: 200px; object-fit: cover;">
-                        @endif
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $training->title }}</h5>
-                            <p class="card-text">
-                                <strong>Ubicación:</strong> {{ $training->park->name }} <br>
-                                <strong>Actividad:</strong> {{ $training->activity->name }} <br>
-                                <strong>Nivel:</strong> {{ $training->level }}
-                            </p>
-                            <p class="mb-2">
-                                <strong>Horarios:</strong>
+                <div class="bg-white shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105">
+                    @if ($training->photos->isNotEmpty())
+                        <img src="{{ asset('storage/' . $training->photos->first()->photo_path) }}" 
+                             class="w-full h-48 object-cover" 
+                             alt="Foto de entrenamiento">
+                    @endif
+                    <div class="p-4">
+                        <h5 class="text-xl font-semibold text-gray-800">{{ $training->title }}</h5>
+                        <p class="text-gray-600 text-sm">
+                            <strong>Ubicación:</strong> {{ $training->park->name }} <br>
+                            <strong>Actividad:</strong> {{ $training->activity->name }} <br>
+                            <strong>Nivel:</strong> {{ $training->level }}
+                        </p>
+                        <div class="mt-3">
+                            <strong class="text-gray-700">Días con Clases:</strong>
+                            <div class="flex flex-wrap gap-1 mt-1">
                                 @foreach ($training->schedules as $schedule)
-                                    <span class="badge bg-secondary">
-                                        {{ $schedule->day }} ({{ $schedule->start_time }} - {{ $schedule->end_time }})
+                                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">
+                                        {{ $schedule->day }}
                                     </span>
                                 @endforeach
-                            </p>
-                            <p class="mb-2">
-                                <strong>👥 Alumnos inscritos:</strong> 
-                                <span class="badge bg-info">{{ $training->student_count }}</span>
-                            </p>
-                           
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <a href="{{ route('trainings.detail', $training->id) }}"
+                               class="block text-center bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
+                                Ver Detalle
+                            </a>
                         </div>
                     </div>
                 </div>
             @endforeach
         </div>
     @else
-        <p class="text-muted">No tienes entrenamientos creados.</p>
+        <p class="text-gray-500 text-center">No tienes entrenamientos creados.</p>
     @endif
-</main>
+</div>
 @endsection

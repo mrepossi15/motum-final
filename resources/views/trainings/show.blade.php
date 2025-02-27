@@ -37,35 +37,50 @@
             @if($photoCount > 0)
                 <div class="grid gap-4 
                             @if($photoCount == 2) grid-cols-2 
-                            @elseif($photoCount == 3) grid-cols-4 
-                            @elseif($photoCount >= 4) grid-cols-4 
+                            @elseif($photoCount >= 3) grid-cols-4 
                             @else grid-cols-1 @endif">
 
-                    @if($photoCount == 3 || $photoCount >= 4)
-                        <div class="col-span-3 overflow-hidden">
-                            <img src="{{ asset('storage/training_photos/' . basename($training->photos[0]->photo_path)) }}"
-                                 alt="Foto principal"
-                                 class="w-full h-[300px] object-cover">
-                        </div>
-                    @endif
-
-                    <div class="@if($photoCount == 3) grid grid-rows-2 gap-4 @endif">
-                        @foreach($training->photos->slice($photoCount >= 3 ? 1 : 0, $photoCount == 3 ? 2 : $photoCount) as $photo)
+                    {{-- 🖼️ Si hay 2 fotos, cada una ocupa la mitad --}}
+                    @if($photoCount == 2)
+                        @foreach($training->photos as $photo)
                             <div class="overflow-hidden cursor-pointer">
-                                <img src="{{ asset('storage/training_photos/' . basename($photo->photo_path)) }}"
-                                     alt="Foto adicional"
-                                     class="w-full h-[140px] object-cover">
+                                <img src="{{ asset('storage/' . $photo->photo_path) }}"
+                                     alt="Foto entrenamiento"
+                                     class="w-full h-[300px] object-cover ">
                             </div>
                         @endforeach
-                    </div>
+
+                    {{-- 🖼️ Si hay 3 o más fotos, mostrar en layout de 4 columnas --}}
+                    @elseif($photoCount >= 3)
+                        <div class="col-span-3 overflow-hidden">
+                            <img src="{{ asset('storage/' . $training->photos[0]->photo_path) }}"
+                                 alt="Foto principal"
+                                 class="w-full h-[300px] object-cover ">
+                        </div>
+
+                        <div class="grid grid-rows-2 gap-4">
+                            @foreach($training->photos->slice(1, 2) as $photo)
+                                <div class="overflow-hidden cursor-pointer">
+                                    <img src="{{ asset('storage/' . $photo->photo_path) }}"
+                                         alt="Foto adicional"
+                                         class="w-full h-[140px] object-cover">
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
+
             @else
+                {{-- 🖼️ Imagen por defecto si no hay fotos --}}
                 <div class="overflow-hidden cursor-pointer">
-                    <img src="{{ asset('images/default-training.jpg') }}" alt="Foto de entrenamiento" class="w-full h-[300px] object-cover">
+                    <img src="{{ asset('images/default-training.jpg') }}" 
+                         alt="Foto de entrenamiento" 
+                         class="w-full h-[300px] object-cover ">
                 </div>
             @endif
         </a>
     </div>
+
 
     <!-- Carrusel en dispositivos móviles -->
     <div class="block md:hidden" x-data="carousel({{ $training->photos->count() }})">

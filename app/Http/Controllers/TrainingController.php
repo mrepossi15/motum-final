@@ -348,6 +348,131 @@ class TrainingController extends Controller
             return redirect()->back()->with('error', 'Error al actualizar el entrenamiento.');
         }
     }
+    public function editAll(Request $request, $id)
+    {
+        $training = Training::with(['trainer', 'park', 'activity', 'schedules', 'prices'])->findOrFail($id);
+
+    
+
+        $selectedDay = ucfirst(strtolower($request->query('day')));
+
+        if ($training->schedules->isNotEmpty()) {
+            $filteredSchedules = $selectedDay
+                ? $training->schedules->filter(fn($schedule) => strtolower($schedule->day) === strtolower($selectedDay))
+                : $training->schedules;
+        } else {
+            $filteredSchedules = collect();
+        }
+
+        $activities = Activity::all();
+        $parks = Park::all();
+
+        return view('trainings.editAll', compact('training', 'activities', 'parks', 'filteredSchedules', 'selectedDay'));
+    }
+    public function updateAll(Request $request, $id)
+    {
+        // Normalizar horarios al formato H:i
+        if ($request->has('schedule.start_time')) {
+            $startTimes = array_map(fn($time) => date('H:i', strtotime($time)), $request->schedule['start_time']);
+            $request->merge(['schedule.start_time' => $startTimes]);
+        }
+
+        if ($request->has('schedule.end_time')) {
+            $endTimes = array_map(fn($time) => date('H:i', strtotime($time)), $request->schedule['end_time']);
+            $request->merge(['schedule.end_time' => $endTimes]);
+        }
+
+        // Validar los datos principales del entrenamiento
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'level' => 'required|in:Principiante,Intermedio,Avanzado',
+            'activity_id' => 'required|exists:activities,id',
+            'park_id' => 'required|exists:parks,id',
+            'photos.*' => 'nullable|image|mimes:jpeg,png,jpg',
+            'photos_description.*' => 'nullable|string|max:255',
+            'available_spots' => 'required|integer|min:1', // Validar cupos disponibles como un entero mínimo de 1
+            
+        ]);
+
+        // Validar los horarios (schedules) y precios
+        $request->validate([
+            'schedule.days.*' => 'nullable|array',
+            'schedule.start_time.*' => 'required|string', // Relajar para cualquier string
+            'schedule.end_time.*' => 'required|string|after:schedule.start_time.*',
+            'prices.weekly_sessions.*' => 'nullable|integer|min:1',
+            'prices.price.*' => 'nullable|numeric|min:0',
+        ]);
+
+        // Buscar el entrenamiento
+        $training = Training::findOrFail($id);
+
+        // Verificar permisos (opcional)
+        if (auth()->id() !== $training->trainer_id) {
+            abort(403, 'No tienes permiso para editar este entrenamiento.');
+        }
+
+        // Actualizar los datos principales
+        $training->update($validated);
+
+        // Actualizar horarios
+        $training->schedules()->delete(); // Borrar horarios existentes
+        if ($request->has('schedule.days')) {
+            foreach ($request->schedule['days'] as $index => $days) {
+                foreach ($days as $day) {
+                    $training->schedules()->create([
+                        'day' => $day,
+                        'start_time' => $request->schedule['start_time'][$index],
+                        'end_time' => $request->schedule['end_time'][$index],
+                    ]);
+                }
+            }
+        }
+
+        // Actualizar precios
+        $training->prices()->delete(); // Borrar precios existentes
+        if ($request->has('prices.weekly_sessions')) {
+            foreach ($request->prices['weekly_sessions'] as $index => $weekly_sessions) {
+                $training->prices()->create([
+                    'weekly_sessions' => $weekly_sessions,
+                    'price' => $request->prices['price'][$index],
+                ]);
+            }
+        }
+        // Manejar la subida de nuevas imágenes
+        if ($request->hasFile('photos')) {
+            // Eliminar las fotos existentes asociadas al entrenamiento
+            foreach ($training->photos as $existingPhoto) {
+                if (\Storage::disk('public')->exists($existingPhoto->photo_path)) {
+                    \Storage::disk('public')->delete($existingPhoto->photo_path); // Eliminar la foto del disco
+                }
+                $existingPhoto->delete(); // Eliminar el registro de la base de datos
+            }
+        
+            // Manejar la nueva foto
+            foreach ($request->file('photos') as $photo) {
+                $imagePath = 'training_photos/' . uniqid() . '.' . $photo->getClientOriginalExtension();
+        
+                // Redimensionar la imagen
+                $resizedImage = Image::make($photo)->resize(800, 600, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+        
+                // Guardar solo la imagen redimensionada
+                $resizedImage->save(storage_path('app/public/' . $imagePath));
+        
+                // Registrar en la base de datos
+                TrainingPhoto::create([
+                    'training_id' => $training->id,
+                    'photo_path' => $imagePath,
+                    'training_photos_description' => $request->photos_description, // Usar la descripción del campo hidden
+                ]);
+            }
+        }
+        return redirect()->route('trainings.detail', $training->id)
+                        ->with('success', 'Entrenamiento actualizado con éxito.');
+    }
 
     public function destroy(Request $request, $id)
     {
@@ -601,7 +726,6 @@ class TrainingController extends Controller
         
         return view('student.training.my-trainings', compact('trainings', 'reservations'));
     }
-
     public function select(Request $request, $id)
     {
         $user = auth()->user();
@@ -758,7 +882,7 @@ class TrainingController extends Controller
         }
     
         $role = auth()->user()->role;
-        $view = ($role === 'entrenador' || $role === 'admin') ? 'trainer.training.show' : 'student.show-training';
+        $view = ($role === 'entrenador' || $role === 'admin') ? 'trainings.show' : 'student.show-training';
     
         return view($view, compact(
             'training', 'filteredSchedules', 'selectedDay', 'selectedTime', 'selectedDate', 'filteredReservations',
@@ -819,6 +943,13 @@ class TrainingController extends Controller
 
         return redirect()->back()->with('success', 'Foto eliminada exitosamente.');
     }
+    public function detail($id)
+{
+    $training = Training::findOrFail($id);
+    $training->load(['trainer', 'park', 'activity', 'schedules', 'prices', 'students', 'reservations.user', 'photos', 'reviews.user']);
+
+    return view('trainings.detail', compact('training'));
+}
 
 }
 

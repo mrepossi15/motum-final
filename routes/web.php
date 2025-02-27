@@ -104,8 +104,16 @@ Route::get('/trainer/profile/edit', [TrainerController::class, 'editTrainerProfi
  Route::put('/trainer/profile/update', [TrainerController::class, 'updateTrainer'])
     ->name('trainer.update')
     ->middleware(['auth', 'role:entrenador']);
-    Route::post('/store/experience', [TrainerController::class, 'storeExperience'])
+//Experiencia dnetrenador
+Route::post('/store/experience', [TrainerController::class, 'storeExperience'])
     ->name('trainer.storeExperience');
+Route::put('/trainer/experience/{id}', [TrainerController::class, 'updateExperience'])
+    ->name('trainer.experience.update')
+    ->middleware(['auth', 'role:entrenador']);
+
+Route::delete('/trainer/experience/{id}', [TrainerController::class, 'destroyExperience'])
+    ->name('trainer.experience.destroy')
+    ->middleware(['auth', 'role:entrenador']);
 
 
 // Todos los entrenamientos del entrenador
@@ -171,8 +179,8 @@ Route::delete('/entrenamientos/{id}', [TrainingController::class, 'destroy'])
     ->name('trainings.destroy')
     ->middleware(['auth', 'role:entrenador']);
     
-Route::delete('/entrenamientos/{id}/todos', [TrainingController::class, 'destroyAll'])
-    ->name('destroy.all')
+    Route::delete('/entrenamientos/{id}/todos', [TrainingController::class, 'destroyAll'])
+    ->name('trainings.destroyAll')
     ->middleware(['auth', 'role:entrenador']);
 
 //Suspender una clase
@@ -185,6 +193,10 @@ Route::get('/trainings/{training}/gallery', [TrainingController::class, 'gallery
 Route::post('/trainings/{training}/photos', [TrainingController::class, 'storePhoto'])->name('trainings.photos.store');
 Route::delete('/trainings/photos/{photo}', [TrainingController::class, 'destroyPhoto'])->name('trainings.photos.destroy');
 
+Route::get('/trainings/{id}/edit-all', [TrainingController::class, 'editAll'])->name('trainings.editAll');
+
+// Ruta para actualizar el entrenamiento editado
+Route::put('/trainings/{id}/update-all', [TrainingController::class, 'updateAll'])->name('trainings.updateAll');
 /*
 |--------------------------------------------------------------------------
 | Rutas de ReservationController
@@ -228,3 +240,7 @@ Route::post('/reviews', [ReviewController::class, 'store'])
 Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])
     ->name('reviews.destroy')
     ->middleware('auth');
+
+Route::get('/trainings/{id}/detail', [TrainingController::class, 'detail'])
+->name('trainings.detail')
+->middleware(['auth', 'role:entrenador']);

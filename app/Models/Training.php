@@ -45,9 +45,8 @@ class Training extends Model
     // Relación con precios de entrenamiento
     public function prices()
     {
-        return $this->hasMany(TrainingPrice::class);
+        return $this->hasMany(TrainingPrice::class, 'training_id');
     }
-
   
     // Relación con las reseñas del entrenamiento
     public function reviews()
