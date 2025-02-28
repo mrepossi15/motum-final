@@ -142,7 +142,7 @@ class ReservationController extends Controller
         return view('student.training.reserve-training', compact('training', 'availableSchedules'));
     }
 
-    // Me parece que no lo uso
+    // Tomar lista
     public function reservationDetail($id, $date, Request $request)
     {
         $selectedTime = $request->query('time'); // Obtener la hora seleccionada
@@ -157,7 +157,7 @@ class ReservationController extends Controller
             })
             ->get();
     
-        return view('trainings.reservation-detail', compact('training', 'date', 'reservations', 'selectedTime'));
+        return view('reservations.attendance', compact('training', 'date', 'reservations', 'selectedTime'));
     }
     
 

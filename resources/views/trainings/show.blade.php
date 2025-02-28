@@ -20,6 +20,7 @@
                                 Editar
                             </a>
                         </li>
+                        
                         <li>
     <button class="dropdown-item text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" onclick="toggleModal()">Eliminar</button>
 </li>
@@ -175,7 +176,7 @@
 
                         <div class="text-left">
                             <p class="text-sm text-gray-500">🕒 Horario</p>
-                            <p class="text-gray-700">{{ $selectedTime }} - {{ $filteredSchedules->first()-> end_time ?? 'No disponible' }}</p>
+                            <p class="text-gray-700">{{ $filteredSchedules->first()-> start_time ?? 'No disponible' }} - {{ $filteredSchedules->first()-> end_time ?? 'No disponible' }}</p>
                         </div>
 
                         <div class="text-left">
@@ -194,6 +195,20 @@
                         <h2 class="text-lg font-semibold mb-2">Descripción</h2>
                         <p class="text-gray-700">{{ $training->description ?? 'No hay descripción disponible.' }}</p>
                     </div>
+                    <!-- 💰 Sección de Precios -->
+                    @if($training->prices->isNotEmpty())
+                        <div class="border-b pb-4 pt-4">
+                            <h2 class="text-lg font-semibold mb-2">💰 Precios</h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                @foreach($training->prices as $price)
+                                    <div class="border p-4 rounded-lg shadow-sm bg-white">
+                                        <p class="text-gray-700"><strong>{{ $price->weekly_sessions }} x semana</strong></p>
+                                        <p class="text-gray-500 text-sm">Precio: <span class="text-orange-600 font-semibold">${{ number_format($price->price, 2) }}</span></p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
 
                     <!-- Resenas -->
@@ -248,27 +263,23 @@
 
                 <!-- Botón Ver Lista -->
                 <!-- Botón para Desktop y Tablet -->
-                <div class="hidden md:flex justify-center items-center">
-                    <div class="bg-white p-4 rounded-lg shadow-lg border w-full max-w-[400px] mx-auto">
-                        <div class="flex justify-center">
-                            @if($filteredReservations->has($selectedTime) && $filteredReservations[$selectedTime]->isNotEmpty())
-                                @if($isClassAccessible)
-                                    <a href="{{ $reservationDetailUrl }}" class="inline-flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 w-full text-base truncate whitespace-nowrap">
-                                        Tomar Lista
-                                    </a>
-                                @else
-                                    <button class="bg-yellow-500 text-black px-4 py-2 rounded-md w-full text-base truncate whitespace-nowrap" disabled>
-                                        Disponible el día de la clase
-                                    </button>
-                                @endif
-                            @else
-                                <button class="bg-gray-400 text-white px-4 py-2 rounded-md w-full text-base truncate whitespace-nowrap" disabled>
-                                    No disponible
-                                </button>
-                            @endif
-                        </div>
+                <div class="flex justify-center items-center">
+                <div class="bg-white p-4 rounded-lg shadow-lg border w-full max-w-[400px] mx-auto">
+                    <div class="flex justify-center">
+                        @if ($isClassAccessible)
+                            <a href="{{ $reservationDetailUrl }}" 
+                            class="inline-flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 w-full text-base truncate whitespace-nowrap">
+                                📋 Tomar Lista
+                            </a>
+                        @else
+                            <button class="bg-yellow-500 text-black px-4 py-2 rounded-md w-full text-base truncate whitespace-nowrap" disabled>
+                                {{ $accessMessage }}
+                            </button>
+                        @endif
                     </div>
                 </div>
+            </div>
+                
 
                 <!-- Botón Fijo en Móviles (sm o menos) -->
                 <div class="fixed inset-x-0 bottom-0 z-50 bg-white p-2 shadow-lg md:hidden">

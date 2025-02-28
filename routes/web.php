@@ -120,7 +120,9 @@ Route::delete('/trainer/experience/{id}', [TrainerController::class, 'destroyExp
 Route::get('/mis-entrenamientos', [TrainerController::class, 'showTrainerTrainings'])
     ->name('trainer.show-trainings')
     ->middleware(['auth', 'role:entrenador']);
-// Detalle del entrenamiento 
+
+
+// Detalle del entrenamiento. NO LO USO
 Route::get('/entrenamientos/{id}', [TrainingController::class, 'showAll'])
 ->name('trainer.showAll')
 ->middleware(['auth', 'role:entrenador']);
@@ -221,7 +223,7 @@ Route::get('/entrenamiento/{id}/available-times', [ReservationController::class,
 
   
     Route::get('/entrenamiento/{id}/detalle-reserva/{date}', [ReservationController::class, 'reservationDetail'])
-->name('trainings.reservation-detail');
+->name('reservations.attendance');
 
 Route::patch('/reservations/{id}/update-status', [ReservationController::class, 'updateReservationStatus'])
     ->name('reservations.updateStatus')

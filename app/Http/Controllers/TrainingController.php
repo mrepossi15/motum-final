@@ -142,6 +142,11 @@ class TrainingController extends Controller
     {   
         $selectedDate = $request->query('date'); 
         $selectedTime = $request->query('time');
+        Log::info('🔍 Iniciando show() para entrenamiento ID: ' . $id, [
+            'selectedDate' => $selectedDate,
+            'selectedTime' => $selectedTime,
+            'now' => now()->toDateTimeString(),
+        ]);
         
         $training = Training::with([
             'trainer',
@@ -200,7 +205,7 @@ class TrainingController extends Controller
             : collect([]);
     
         // 📌 **Construir URL para tomar lista**
-        $reservationDetailUrl = route('trainings.reservation-detail', [
+        $reservationDetailUrl = route('reservations.attendance', [
             'id' => $training->id,
             'date' => $selectedDate,
             'time' => $selectedTime
@@ -208,7 +213,7 @@ class TrainingController extends Controller
     
         // 📌 **Determinar si el entrenador puede tomar lista**
         $isClassAccessible = false;
-        $accessMessage = '';
+        $accessMessage = "Fecha u hora no especificadas"; // Valor por defecto
     
         if ($selectedDate && $selectedTime) {
             $classStartTime = Carbon::parse("$selectedDate $selectedTime");
@@ -216,13 +221,24 @@ class TrainingController extends Controller
             $now = now();
     
             if ($now->lessThan($classStartTime)) {
-                $accessMessage = "Disponible desde " . $classStartTime->format('H:i');
-            } elseif ($now->greaterThanOrEqualTo($classStartTime) && $now->lessThanOrEqualTo($classEndTime)) {
+                $accessMessage = "No disponible";
+            } elseif ($now->between($classStartTime, $classEndTime)) {
                 $isClassAccessible = true;
+                $accessMessage = "Lista disponible ahora.";
             } else {
                 $accessMessage = "Acceso cerrado";
             }
         }
+        Log::info('🔍 Verificación de acceso:', [
+            'selectedDate' => $selectedDate,
+            'selectedTime' => $selectedTime,
+            'classStartTime' => $classStartTime ?? null,
+            'classEndTime' => $classEndTime ?? null,
+            'isClassAccessible' => $isClassAccessible,
+            'now' => now()->toDateTimeString(),
+            'accessMessage' => $accessMessage,
+        ]);
+        
     
         $role = auth()->user()->role;
         $view = ($role === 'entrenador' || $role === 'admin') ? 'trainings.show' : 'student.show-training';
@@ -811,6 +827,8 @@ class TrainingController extends Controller
     
         return view('parks.trainings', compact('park', 'activity', 'trainings', 'daysOfWeek', 'levels', 'selectedDays', 'selectedHours', 'selectedLevels'));
     }
+
+    //NO LO USO
     public function showAll(Request $request, $id)
     {   
         $selectedDate = $request->query('date'); 
@@ -946,8 +964,4 @@ class TrainingController extends Controller
 
         return view('trainings.detail', compact('training'));
     }
-
-
 }
-
-

@@ -97,19 +97,6 @@
             <h1 class="text-3xl font-bold text-orange-600">{{ $training->title }}</h1>
             <p class="text-gray-600">🏞 {{ $training->park->name }} - ⚽ {{ $training->activity->name }} - Nivel: {{ $training->level }}</p>
 
-            <!-- 💰 Precios -->
-            @if($training->prices->isNotEmpty())
-                <div class="mt-4">
-                    <strong class="text-gray-700">Precios:</strong>
-                    <ul class="text-gray-600">
-                        @foreach ($training->prices as $price)
-                            <li>- {{ $price->weekly_sessions }} sesiones/semana: ${{ number_format($price->price, 2) }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @else
-                <p class="text-gray-500">No hay precios disponibles.</p>
-            @endif
 
             <!-- 📅 Horarios -->
             <div class="mt-4">
@@ -128,6 +115,22 @@
                 <strong class="text-gray-700">Descripción:</strong>
                 <p class="text-gray-600 mt-2">{{ $training->description }}</p>
             </div>
+
+            <!-- 💰 Precios -->
+            @if($training->prices->isNotEmpty())
+                        <div class="border-b pb-4 pt-4">
+                            <h2 class="text-lg font-semibold mb-2">💰 Precios</h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                @foreach($training->prices as $price)
+                                    <div class="border p-4 rounded-lg shadow-sm bg-white">
+                                        <p class="text-gray-700"><strong>{{ $price->weekly_sessions }} x semana</strong></p>
+                                        <p class="text-gray-500 text-sm">Precio: <span class="text-orange-600 font-semibold">${{ number_format($price->price, 2) }}</span></p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                    
              <!-- 📜 Participanets -->
              <div class="mt-6">
                 <strong class="text-gray-700">Participantes:</strong>
