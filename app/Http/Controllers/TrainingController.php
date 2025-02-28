@@ -608,11 +608,7 @@ class TrainingController extends Controller
  
          Log::info("🗑️ Se eliminaron {$deletedReservations} reservas para training_id={$trainingId} en fecha {$trainingDate}");
  
-         return response()->json([
-             'message' => 'Clase suspendida con éxito y reservas eliminadas',
-             'date' => $trainingDate,
-             'deleted_reservations' => $deletedReservations
-         ]);
+         return redirect()->route('trainer.calendar')->with('success', 'Clase suspendida con éxito y reservas eliminadas.');
      }
 
      public function getTrainingsForWeek(Request $request)
@@ -944,12 +940,13 @@ class TrainingController extends Controller
         return redirect()->back()->with('success', 'Foto eliminada exitosamente.');
     }
     public function detail($id)
-{
-    $training = Training::findOrFail($id);
-    $training->load(['trainer', 'park', 'activity', 'schedules', 'prices', 'students', 'reservations.user', 'photos', 'reviews.user']);
+    {
+        $training = Training::findOrFail($id);
+        $training->load(['trainer', 'park', 'activity', 'schedules', 'prices', 'students', 'reservations.user', 'photos', 'reviews.user']);
 
-    return view('trainings.detail', compact('training'));
-}
+        return view('trainings.detail', compact('training'));
+    }
+
 
 }
 

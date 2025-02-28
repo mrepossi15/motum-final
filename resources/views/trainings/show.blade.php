@@ -30,18 +30,27 @@
 
             <!-- Galería de Imágenes -->
             <div class="mb-6">
+            
     <div class="hidden md:block">
         <a href="{{ route('trainings.gallery', ['training' => $training->id]) }}" class="block">
             @php $photoCount = $training->photos->count(); @endphp
 
             @if($photoCount > 0)
                 <div class="grid gap-4 
-                            @if($photoCount == 2) grid-cols-2 
-                            @elseif($photoCount >= 3) grid-cols-4 
-                            @else grid-cols-1 @endif">
+                            @if($photoCount == 1) grid-cols-1 
+                            @elseif($photoCount == 2) grid-cols-2 
+                            @else grid-cols-4 @endif">
+
+                    {{-- 🖼️ Si hay solo una foto, mostrarla en pantalla completa --}}
+                    @if($photoCount == 1)
+                        <div class="overflow-hidden cursor-pointer">
+                            <img src="{{ asset('storage/' . $training->photos->first()->photo_path) }}"
+                                 alt="Foto entrenamiento"
+                                 class="w-full h-[300px] object-cover ">
+                        </div>
 
                     {{-- 🖼️ Si hay 2 fotos, cada una ocupa la mitad --}}
-                    @if($photoCount == 2)
+                    @elseif($photoCount == 2)
                         @foreach($training->photos as $photo)
                             <div class="overflow-hidden cursor-pointer">
                                 <img src="{{ asset('storage/' . $photo->photo_path) }}"

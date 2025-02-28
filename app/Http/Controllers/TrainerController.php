@@ -282,105 +282,123 @@ class TrainerController extends Controller
     }
    
     public function updateTrainer(Request $request)
-    {
-        try {
-            Log::info('Iniciando actualización del perfil del entrenador', ['user_id' => auth()->id()]);
+{
+    try {
+        Log::info('🚀 Iniciando actualización del perfil del entrenador', ['user_id' => auth()->id()]);
 
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
-                'mercado_pago_email' => 'nullable|email|unique:users',
-                'collector_id' => 'nullable|string|max:255|unique:users',
-                'certification' => 'nullable|string|max:255',
-                'biography' => 'nullable|string|max:500',
-                'especialty' => 'nullable|string|max:255',
-                'birth' => 'nullable|date',
-                'experiences' => 'nullable|array',
-                'experiences.*.role' => 'required|string|max:255',
-                'experiences.*.company' => 'nullable|string|max:255',
-                'experiences.*.year_start' => 'required|integer|min:1900|max:' . now()->year,
-                'experiences.*.year_end' => 'required|integer|min:1900|max:' . now()->year,
-                'experiences.*.details' => 'nullable|string',
-                'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'certification_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
-            ]);
+        // Verificar qué datos llegan en la solicitud
+        Log::info('📩 Datos recibidos en la solicitud:', $request->all());
 
-            $user = auth()->user();
+        // Validación de datos
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
+            'mercado_pago_email' => 'nullable|email|unique:users,mercado_pago_email,' . auth()->id(),
+            'certification' => 'nullable|string|max:255',
+            'biography' => 'nullable|string|max:500',
+            'especialty' => 'nullable|string|max:255',
+            'birth' => 'nullable|date',
+            'experiences' => 'nullable|array',
+            'experiences.*.role' => 'required|string|max:255',
+            'experiences.*.company' => 'nullable|string|max:255',
+            'experiences.*.year_start' => 'required|integer|min:1900|max:' . now()->year,
+            'experiences.*.year_end' => 'required|integer|min:1900|max:' . now()->year,
+            'experiences.*.details' => 'nullable|string',
+            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'certification_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
 
-            // Actualizar datos básicos
-            $user->update([
-                'name' => $request->name,
-                'email' => $request->email,
-                'mercado_pago_email' => $request->mercado_pago_email,
-                'collector_id' => $request->collector_id,
-                'certification' => $request->certification,
-                'biography' => $request->biography,
-                'especialty' => $request->especialty,
-                'birth' => $request->birth
-            ]);
+        Log::info('✅ Validación completada con éxito.');
 
-            Log::info('Perfil del entrenador actualizado correctamente', ['user_id' => $user->id]);
+        $user = auth()->user();
 
-            // Manejar la subida de imágenes
-            if ($request->hasFile('profile_pic')) {
-                if ($user->profile_pic && Storage::disk('public')->exists($user->profile_pic)) {
-                    Storage::disk('public')->delete($user->profile_pic);
-                }
+        // Actualizar datos básicos
+        Log::info("📌 Actualizando datos básicos del usuario ID: {$user->id}");
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'mercado_pago_email' => $request->mercado_pago_email,
+            'certification' => $request->certification,
+            'biography' => $request->biography,
+            'especialty' => $request->especialty,
+            'birth' => $request->birth
+        ]);
+        Log::info('✅ Datos básicos actualizados.');
 
-                $profilePicPath = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
-                $user->update([
-                    'profile_pic' => $profilePicPath,
-                    'profile_pic_description' => 'Foto de perfil actualizada'
-                ]);
+        // Manejo de imágenes
+        if ($request->hasFile('profile_pic')) {
+            Log::info("📸 Subiendo nueva foto de perfil para el usuario ID: {$user->id}");
+
+            if ($user->profile_pic && Storage::disk('public')->exists($user->profile_pic)) {
+                Log::info("🗑 Eliminando foto de perfil antigua: {$user->profile_pic}");
+                Storage::disk('public')->delete($user->profile_pic);
             }
 
-            if ($request->hasFile('medical_fit')) {
-                if ($user->medical_fit && Storage::disk('public')->exists($user->medical_fit)) {
-                    Storage::disk('public')->delete($user->medical_fit);
-                }
-
-                $medicalFitPath = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 600, 400);
-                $user->update([
-                    'medical_fit' => $medicalFitPath,
-                    'medical_fit_description' => 'Apto médico actualizado'
-                ]);
-            }
-
-            if ($request->hasFile('certification_pic')) {
-                if ($user->certification_pic && Storage::disk('public')->exists($user->certification_pic)) {
-                    Storage::disk('public')->delete($user->certification_pic);
-                }
-
-                $certificationPath = $this->resizeAndSaveImage($request->file('certification_pic'), 'certification_pics', 600, 400);
-                $user->update([
-                    'certification_pic' => $certificationPath,
-                    'certification_pic_description' => 'Certificado actualizado'
-                ]);
-            }
-
-            Log::info('Imágenes del perfil actualizadas correctamente');
-
-            // Actualizar experiencias laborales
-            if ($request->has('experiences')) {
-                $user->experiences()->delete();
-                foreach ($request->experiences as $experience) {
-                    $user->experiences()->create([
-                        'role' => $experience['role'],
-                        'company' => $experience['company'] ?? null,
-                        'year_start' => $experience['year_start'],
-                        'year_end' => $experience['year_end'],
-                        'details' => $experience['details'] ?? null,
-                    ]);
-                }
-            }
-
-            return redirect()->route('trainer.profile')->with('success', 'Perfil actualizado exitosamente.');
-        } catch (\Exception $e) {
-            Log::error('Error durante la actualización del perfil', ['message' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Error al actualizar el perfil.');
+            $profilePicPath = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
+            $user->update(['profile_pic' => $profilePicPath]);
+            Log::info("✅ Foto de perfil actualizada en: $profilePicPath");
         }
+
+        if ($request->hasFile('medical_fit')) {
+            Log::info("📑 Subiendo nuevo apto médico para el usuario ID: {$user->id}");
+
+            if ($user->medical_fit && Storage::disk('public')->exists($user->medical_fit)) {
+                Log::info("🗑 Eliminando apto médico antiguo: {$user->medical_fit}");
+                Storage::disk('public')->delete($user->medical_fit);
+            }
+
+            $medicalFitPath = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 600, 400);
+            $user->update(['medical_fit' => $medicalFitPath]);
+            Log::info("✅ Apto médico actualizado en: $medicalFitPath");
+        }
+
+        if ($request->hasFile('certification_pic')) {
+            Log::info("📜 Subiendo nueva certificación para el usuario ID: {$user->id}");
+
+            if ($user->certification_pic && Storage::disk('public')->exists($user->certification_pic)) {
+                Log::info("🗑 Eliminando certificación antigua: {$user->certification_pic}");
+                Storage::disk('public')->delete($user->certification_pic);
+            }
+
+            $certificationPath = $this->resizeAndSaveImage($request->file('certification_pic'), 'certification_pics', 600, 400);
+            $user->update(['certification_pic' => $certificationPath]);
+            Log::info("✅ Certificación actualizada en: $certificationPath");
+        }
+
+        Log::info('🖼 Imágenes del perfil actualizadas correctamente.');
+
+        // Actualizar experiencias laborales
+        if ($request->has('experiences')) {
+            Log::info("💼 Eliminando experiencias laborales antiguas del usuario ID: {$user->id}");
+            $user->experiences()->delete();
+
+            foreach ($request->experiences as $experience) {
+                Log::info("➕ Agregando experiencia laboral: " . json_encode($experience));
+
+                $user->experiences()->create([
+                    'role' => $experience['role'],
+                    'company' => $experience['company'] ?? null,
+                    'year_start' => $experience['year_start'],
+                    'year_end' => $experience['year_end'],
+                    'details' => $experience['details'] ?? null,
+                ]);
+            }
+        }
+
+        Log::info("✅ Perfil del entrenador actualizado correctamente, redirigiendo...");
+        return redirect()->route('trainer.profile')->with('success', 'Perfil actualizado exitosamente.');
+
+    } catch (\Exception $e) {
+        Log::error('🚨 Error durante la actualización del perfil', [
+            'message' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile()
+        ]);
+
+        return redirect()->back()->with('error', 'Error al actualizar el perfil.');
     }
+}
 
     public function showTrainerTrainings()
     {

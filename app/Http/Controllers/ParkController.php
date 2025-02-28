@@ -18,7 +18,7 @@ class ParkController extends Controller
     public function map()
     {
         $activities = Activity::all(); // 🔥 Obtener todas las actividades
-        return view('mapa', compact('activities'));
+        return view('students.map', compact('activities'));
     }
 
     // Vista para agregar un parque. POV entrenador
@@ -128,37 +128,37 @@ class ParkController extends Controller
         return view('parks.show', compact('park', 'isFavorite'));
     }
 
-public function getNearbyParks(Request $request)
-{
-    $request->validate([
-        'lat' => 'required|numeric',
-        'lng' => 'required|numeric',
-        'radius' => 'nullable|numeric|min:1000|max:10000', // Mínimo 1km, máximo 10km
-        'activity_id' => 'nullable|exists:activities,id', // Validar actividad opcionalmente
-    ]);
-
-    $lat = $request->lat;
-    $lng = $request->lng;
-    $radius = $request->input('radius', 5000); // Valor por defecto 5km
-    $activityId = $request->input('activity_id'); // Recibir el filtro de actividad
-
-    // 🔥 Obtener solo parques con entrenamientos de la actividad seleccionada
-    $query = Park::selectRaw("
-        parks.id, parks.name, parks.location, parks.latitude, parks.longitude,
-        (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance
-    ", [$lat, $lng, $lat])
-    ->having("distance", "<", $radius / 1000) // Convertimos metros a km
-    ->orderBy("distance");
-
-    // 🔥 Si se seleccionó una actividad, filtrar parques con esa actividad
-    if ($activityId) {
-        $query->whereHas('trainings', function ($q) use ($activityId) {
-            $q->where('activity_id', $activityId);
-        });
+    public function getNearbyParks(Request $request)
+    {
+        $request->validate([
+            'lat' => 'required|numeric',
+            'lng' => 'required|numeric',
+            'radius' => 'nullable|numeric|min:1000|max:10000', // Mínimo 1km, máximo 10km
+            'activity_id' => 'nullable|exists:activities,id', // Validar actividad opcionalmente
+        ]);
+    
+        $lat = $request->lat;
+        $lng = $request->lng;
+        $radius = $request->input('radius', 5000); // Valor por defecto 5km
+        $activityId = $request->input('activity_id'); // Recibir el filtro de actividad
+    
+        // 🔥 Obtener solo parques con entrenamientos de la actividad seleccionada
+        $query = Park::selectRaw("
+            parks.id, parks.name, parks.location, parks.latitude, parks.longitude,
+            (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance
+        ", [$lat, $lng, $lat])
+        ->having("distance", "<", $radius / 1000) // Convertimos metros a km
+        ->orderBy("distance");
+    
+        // 🔥 Si se seleccionó una actividad, filtrar parques con esa actividad
+        if ($activityId) {
+            $query->whereHas('trainings', function ($q) use ($activityId) {
+                $q->where('activity_id', $activityId);
+            });
+        }
+    
+        $parks = $query->get();
+    
+        return response()->json($parks);
     }
-
-    $parks = $query->get();
-
-    return response()->json($parks);
-}
 }

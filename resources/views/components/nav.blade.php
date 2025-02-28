@@ -46,7 +46,7 @@
                             </li>
                         @elseif (auth()->user()->role === 'alumno')
                             <li>
-                                <a href="{{ route('students.map') }}" class="text-orange-500 hover:underline {{ request()->routeIs('map') ? 'font-bold' : '' }}">
+                                <a href="{{ route('students.map') }}" class="text-orange-500 hover:underline {{ request()->routeIs('students.map') ? 'font-bold' : '' }}">
                                     Mapa
                                 </a>
                             </li>

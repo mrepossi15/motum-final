@@ -24,3 +24,13 @@ use Illuminate\Support\Facades\Log;
 Route::middleware('auth:sanctum')->get('/usuario', function (Request $request) {
     return $request->user();
 });
+
+
+Route::get('/nearby-parks', [ParkController::class, 'getNearbyParks']);
+
+// routes/api.php
+Route::get('/trainings', [TrainingController::class, 'getTrainingsByPark']);
+
+
+// 🔹 Webhook de Mercado Pago para recibir confirmaciones de pago
+Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook'])->name('payment.webhook');

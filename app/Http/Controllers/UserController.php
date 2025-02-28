@@ -32,7 +32,7 @@ class UserController extends Controller
                 if ($role === 'entrenador') {
                     return redirect()->route('trainer.calendar');
                 } elseif ($role === 'alumno') {
-                    return redirect()->route('map');
+                    return redirect()->route('students.map');
                 }
             }
 
