@@ -79,14 +79,14 @@ class StudentController extends Controller
     public function studentProfile($id)
     {
         $user = User::findOrFail($id); // Buscar el usuario por ID
-        return view('student.show-profile', compact('user'));
+        return view('students.profile', compact('user'));
     }
     
 
     public function editStudentProfile()
     {
         $user = Auth::user(); // Obtener el usuario autenticado
-        return view('student.edit-profile', compact('user'));
+        return view('students.edit', compact('user'));
     }
 
     public function updateStudent(Request $request)
@@ -119,7 +119,7 @@ class StudentController extends Controller
     
         $user->save();
     
-        return redirect()->route('student.profile')->with('success', 'Perfil actualizado correctamente.');
+        return redirect()->route('students.profile', ['id' => $user->id])->with('success', 'Perfil actualizado correctamente.');
     }
 
     public function myTrainings() {
@@ -147,6 +147,18 @@ class StudentController extends Controller
         $activities = Activity::all(); 
         return view('students.map', compact('activities'));
     }
+
+    public function showTrainerProfile($trainerId)
+{
+    $trainer = User::where('id', $trainerId)->where('role', 'entrenador')->firstOrFail();
+
+    $parks = $trainer->parks()->get();
+    $experiences = $trainer->experiences()->get();
+    $trainings = $trainer->trainings()->with(['park', 'activity'])->get();
+    $reviews = $trainer->reviews()->with('user')->get(); 
+
+    return view('students.trainerProfile', compact('trainer', 'parks', 'trainings', 'experiences', 'reviews'));
+}
 
 
 }

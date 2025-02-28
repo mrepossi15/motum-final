@@ -40,14 +40,14 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('trainer.show-trainings') }}" class="text-orange-500 hover:underline {{ request()->routeIs('trainer.index') ? 'font-bold' : '' }}">
+                                <a href="{{ route('trainer.show-trainings') }}" class="text-orange-500 hover:underline {{ request()->routeIs('trainer.show-trainings') ? 'font-bold' : '' }}">
                                     Mis Entrenamientos
                                 </a>
                             </li>
                         @elseif (auth()->user()->role === 'alumno')
                             <li>
                                 <a href="{{ route('students.map') }}" class="text-orange-500 hover:underline {{ request()->routeIs('students.map') ? 'font-bold' : '' }}">
-                                    Mapa
+                                    Mi carrito
                                 </a>
                             </li>
                             <li>
@@ -56,6 +56,12 @@
                                     Mi Perfil
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ route('cart.view') }}" class="text-orange-500 hover:underline {{ request()->routeIs('cart.view') ? 'font-bold' : '' }}">
+                                    Mapa
+                                </a>
+                             </li>
+
                             
                         @endif
 

@@ -59,7 +59,7 @@ Route::get('/perfil/{id}', [StudentController::class, 'studentProfile'])
     ->name('students.profile')
     ->middleware('auth'); 
 Route::get('/alumno/perfil/editar', [StudentController::class, 'editStudentProfile'])
-    ->name('students.editProfile')->middleware('auth');
+    ->name('students.edit')->middleware('auth');
 Route::put('/alumno/perfil/editar', [StudentController::class, 'updateStudent'])
     ->name('students.updateProfile')->middleware('auth');
 
@@ -68,6 +68,7 @@ Route::get('/mapa', [studentController::class, 'map'])
     ->name('students.map')
     ->middleware(['auth', 'role:alumno']);
 
+Route::get('/trainers/{id}', [StudentController::class, 'showTrainerProfile'])->name('students.trainerProfile');
 
     /*
 |--------------------------------------------------------------------------
@@ -203,8 +204,12 @@ Route::get('/trainings/{id}/edit-all', [TrainingController::class, 'editAll'])->
 // Ruta para actualizar el entrenamiento editado
 Route::put('/trainings/{id}/update-all', [TrainingController::class, 'updateAll'])->name('trainings.updateAll');
 
+//Catalogo de entrenamintos de cierta act en cierto parque
 Route::get('/parks/{park}/activities/{activity}', [TrainingController::class, 'showTrainings'])
-    ->name('activities.trainings');
+    ->name('trainings.catalog');
+
+Route::get('alumnos/trainings/{id}', [TrainingController::class, 'select'])
+    ->name('trainings.selected');
 /*
 |--------------------------------------------------------------------------
 | Rutas de ReservationController
@@ -253,7 +258,7 @@ Route::get('/trainings/{id}/detail', [TrainingController::class, 'detail'])
 ->name('trainings.detail')
 ->middleware(['auth', 'role:entrenador']);
 
-    /*
+/*
 |--------------------------------------------------------------------------
 | Rutas de FavoriteController
 |--------------------------------------------------------------------------
@@ -263,3 +268,17 @@ Route::get('/trainings/{id}/detail', [TrainingController::class, 'detail'])
 Route::post('/favorites/toggle', [FavoriteController::class, 'toggleFavorite'])->name('favorites.toggle');
 Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
 
+/*
+|--------------------------------------------------------------------------
+| Rutas de CartController
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/cart/add', [CartController::class, 'add'])
+->name('cart.add');;
+Route::get('/cart/view', [CartController::class, 'viewCart'])
+->name('cart.view');
+Route::post('/cart/remove', [CartController::class, 'remove'])
+->name('cart.remove');
+Route::post('/cart/clear', [CartController::class, 'clear'])
+->name('cart.clear');

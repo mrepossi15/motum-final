@@ -45,9 +45,9 @@
                          x-transition:leave-end="opacity-0"
                          class="absolute inset-0 w-full h-full flex justify-center items-center">
                         <img :src="'{{ url('') }}' + photo" 
-     alt="Foto de {{ $park->name }}" 
-     class="w-full h-96 object-cover rounded-lg">
-                    </div>
+                        alt="Foto de {{ $park->name }}" 
+                        class="w-full h-96 object-cover rounded-lg">
+                                        </div>
                 </template>
             </div>
 
@@ -86,7 +86,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
             @foreach($park->trainings->pluck('activity')->unique() as $activity)
                 @if ($activity) 
-                    <a href="{{ route('activities.trainings', ['park' => $park->id, 'activity' => $activity->id]) }}" 
+                    <a href="{{ route('trainings.catalog', ['park' => $park->id, 'activity' => $activity->id]) }}" 
                        class="text-decoration-none">
                         <div class="activity-card p-3 text-center shadow-sm border rounded-lg bg-white">
                             <h5 class="text-orange-500 font-bold">{{ $activity->name }}</h5>

@@ -774,11 +774,12 @@ class TrainingController extends Controller
         if ($role === 'entrenador' || $role === 'admin') {
             return view('trainer.show', compact('training', 'filteredSchedules', 'selectedDay', 'isFavorite'));
         } else {
-            return view('student.training.show-training', compact('training', 'filteredSchedules', 'selectedDay', 'hasPurchased', 'isFavorite'));
+            return view('trainings.selected', compact('training', 'filteredSchedules', 'selectedDay', 'hasPurchased', 'isFavorite'));
         }
     }
     public function showTrainings(Request $request, $parkId, $activityId)
     {
+        
         // Buscar el parque y la actividad
         $park = Park::findOrFail($parkId);
         $activity = Activity::findOrFail($activityId);
@@ -825,10 +826,10 @@ class TrainingController extends Controller
         $daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
         $levels = ['Principiante', 'Intermedio', 'Avanzado']; // 🔹 Niveles disponibles
     
-        return view('parks.trainings', compact('park', 'activity', 'trainings', 'daysOfWeek', 'levels', 'selectedDays', 'selectedHours', 'selectedLevels'));
+        return view('trainings.catalog', compact('park', 'activity', 'trainings', 'daysOfWeek', 'levels', 'selectedDays', 'selectedHours', 'selectedLevels'));
     }
 
-    //NO LO USO
+  
     public function showAll(Request $request, $id)
     {   
         $selectedDate = $request->query('date'); 
@@ -896,7 +897,7 @@ class TrainingController extends Controller
         }
     
         $role = auth()->user()->role;
-        $view = ($role === 'entrenador' || $role === 'admin') ? 'trainings.show' : 'student.show-training';
+        $view = ($role === 'entrenador' || $role === 'admin') ? 'trainings.show' : 'trainings.show-training';
     
         return view($view, compact(
             'training', 'filteredSchedules', 'selectedDay', 'selectedTime', 'selectedDate', 'filteredReservations',
