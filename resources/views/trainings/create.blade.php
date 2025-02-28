@@ -101,7 +101,7 @@
             </div>
             <!-- Botones -->
             <div class="flex justify-end gap-2">
-            <x-form.button type="button" color="gray" onclick="window.location='{{ route('trainer.calendar') }}'">Cancelar</x-form.button>
+            <x-form.button type="button" color="gray" onclick="window.location='{{route('trainer.calendar')}}'">Cancelar</x-form.button>
                 <x-form.button type="submit" color="orange">Guardar Entrenamiento</x-form.button>
             </div>
         </form>

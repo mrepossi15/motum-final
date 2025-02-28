@@ -130,6 +130,7 @@ class ParkController extends Controller
     
         return view('parks.show', compact('park', 'isFavorite'));
     }
+    
 
     public function getNearbyParks(Request $request)
     {

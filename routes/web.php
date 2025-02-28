@@ -146,6 +146,7 @@ Route::post('/entrenador/agregar-parque', [ParkController::class, 'store'])
 
 // Trae todos los parques. No lo use yet.
 Route::get('/parques/{id}', [ParkController::class, 'show'])->name('parks.show');
+
 Route::get('/api/nearby-parks', [ParkController::class, 'getNearbyParks']);
 
 
@@ -201,6 +202,9 @@ Route::get('/trainings/{id}/edit-all', [TrainingController::class, 'editAll'])->
 
 // Ruta para actualizar el entrenamiento editado
 Route::put('/trainings/{id}/update-all', [TrainingController::class, 'updateAll'])->name('trainings.updateAll');
+
+Route::get('/parks/{park}/activities/{activity}', [TrainingController::class, 'showTrainings'])
+    ->name('activities.trainings');
 /*
 |--------------------------------------------------------------------------
 | Rutas de ReservationController
@@ -248,3 +252,14 @@ Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])
 Route::get('/trainings/{id}/detail', [TrainingController::class, 'detail'])
 ->name('trainings.detail')
 ->middleware(['auth', 'role:entrenador']);
+
+    /*
+|--------------------------------------------------------------------------
+| Rutas de FavoriteController
+|--------------------------------------------------------------------------
+*/
+
+
+Route::post('/favorites/toggle', [FavoriteController::class, 'toggleFavorite'])->name('favorites.toggle');
+Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+

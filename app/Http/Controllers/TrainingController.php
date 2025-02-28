@@ -964,4 +964,5 @@ class TrainingController extends Controller
 
         return view('trainings.detail', compact('training'));
     }
+   
 }

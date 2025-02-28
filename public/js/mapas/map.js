@@ -24,8 +24,12 @@ function initMap() {
     autocomplete.addListener('place_changed', () => handleAddressSelection(autocomplete));
 
     document.getElementById('recenter-btn').addEventListener('click', () => {
+        console.log("📍 Botón 'Recentrar' presionado");
         if (userLocation) {
-            resetAutocomplete();
+            resetAutocomplete(); // 🔄 Borrar el input de autocompletado
+            userLat = userLocation.lat; // 🔄 Reiniciar coordenadas a la ubicación real
+            userLng = userLocation.lng;
+            console.log("🌍 Coordenadas restauradas a la ubicación actual:", userLat, userLng);
             setMapLocation(userLat, userLng);
             fetchNearbyParks(userLat, userLng, searchRadius, selectedActivity);
         } else {
@@ -131,7 +135,7 @@ function showParksOnMap(parks) {
         });
 
         marker.addListener("click", () => {
-            window.location.href = `/parks/${park.id}`;
+            window.location.href = `/parques/${park.id}`;
         });
 
         markers.push(marker);
