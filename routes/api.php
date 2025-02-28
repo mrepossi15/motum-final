@@ -24,9 +24,10 @@ use Illuminate\Support\Facades\Log;
 Route::middleware('auth:sanctum')->get('/usuario', function (Request $request) {
     return $request->user();
 });
-
-
-Route::get('/nearby-parks', [ParkController::class, 'getNearbyParks']);
+Route::get('/activities', function () {
+    return response()->json(Activity::select('id', 'name')->get());
+});
+Route::get('/api/nearby-parks', [ParkController::class, 'getNearbyParks']);
 
 // routes/api.php
 Route::get('/trainings', [TrainingController::class, 'getTrainingsByPark']);

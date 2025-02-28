@@ -146,6 +146,8 @@ Route::post('/entrenador/agregar-parque', [ParkController::class, 'store'])
 
 // Trae todos los parques. No lo use yet.
 Route::get('/parques/{id}', [ParkController::class, 'show'])->name('parks.show');
+Route::get('/api/nearby-parks', [ParkController::class, 'getNearbyParks']);
+
 
 /*
 |--------------------------------------------------------------------------

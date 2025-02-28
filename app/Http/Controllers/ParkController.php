@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use App\Models\Park;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +11,8 @@ use App\Models\Activity;
 use App\Models\Favorite;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Log;
+
 
 class ParkController extends Controller
 {
@@ -133,24 +136,31 @@ class ParkController extends Controller
         $request->validate([
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
-            'radius' => 'nullable|numeric|min:1000|max:10000', // Mínimo 1km, máximo 10km
-            'activity_id' => 'nullable|exists:activities,id', // Validar actividad opcionalmente
+            'radius' => 'nullable|numeric|min:1000|max:10000',
+            'activity_id' => 'nullable|exists:activities,id',
         ]);
     
         $lat = $request->lat;
         $lng = $request->lng;
-        $radius = $request->input('radius', 5000); // Valor por defecto 5km
-        $activityId = $request->input('activity_id'); // Recibir el filtro de actividad
+        $radius = $request->input('radius', 5000);
+        $activityId = $request->input('activity_id');
     
-        // 🔥 Obtener solo parques con entrenamientos de la actividad seleccionada
+        // 🔍 Mostrar los datos recibidos en Laravel
+        Log::info('🔍 Datos recibidos en getNearbyParks', [
+            'lat' => $lat,
+            'lng' => $lng,
+            'radius' => $radius,
+            'activity_id' => $activityId,
+        ]);
+    
         $query = Park::selectRaw("
             parks.id, parks.name, parks.location, parks.latitude, parks.longitude,
             (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance
         ", [$lat, $lng, $lat])
-        ->having("distance", "<", $radius / 1000) // Convertimos metros a km
+        ->having("distance", "<", $radius / 1000)
         ->orderBy("distance");
     
-        // 🔥 Si se seleccionó una actividad, filtrar parques con esa actividad
+        // 🛠 Si se selecciona una actividad, filtrar parques con entrenamientos activos
         if ($activityId) {
             $query->whereHas('trainings', function ($q) use ($activityId) {
                 $q->where('activity_id', $activityId);
@@ -158,6 +168,12 @@ class ParkController extends Controller
         }
     
         $parks = $query->get();
+    
+        // 🔍 Verificar si se encontraron parques antes de retornar
+        if ($parks->isEmpty()) {
+            Log::warning("❌ No se encontraron parques con la actividad ID: {$activityId}");
+            return response()->json([], 404);
+        }
     
         return response()->json($parks);
     }
