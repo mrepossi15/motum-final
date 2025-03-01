@@ -81,8 +81,8 @@
                         <p><strong>Comentario:</strong> {{ $review->comment }}</p>
                         <p><small><strong>Autor:</strong> {{ $review->user->name }}</small></p>
 
-                        @if(Auth::id() === $review->user_id || Auth::user()->role === 'admin')
-                            <form action="{{ route('reviews.destroy', $review->id) }}" method="POST" class="inline">
+                        @if(auth()->id() === $review->user_id || auth()->user()->role === 'admin')
+                            <form action="{{ route('reviews.destroy', $review->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-500 hover:text-red-700" onclick="return confirm('¿Seguro que quieres eliminar esta reseña?')">

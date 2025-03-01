@@ -60,7 +60,7 @@ class ReviewController extends Controller
 public function destroy($id)
 {
     $review = Review::findOrFail($id);
-
+    
     // Solo el alumno que creó la reseña o un administrador pueden eliminarla
     if (Auth::id() !== $review->user_id && Auth::user()->role !== 'admin') {
         abort(403, 'No tienes permiso para eliminar esta reseña.');

@@ -175,9 +175,22 @@
                         </div>
 
                         <div class="text-left">
-                            <p class="text-sm text-gray-500">🕒 Horario</p>
-                            <p class="text-gray-700">{{ $filteredSchedules->first()-> start_time ?? 'No disponible' }} - {{ $filteredSchedules->first()-> end_time ?? 'No disponible' }}</p>
-                        </div>
+    <p class="text-sm text-gray-500">🕒 Horario</p>
+    
+    @if($filteredSchedules->isNotEmpty())
+        @php
+            $schedule = $filteredSchedules->first();
+        @endphp
+        <p class="text-gray-700">
+            {{ $schedule->start_time ?? 'No disponible' }} - {{ $schedule->end_time ?? 'No disponible' }}
+            @if($schedule->is_exception)
+                <span class="badge bg-warning">Horario Modificado</span>
+            @endif
+        </p>
+    @else
+        <p class="text-gray-700">No disponible</p>
+    @endif
+</div>
 
                         <div class="text-left">
                             <p class="text-sm text-gray-500">⚽ Actividad</p>
@@ -245,7 +258,7 @@
                                     <!-- Comentario (Mostrar más si es largo) -->
                                     <div x-data="{ expanded: false }">
                                         <p class="text-gray-700" x-show="!expanded">
-                                            {{ Str::limit($review->comment, 150) }}
+                                            {{($review->comment) }}
                                             @if(strlen($review->comment) > 150)
                                                 <span @click="expanded = true" class="text-blue-500 cursor-pointer">Mostrar más</span>
                                             @endif

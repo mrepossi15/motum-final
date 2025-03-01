@@ -137,7 +137,7 @@
                 <ul class="divide-y divide-gray-200 bg-white shadow-md rounded-lg">
                     @foreach($training->students as $student)
                         <li class="p-4 hover:bg-gray-100 flex justify-between items-center">
-                            <a href="{{ route('student.profile', $student->id) }}" class="font-semibold text-blue-600 hover:underline">
+                            <a href="{{ route('students.profile', $student->id) }}" class="font-semibold text-blue-600 hover:underline">
                                 {{ $student->name }}
                             </a>
                             <span class="text-gray-500 text-sm">({{ $student->email }})</span>

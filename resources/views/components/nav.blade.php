@@ -47,7 +47,7 @@
                         @elseif (auth()->user()->role === 'alumno')
                             <li>
                                 <a href="{{ route('students.map') }}" class="text-orange-500 hover:underline {{ request()->routeIs('students.map') ? 'font-bold' : '' }}">
-                                    Mi carrito
+                                   Mapa
                                 </a>
                             </li>
                             <li>
@@ -58,7 +58,12 @@
                             </li>
                             <li class="nav-item">
                                 <a href="{{ route('cart.view') }}" class="text-orange-500 hover:underline {{ request()->routeIs('cart.view') ? 'font-bold' : '' }}">
-                                    Mapa
+                                    Mi carrito
+                                </a>
+                             </li>
+                             <li class="nav-item">
+                                <a href="{{ route('reservations.show') }}" class="text-orange-500 hover:underline {{ request()->routeIs('reservations.show') ? 'font-bold' : '' }}">
+                                    Mis entrenamientos
                                 </a>
                              </li>
 

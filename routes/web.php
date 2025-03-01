@@ -118,9 +118,10 @@ Route::delete('/trainer/experience/{id}', [TrainerController::class, 'destroyExp
 
 
 // Todos los entrenamientos del entrenador
-Route::get('/mis-entrenamientos', [TrainerController::class, 'showTrainerTrainings'])
-    ->name('trainer.show-trainings')
-    ->middleware(['auth', 'role:entrenador']);
+
+Route::get('/trainer/trainings', [TrainerController::class, 'showTrainerTrainings'])
+->name('trainer.show-trainings')
+->middleware(['auth', 'role:entrenador']);
 
 
 // Detalle del entrenamiento. NO LO USO
@@ -210,6 +211,10 @@ Route::get('/parks/{park}/activities/{activity}', [TrainingController::class, 's
 
 Route::get('alumnos/trainings/{id}', [TrainingController::class, 'select'])
     ->name('trainings.selected');
+
+Route::get('/mis-entrenamientos', [TrainingController::class, 'myTrainings'])
+    ->middleware('auth')
+    ->name('reservations.show');
 /*
 |--------------------------------------------------------------------------
 | Rutas de ReservationController
@@ -228,7 +233,7 @@ Route::delete('/entrenamiento/{id}/delete', [ReservationController::class, 'canc
     ->middleware('auth')
     ->name('cancel.reservation');
 
-Route::get('/entrenamiento/{id}/available-times', [ReservationController::class, 'getAvailableTimes'])
+    Route::get('/trainings/{id}/available-times', [ReservationController::class, 'getAvailableTimes'])
     ->middleware('auth')
     ->name('trainings.available-times');
 
@@ -282,3 +287,16 @@ Route::post('/cart/remove', [CartController::class, 'remove'])
 ->name('cart.remove');
 Route::post('/cart/clear', [CartController::class, 'clear'])
 ->name('cart.clear');
+
+
+
+Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+
+    // 🔹 Ver pagos realizados
+Route::get('/payments', [PaymentController::class, 'userPayments'])->name('payments.index');
+
+    // 🔹 Páginas de redirección después del pago
+Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+Route::get('/payment/failure', [PaymentController::class, 'failure'])->name('payment.failure');
+Route::get('/payment/pending', [PaymentController::class, 'pending'])->name('payment.pending');
+Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook']);
