@@ -20,58 +20,73 @@
 
         <!-- 📍 Botón flotante de ubicación -->
         <button id="recenter-btn" 
-            class="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg transition hover:bg-gray-100 focus:ring-4 focus:ring-gray-300 z-50">
-            📍
+            class="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg transition hover:bg-gray-100 focus:ring-2 focus:ring-orange-300 z-50 flex items-center justify-center">
+            <x-lucide-locate class="w-6 h-6 text-orange-500" />
         </button>
     </div>
 
     <!-- 📜 Fila 2: Lista de Parques y Filtros (60% de la pantalla) -->
-    <div class="w-full h-[60vh] bg-white rounded-t-3xl flex flex-col shadow-lg">
+    <div class="w-full h-[60vh] bg-[#1E1E1E]  flex flex-col shadow-lg">
 
         <!-- 🏷️ Encabezado con Botón de Filtros y Borrar Filtros -->
-        <div class="flex items-center justify-between p-4 border-b">
-            <h2 class="text-lg font-bold text-gray-900">Parques Cerca</h2>
+        <div class="flex items-center justify-between px-4 pt-4 ">
+            <h2 class="text-md text-white">Parques Cercanos</h2>
             <div class="flex space-x-2">
-                <button id="toggle-filters-btn" class="bg-gray-200 p-2 rounded-full hover:bg-gray-300 transition">
-                    ⚙️ Filtros
-                </button>
-                <button id="clear-filters-btn" class="hidden bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition">
-                    ❌
-                </button>
+            <button id="toggle-filters-btn" class="p-2 hover:bg-back transition">
+                    <x-lucide-sliders-horizontal class="w-6 h-6 text-orange-500" />
+            </button>
+            <button id="clear-filters-btn" class="hidden bg-red-600 text-white py-1 px-2 rounded-sm hover:bg-red-500 transition flex items-center">
+                <x-lucide-x class="w-5 h-5" />
+            </button>
             </div>
         </div>
 
         <!-- 🎛️ Sección de Filtros (Inicialmente Oculta) -->
-        <div id="filters-section" class="hidden flex flex-col p-4 bg-gray-100 rounded-lg space-y-3">
-            
+        <div id="filters-section" class="hidden flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-6">
+    
             <!-- 📍 Input de Dirección con Autocomplete -->
-            <label class="block text-gray-700 font-semibold">Buscar por Dirección:</label>
-            <input type="text" id="address-input" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Ingresa una dirección">
+            <div class="relative">
+                <label class="absolute top-0 left-3 -mt-2 bg-gray-900 px-1 text-white text-sm">Buscador</label>
+                <input type="text" id="address-input" class="w-full bg-black text-white border border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500" placeholder="Buscar">
+            </div>
 
-            <!-- 🎭 Selección de Actividad -->
-            <label class="block text-gray-700 font-semibold">Seleccionar Actividad:</label>
-            <select id="activity-select" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                <option value="">Todas las actividades</option>
-                @foreach($activities as $activity)
-                    <option value="{{ $activity->id }}">{{ $activity->name }}</option>
-                @endforeach
-            </select>
+         <!-- 🎭 Selección de Actividad -->
+            <div class="relative mb-6">
+                <label class="absolute top-0 left-3 -mt-2 bg-gray-900 px-1 text-white text-sm">Actividades</label>
+                <select id="activity-select" class="w-full bg-black text-white border border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                    <option value="">Todas las actividades</option>
+                    @foreach($activities as $activity)
+                        <option value="{{ $activity->id }}">{{ $activity->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-            <!-- 📏 Selección de Radio -->
-            <label class="block text-gray-700 font-semibold mt-2">Definir Radio:</label>
-            <input type="range" id="radius-slider" min="1" max="10" value="5">
-            <p id="radius-value" class="text-center text-sm text-gray-700">5 km</p>
+            <!-- 📏 Selección de Radio (slider con línea completa) -->
+            <div class="relative mb-10 pt-5">
+                <!-- 🔹 Movemos el label un poco más arriba con `top-[-10px]` y le damos `z-10` -->
+                <label class="absolute top-[-10px] px-2 text-white text-sm z-10">Definir Radio</label>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- 🔹 Slider con margen superior para evitar que el label lo pise -->
+                    <input type="range" id="radius-slider" min="1" max="10" value="5" 
+                        class="w-full max-w-[300px] appearance-none bg-white rounded-lg h-1 cursor-pointer">
+
+                    <!-- 🔹 Aseguramos que "5 km" siempre esté en una línea -->
+                    <p id="radius-value" class="text-white text-sm whitespace-nowrap flex-shrink-0">5 km</p>
+                </div>
+            </div>
 
             <!-- 🛠️ Botón Aplicar Filtros -->
-            <div class="mt-4 flex justify-end">
-                <button id="apply-filters-btn" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
-                    ✅ Aplicar
+            <div class="mt-4 flex justify-center">
+                <button id="apply-filters-btn" class="bg-orange-500 text-white  text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
+                    Aplicar
                 </button>
             </div>
+            
         </div>
 
         <!-- 📋 Lista de Parques (Oculta por defecto, aparece solo si hay parques) -->
-        <div id="parks-list-container" class="hidden flex-1 overflow-y-auto p-4 space-y-3">
+        <div id="parks-list-container" class="hidden flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3">
             <div id="parks-list"></div>
         </div>
 
@@ -101,8 +116,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let filtersApplied = false;
 
     // ⚠️ Verificar que los elementos existen antes de agregar eventos
-    if (!radiusSlider || !radiusValue || !applyFiltersBtn || !clearFiltersBtn) {
-        console.error("❌ Error: Elementos del filtro no encontrados en el DOM.");
+    if (!radiusSlider || !radiusValue || !applyFiltersBtn || !clearFiltersBtn || 
+        !toggleBtn || !filtersSection || !parksListContainer || !recenterBtn || !addressInput) {
+        console.error("❌ Error: Uno o más elementos no se encontraron en el DOM.");
         return;
     }
 
@@ -113,89 +129,104 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 📌 Aplicar filtros al hacer clic en "Aplicar"
     applyFiltersBtn.addEventListener("click", function () {
-    searchRadius = radiusSlider.value * 1000; // Convertir km a metros
-    selectedActivity = document.getElementById("activity-select").value; // 📌 Capturar la actividad seleccionada
+        searchRadius = radiusSlider.value * 1000; // Convertir km a metros
+        selectedActivity = document.getElementById("activity-select").value;
 
-    console.log(`✅ Aplicando filtros: Radio ${searchRadius}m, Actividad: ${selectedActivity}`);
+        console.log(`✅ Aplicando filtros: Radio ${searchRadius}m, Actividad: ${selectedActivity}`);
 
-    if (userLat && userLng) {
-        console.log("📍 Moviendo mapa y ajustando zoom...");
+        if (userLat && userLng) {
+            setMapLocation(userLat, userLng, searchRadius, true);
+            fetchNearbyParks(userLat, userLng, searchRadius, selectedActivity);
+        } else {
+            console.warn("⚠️ No se ha obtenido la ubicación del usuario todavía.");
+        }
 
-        // 🚀 Ajustar la ubicación del mapa y hacer zoom según el radio
-        setMapLocation(userLat, userLng, searchRadius, true);
-
-        // ✅ Llamar a la API con el filtro de actividad
-        fetchNearbyParks(userLat, userLng, searchRadius, selectedActivity);
-    } else {
-        console.warn("⚠️ No se ha obtenido la ubicación del usuario todavía.");
-    }
-
-    filtersSection.classList.add("hidden"); // Ocultar filtros después de aplicar
-    clearFiltersBtn.classList.remove("hidden"); // Mostrar botón de borrar filtros
-});
+        filtersSection.classList.add("hidden");
+        clearFiltersBtn.classList.remove("hidden");
+    });
 
     // 📌 Limpiar filtros y restaurar valores por defecto
     clearFiltersBtn.addEventListener("click", function () {
-        radiusSlider.value = 5;
-        radiusValue.textContent = "5 km";
-        document.getElementById("activity-select").value = "";
-        addressInput.value = "";
-        searchRadius = 5000;
-        selectedActivity = "";
-        filtersApplied = false;
-
-        console.log("🔄 Filtros reseteados a valores por defecto.");
-
-        fetchNearbyParks(userLat, userLng, searchRadius, selectedActivity);
-
-        // Ocultar botón de borrar filtros
-        clearFiltersBtn.classList.add("hidden");
+        resetFilters();
     });
 
     // 📌 Mostrar filtros y ocultar lista de parques
     toggleBtn.addEventListener("click", function () {
         filtersSection.classList.toggle("hidden");
-        parksListContainer.classList.add("hidden"); // Ocultar la lista de parques mientras se filtra
+        parksListContainer.classList.add("hidden"); 
     });
 
-    // 📌 Si presiono "Recentrar", se cierra el filtro automáticamente
+    // 📌 Si presiono "Recentrar", restablece la ubicación
     recenterBtn.addEventListener("click", function () {
-    console.log("📍 Recentrando ubicación...");
+        console.log("📍 Recentrando ubicación...");
+        resetFilters();
+    });
 
-    filtersSection.classList.add("hidden"); // Cerrar filtros si estaban abiertos
-    resetFilters(); // 🔄 Resetear filtros antes de recentrar
-
-    // Ocultar el botón de borrar filtros
-    document.getElementById("clear-filters-btn").classList.add("hidden");
-
-    if (userLocation) {
-        setMapLocation(userLocation.lat, userLocation.lng, searchRadius, true);
-        fetchNearbyParks(userLocation.lat, userLocation.lng, searchRadius, selectedActivity);
-    } else {
-        getUserLocation(true);
-    }
-});
 });
 
-
+// 📌 Función para restablecer filtros y volver a la ubicación original
 function resetFilters() {
-    console.log("🔄 Resetear filtros a valores predeterminados...");
+    console.log("🔄 Restableciendo filtros y volviendo a ubicación original...");
 
+    // 🔴 Limpiar el input de búsqueda
+    document.getElementById("address-input").value = "";
+
+    // 🔴 Restaurar valores predeterminados de los filtros
     document.getElementById("radius-slider").value = 5;
     document.getElementById("radius-value").textContent = "5 km";
     document.getElementById("activity-select").value = "";
-    document.getElementById("address-input").value = "";
-
-    searchRadius = 5000;
     selectedActivity = "";
-    filtersApplied = false;
+    searchRadius = 5000;
 
-    // Ocultar completamente el botón de borrar filtros
-    const clearFiltersBtn = document.getElementById("clear-filters-btn");
-    clearFiltersBtn.classList.add("hidden");
+    // 🔄 Restaurar coordenadas a la ubicación inicial del usuario
+    if (userLocation) {
+        userLat = userLocation.lat;
+        userLng = userLocation.lng;
+        selectedLat = null;
+        selectedLng = null;
+        console.log("📍 Ubicación restaurada a:", userLat, userLng);
+    } else {
+        console.warn("⚠️ No se encontró la ubicación del usuario, intentando obtenerla...");
+        getUserLocation(true);
+        return;
+    }
 
-    console.log("✅ Filtros reseteados.");
+    // 🔄 Recentrar y volver a cargar parques
+    recenterMap();
+
+    // 🔥 Ocultar botón de borrar filtros
+    document.getElementById("clear-filters-btn").classList.add("hidden");
+
+    console.log("✅ Filtros reseteados y ubicación restaurada.");
 }
+// 📌 Función para recentrar el mapa a la ubicación original
+function recenterMap() {
+    console.log("📍 Recentrando a la ubicación original...");
+
+    if (userLocation) {
+        userLat = userLocation.lat;
+        userLng = userLocation.lng;
+        selectedLat = null;
+        selectedLng = null;
+        console.log("✅ Ubicación restaurada a:", userLat, userLng);
+    } else {
+        console.warn("⚠️ Ubicación no disponible, intentando obtenerla nuevamente...");
+        getUserLocation(true);
+        return;
+    }
+
+    setMapLocation(userLat, userLng, searchRadius, true);
+    fetchNearbyParks(userLat, userLng, searchRadius, selectedActivity);
+}
+// Función para acortar la dirección y mostrar solo las primeras dos partes
+function formatAddress(address) {
+    if (!address) return "Ubicación desconocida";
+    
+    const parts = address.split(","); // Divide la dirección en partes
+    return parts.slice(0, 2).join(","); // Toma solo las primeras 2 partes
+}
+
+
 // 📌 Función para actualizar la lista de parques en el HTML
 function updateParksList(parks) {
     const parksList = document.getElementById("parks-list");
@@ -212,44 +243,42 @@ function updateParksList(parks) {
 
     parks.forEach(park => {
         let parkElement = document.createElement("div");
-        parkElement.className = "flex items-center space-x-4 bg-gray-100 p-3 rounded-lg shadow-sm cursor-pointer hover:bg-gray-200 transition";
-
+        parkElement.className = "flex items-center space-x-4 bg-black p-3 rounded-md shadow-sm cursor-pointer transition border border-transparent hover:border-orange-500";
         parkElement.innerHTML = `
-            <img src="${park.photo}" alt="${park.name}" class="w-16 h-16 rounded-lg object-cover">
-            <div>
-                <h3 class="text-sm font-semibold">${park.name}</h3>
-                <p class="text-xs text-gray-500">${park.location || "Ubicación desconocida"}</p>
+            <img src="${park.photo}" alt="${park.name}" class="w-16 h-16 rounded-sm object-cover">
+            
+            <!-- Línea divisoria + Contenedor de texto -->
+            <div class="flex flex-col pl-3 border-l border-gray-300 flex-grow">
+                <h3 class="text-sm text-white font-semibold">${park.name}</h3>
+                <p class="text-xs text-gray-500">${formatAddress(park.location) || "Ubicación desconocida"}</p>
+                <p class="text-xs text-white"><strong>${park.distance_km} km</strong></p>
+
+                <!-- 🔥 Botón Ver más (redirige al parque) -->
+                <div class="flex justify-end mt-2">
+                    <button class="text-orange-500 text-xs font-semibold hover:underline ver-mas-btn" data-id="${park.id}">
+                        Ver más
+                    </button>
+                </div>
             </div>
         `;
 
-        // 🎯 Evento para mover el mapa al hacer clic en un parque
+        // ✅ Evento al botón "Ver más" para redirigir a la URL correcta
+        parkElement.querySelector(".ver-mas-btn").addEventListener("click", (e) => {
+            e.stopPropagation(); // 🔥 Evita que el clic seleccione el contenedor del parque
+            const parkId = e.target.getAttribute("data-id"); // Obtiene el ID del parque
+            window.location.href = `/parques/${parkId}`; // Redirige a la página del parque
+        });
+
+        // ✅ Evento para centrar el mapa cuando se hace clic en la lista (SIN crear marcador)
         parkElement.addEventListener("click", () => {
             const lat = parseFloat(park.latitude);
             const lng = parseFloat(park.longitude);
 
-            console.log(`📍 Seleccionando parque: ${park.name}`);
+            console.log(`📍 Seleccionando parque desde la lista: ${park.name}`);
 
             // 📌 Centrar mapa en el parque seleccionado
             map.setCenter({ lat, lng });
             map.setZoom(16);
-
-            // 🔥 Verificar si el parque tiene un marcador, si no lo tiene, agregarlo
-            let existingMarker = markers.find(m => m.id === park.id);
-            if (!existingMarker) {
-                console.log(`🚀 Creando nuevo marcador para ${park.name}`);
-                let newMarker = new google.maps.Marker({
-                    position: { lat, lng },
-                    map: map,
-                    title: park.name,
-                    icon: {
-                        url: "http://maps.google.com/mapfiles/ms/icons/orange-dot.png", // 🟠 Icono naranja
-                        scaledSize: new google.maps.Size(40, 40),
-                    }
-                });
-
-                // Agregar a la lista de marcadores
-                markers.push({ id: park.id, marker: newMarker });
-            }
         });
 
         parksList.appendChild(parkElement);

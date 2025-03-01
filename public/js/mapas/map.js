@@ -175,11 +175,10 @@ function showParksOnMap(parks) {
             }
         });
 
-        // 🎯 Evento: Al hacer clic en el marcador, centrar el mapa y hacer zoom
+        // ✅ Al hacer clic en el marcador, redirige a la página del parque
         marker.addListener("click", () => {
             console.log(`📍 Clic en marcador: ${park.name}`);
-            map.setCenter(marker.getPosition());
-            map.setZoom(16);
+            window.location.href = `/parques/${park.id}`; // Redirección a la página del parque
         });
 
         // 🔥 Guardar el marcador en el array para referencia
