@@ -133,49 +133,44 @@ class ParkController extends Controller
     
 
     public function getNearbyParks(Request $request)
-    {
-        $request->validate([
-            'lat' => 'required|numeric',
-            'lng' => 'required|numeric',
-            'radius' => 'nullable|numeric|min:1000|max:10000',
-            'activity_id' => 'nullable|exists:activities,id',
-        ]);
-    
-        $lat = $request->lat;
-        $lng = $request->lng;
-        $radius = $request->input('radius', 5000);
-        $activityId = $request->input('activity_id');
-    
-        // 🔍 Mostrar los datos recibidos en Laravel
-        Log::info('🔍 Datos recibidos en getNearbyParks', [
-            'lat' => $lat,
-            'lng' => $lng,
-            'radius' => $radius,
-            'activity_id' => $activityId,
-        ]);
-    
-        $query = Park::selectRaw("
-            parks.id, parks.name, parks.location, parks.latitude, parks.longitude,
-            (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance
-        ", [$lat, $lng, $lat])
-        ->having("distance", "<", $radius / 1000)
-        ->orderBy("distance");
-    
-        // 🛠 Si se selecciona una actividad, filtrar parques con entrenamientos activos
-        if ($activityId) {
-            $query->whereHas('trainings', function ($q) use ($activityId) {
-                $q->where('activity_id', $activityId);
-            });
-        }
-    
-        $parks = $query->get();
-    
-        // 🔍 Verificar si se encontraron parques antes de retornar
-        if ($parks->isEmpty()) {
-            Log::warning("❌ No se encontraron parques con la actividad ID: {$activityId}");
-            return response()->json([], 404);
-        }
-    
-        return response()->json($parks);
+{
+    $request->validate([
+        'lat' => 'required|numeric',
+        'lng' => 'required|numeric',
+        'radius' => 'nullable|numeric|min:1000|max:10000',
+        'activity_id' => 'nullable|exists:activities,id',
+    ]);
+
+    $lat = $request->lat;
+    $lng = $request->lng;
+    $radius = $request->input('radius', 5000);
+    $activityId = $request->input('activity_id');
+
+    $query = Park::selectRaw("
+        parks.id, parks.name, parks.location, parks.latitude, parks.longitude, parks.photo_urls,
+        (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance
+    ", [$lat, $lng, $lat])
+    ->having("distance", "<", $radius / 1000)
+    ->orderBy("distance");
+
+    if ($activityId) {
+        $query->whereHas('trainings', function ($q) use ($activityId) {
+            $q->where('activity_id', $activityId);
+        });
     }
+
+    $parks = $query->get()->map(function ($park) {
+        $photoUrls = json_decode($park->photo_urls, true);
+        return [
+            'id' => $park->id,
+            'name' => $park->name,
+            'latitude' => $park->latitude,
+            'longitude' => $park->longitude,
+            'location' => $park->location,
+            'photo' => !empty($photoUrls) ? $photoUrls[0] : asset('images/default-park.jpg'), // 📌 Usa la primera imagen o una por defecto
+        ];
+    });
+
+    return response()->json($parks);
+}
 }
