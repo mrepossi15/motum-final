@@ -1,17 +1,17 @@
 <div>
-    <!-- Navbar -->
-    <nav class="bg-black border-b border-gray-700">
+    <!-- Navbar (Fijo en la parte superior) -->
+    <nav class="fixed top-0 left-0 w-full bg-black border-b border-gray-700 z-50">
         <div class="container mx-auto flex items-center justify-between px-4 py-2">
             <!-- Logo y Botón Toggler -->
             <a href="{{ route('login') }}" class="text-orange-500 font-semibold italic text-2xl">
                 motum
             </a>
-            <!-- Toggler for Mobile View -->
+            <!-- Toggler para vista móvil -->
             <button 
+                id="navToggler"
                 class="md:hidden text-orange-500 focus:outline-none" 
                 type="button" 
-                aria-label="Toggle navigation" 
-                onclick="document.getElementById('mainNav').classList.toggle('hidden')">
+                aria-label="Toggle navigation">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
                 </svg>
@@ -56,18 +56,16 @@
                                     Mi Perfil
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li>
                                 <a href="{{ route('cart.view') }}" class="text-orange-500 hover:underline {{ request()->routeIs('cart.view') ? 'font-bold' : '' }}">
                                     Mi carrito
                                 </a>
                              </li>
-                             <li class="nav-item">
+                             <li>
                                 <a href="{{ route('reservations.show') }}" class="text-orange-500 hover:underline {{ request()->routeIs('reservations.show') ? 'font-bold' : '' }}">
                                     Mis entrenamientos
                                 </a>
                              </li>
-
-                            
                         @endif
 
                         <!-- Cerrar sesión -->
@@ -85,6 +83,9 @@
         </div>
     </nav>
 </div>
+
+<!-- Espacio para evitar que el contenido quede oculto por la navbar fija -->
+<div class="pt-12"></div>
 
 <!-- Script para el toggler en mobile -->
 <script>

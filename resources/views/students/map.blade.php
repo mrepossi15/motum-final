@@ -12,10 +12,10 @@
 @endif
 
 <!-- 📌 Contenedor Principal -->
-<div class="relative h-screen w-full flex flex-col">
+<div class=" h-screen w-full flex flex-col lg:flex-row "> <!-- ⬅ En móviles/tablets, filas. En PC, columnas -->
 
-    <!-- 🗺️ Fila 1: Mapa (40% de la pantalla) -->
-    <div class="relative w-full h-[40vh]">
+    <!-- 🗺️ Sección A: Mapa -->
+    <div class="relative w-full h-[40vh] md:h-[40vh] lg:h-full lg:w-[70%]  "> <!-- ⬅ En móviles y tablets, 40% alto. En PC, 70% ancho -->
         <div id="map" class="absolute inset-0 w-full h-full"></div>
 
         <!-- 📍 Botón flotante de ubicación -->
@@ -25,51 +25,55 @@
         </button>
     </div>
 
-    <!-- 📜 Fila 2: Lista de Parques y Filtros (60% de la pantalla) -->
-    <div class="w-full h-[60vh] bg-[#1E1E1E]  flex flex-col shadow-lg">
-     <!-- 🏷️ Encabezado con Botón de Filtros y Borrar Filtros -->
-        <div class="flex items-center justify-between px-4 pt-4 ">
+    <!-- 📜 Sección B: Lista de Parques y Filtros -->
+    <div class="w-full h-[60vh] md:h-[60vh] lg:h-full lg:w-[30%] bg-[#1E1E1E] flex flex-col shadow-lg pb-10"> <!-- ⬅ En móviles y tablets, 60% alto. En PC, 30% ancho -->
+        <!-- 🏷️ Encabezado con Botón de Filtros y Borrar Filtros -->
+        <div class="flex items-center justify-between px-4 pt-4">
             <h2 class="text-md text-white">Parques Cercanos</h2>
             <div class="flex space-x-2">
-            <button id="open-filters-btn" class="p-2 hover:bg-back transition">
-                <x-lucide-sliders-horizontal class="w-6 h-6 text-orange-500" />
-            </button>
-            <button id="clear-filters-btn" class="hidden bg-red-600 text-white py-1 px-2 rounded-sm hover:bg-red-500 transition flex items-center">
-                <x-lucide-x class="w-5 h-5" />
-            </button>
+                <button id="open-filters-btn" class="p-2 hover:bg-back transition">
+                    <x-lucide-sliders-horizontal class="w-6 h-6 text-orange-500" />
+                </button>
+                <button id="clear-filters-btn" class="hidden bg-red-600 text-white py-1 px-2 rounded-sm hover:bg-red-500 transition flex items-center">
+                    <x-lucide-x class="w-5 h-5" />
+                </button>
             </div>
         </div>
-        <!-- 📋 Lista de Parques (Oculta por defecto, aparece solo si hay parques) -->
+
+        <!-- 📋 Lista de Parques -->
         <div id="parks-list-container" class="flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3 relative">
             <!-- 🔄 Spinner de carga -->
             <div id="loading-spinner" class="absolute inset-0 flex justify-center items-center bg-[#1E1E1E]">
                 <div class="animate-spin border-4 border-t-orange-500 border-gray-300 rounded-full w-12 h-12"></div>
             </div>
-
-            <!-- 📋 Lista de Parques -->
-            <div id="parks-list" class="hidden"></div>
+            <div id="parks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 mb-5 hidden"></div>
         </div>
     </div>
 </div>
 
-<!-- 🎛️ Modal de Filtros (Corrigiendo el deslizamiento desde abajo) -->
-<div id="filters-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-end z-50">
-    <div id="filters-content" class="bg-[#1E1E1E] p-6 rounded-t-lg w-full max-w-md shadow-lg relative transform translate-y-full transition-transform duration-300 ease-in-out">
-        <div class="h-1 w-12 bg-gray-500 rounded-full mx-auto mb-3" id="swipe-bar"></div> <!-- AGREGADO -->
+<!-- 🎛️ Modal de Filtros -->
+<!-- 🎛️ Modal de Filtros (Adaptado para todas las pantallas) -->
+<div id="filters-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-end md:items-center z-50">
+    <div id="filters-content" class="bg-[#1E1E1E] p-6 rounded-t-lg md:rounded-lg w-full max-w-md md:max-w-lg shadow-lg relative transform translate-y-full transition-transform duration-300 ease-in-out">
+        <div class="h-1 w-12 bg-gray-500 rounded-full mx-auto mb-3 md:hidden" id="swipe-bar"></div> <!-- Oculta barra de swipe en tablets y PC -->
+
         <button id="close-filters-btn" class="absolute top-3 right-3 text-white hover:text-red-500">
             <x-lucide-x class="w-6 h-6" />
         </button>
+
         <h2 class="text-lg text-white mb-4">Filtros</h2>
 
-        <div class="space-y-6">
-            <div class="relative">
+        <div>
+            <div class="relative mb-6">
                 <label class="absolute top-0 left-3 -mt-2 bg-gray-900 px-1 text-white text-sm">Buscador</label>
-                <input type="text" id="address-input" class="w-full bg-black text-white border border-gray-500 rounded-sm px-4 py-3" placeholder="Buscar">
+                <input type="text" id="address-input" class="w-full bg-black text-white border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3" placeholder="Buscar">
             </div>
 
-            <div class="relative">
-                <label class="absolute top-0 left-3 -mt-2 bg-gray-900 px-1 text-white text-sm">Actividades</label>
-                <select id="activity-select" class="w-full bg-black text-white border border-gray-500 rounded-sm px-4 py-3">
+            <div class="relative mb-10">
+                <label class="absolute top-0 left-3 -mt-0 bg-gray-900 px-1 text-white text-sm">
+                    Actividades
+                </label>
+                <select id="activity-select" class="w-full bg-black text-white hover:border-orange-500 border border-gray-500 rounded-sm px-4 py-[14px] mt-2 appearance-none">
                     <option value="">Todas las actividades</option>
                     @foreach($activities as $activity)
                         <option value="{{ $activity->id }}">{{ $activity->name }}</option>
@@ -77,18 +81,17 @@
                 </select>
             </div>
 
-            <div class="relative">
-                <label class="absolute top-[-10px] px-2 text-white text-sm">Definir Radio</label>
-                <input type="range" id="radius-slider" min="1" max="10" value="5" class="w-full bg-white rounded-lg h-1">
+            <div class="relative mt-10">
+                <label class="absolute left-3 top-[-20px] px-2 text-white text-sm">Definir Radio</label>
+                <input type="range" id="radius-slider" min="1" max="10" value="5" class="w-full bg-white rounded-lg h-1 hover:border-orange-500">
                 <p id="radius-value" class="text-white text-sm text-right">5 km</p>
             </div>
         </div>
 
         <div class="mt-6 mb-3 flex justify-center space-x-4">
-            <button id="apply-filters-btn" class="bg-orange-500 text-white  text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
+            <button id="apply-filters-btn" class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
                 Aplicar
             </button>
-   
         </div>
     </div>
 </div>

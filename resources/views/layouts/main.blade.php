@@ -13,21 +13,21 @@
   
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>
-<body>
+<body class="bg-black overflow-hidden">
     @if (!isset($hideNavbar) || !$hideNavbar)
         <header>
             <x-nav></x-nav>
         </header>
     @endif
 
-    <main class="{{ $background ?? 'bg-white' }} min-h-screen">
+    <main class="{{ $background ?? 'bg-black' }} min-h-screen">
         @if (session()->has('feedback.message'))
             <div class="alert alert-{{ session()->get('feedback.type', 'success') }}">
                 {!! session()->get('feedback.message') !!}
             </div>
         @endif
 
-        <div class="{{ isset($hideNavbar) && $hideNavbar ? '' : 'pt-1' }}">
+        <div class="{{ isset($hideNavbar) && $hideNavbar ? '' : '' }}">
             @yield('content')
         </div>
     </main>
