@@ -5,10 +5,13 @@ let userLocation = null;
 let searchRadius = 5000;
 let selectedActivity = '';
 let markers = [];
+let lastFetchedLocation = { lat: null, lng: null, radius: null, activityId: null };
+let parksCache = {}; // 🔥 Cache para evitar llamadas repetidas
+let debounceTimer;
 
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: -34.6037, lng: -58.3816 }, // ⚠️ Temporal, cambiará con la ubicación real
+        center: { lat: -34.6037, lng: -58.3816 }, 
         zoom: getZoomLevel(searchRadius),
         gestureHandling: "auto",
     });
@@ -24,7 +27,6 @@ function initMap() {
     autocomplete.addListener('place_changed', () => handleAddressSelection(autocomplete));
 
     document.getElementById('recenter-btn').addEventListener('click', () => {
-        console.log("📍 Botón 'Recentrar' presionado");
         if (userLocation) {
             resetAutocomplete();
             userLat = userLocation.lat;
@@ -36,22 +38,27 @@ function initMap() {
         }
     });
 
-    // 🔥 Cargar parques automáticamente al iniciar
     setTimeout(() => {
         if (userLat && userLng) {
             fetchNearbyParks(userLat, userLng, searchRadius, selectedActivity);
-        } else {
-            console.warn("⚠️ Esperando obtener la ubicación del usuario...");
         }
-    }, 2000); // ⏳ Espera 2s para asegurar que la geolocalización se obtenga antes
+    }, 2000);
 }
 
 function getUserLocation(forceUpdate = false) {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                userLat = position.coords.latitude;
-                userLng = position.coords.longitude;
+                const newLat = position.coords.latitude;
+                const newLng = position.coords.longitude;
+
+                if (!forceUpdate && userLat === newLat && userLng === newLng) {
+                    console.log("📍 Ubicación ya conocida, evitando llamada a la API.");
+                    return;
+                }
+
+                userLat = newLat;
+                userLng = newLng;
                 userLocation = { lat: userLat, lng: userLng };
 
                 setMapLocation(userLat, userLng);
@@ -64,41 +71,35 @@ function getUserLocation(forceUpdate = false) {
 }
 
 function handleAddressSelection(autocomplete) {
-    const place = autocomplete.getPlace();
-    if (!place.geometry || !place.geometry.location) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) return;
 
-    console.log("📍 Dirección seleccionada:", place.formatted_address);
+        console.log("📍 Dirección seleccionada:", place.formatted_address);
 
-    // 🔄 Guardar la nueva ubicación en variables PERO NO MOVER el mapa aún
-    userLat = place.geometry.location.lat();
-    userLng = place.geometry.location.lng();
-
-    // ⚠️ NO llamamos a setMapLocation aquí para que el usuario deba presionar "Aplicar"
+        userLat = place.geometry.location.lat();
+        userLng = place.geometry.location.lng();
+    }, 500);
 }
-let userMarker = null; // 🔴 Variable global para el marcador de ubicación
+
+let userMarker = null;
 
 function setMapLocation(lat, lng, radius, updateZoom = false) {
     if (!lat || !lng) {
-        console.warn("⚠️ No se pueden actualizar las coordenadas porque no están definidas.");
         return;
     }
 
-    console.log(`📍 Moviendo mapa a: lat ${lat}, lng ${lng}`);
-
     map.setCenter({ lat, lng });
 
-    // 🔥 Ajustar zoom solo si se solicita
     if (updateZoom) {
         const newZoom = getZoomLevel(radius);
         map.setZoom(newZoom);
-        console.log(`🔍 Zoom ajustado a: ${newZoom}`);
     }
 
-    // 📍 Si ya existe el marcador de usuario, solo actualiza la posición
     if (userMarker) {
         userMarker.setPosition({ lat, lng });
     } else {
-        // 📍 Crear marcador para la ubicación del usuario
         userMarker = new google.maps.Marker({
             position: { lat, lng },
             map: map,
@@ -119,15 +120,34 @@ function clearMarkers() {
     markers.forEach(marker => marker.setMap(null));
     markers = [];
 }
-function fetchNearbyParks(lat, lng, radius, activityId = '') {
-    let url = `/api/nearby-parks?lat=${lat}&lng=${lng}&radius=${radius}`;
 
-    // ✅ Agregar el filtro de actividad SOLO si se seleccionó una
-    if (activityId && activityId !== '') {
+function fetchNearbyParks(lat, lng, radius, activityId = '') {
+    let cacheKey = `${lat},${lng},${radius},${activityId}`;
+    
+    // ✅ Si la consulta ya se hizo, usa la caché y evita la llamada innecesaria
+    if (parksCache[cacheKey]) {
+        console.log("⚡ Usando caché para evitar llamada a la API.");
+        updateParksList(parksCache[cacheKey]);
+        showParksOnMap(parksCache[cacheKey]);
+        return;
+    }
+
+    // 🔄 Si ya se hizo esta consulta, evita repetir la llamada
+    if (lastFetchedLocation.lat === lat && lastFetchedLocation.lng === lng &&
+        lastFetchedLocation.radius === radius && lastFetchedLocation.activityId === activityId) {
+        console.log("🔄 Misma consulta, evitando llamada a la API");
+        return;
+    }
+
+    lastFetchedLocation = { lat, lng, radius, activityId };
+
+    let url = `/api/nearby-parks?lat=${lat}&lng=${lng}&radius=${radius}`;
+    if (activityId) {
         url += `&activity_id=${activityId}`;
     }
 
-    console.log(`📡 Fetching parques desde: ${url}`);
+    // ✅ Mostrar mensaje de carga antes de hacer la solicitud
+    updateParksList("loading");
 
     fetch(url)
         .then(response => {
@@ -136,32 +156,30 @@ function fetchNearbyParks(lat, lng, radius, activityId = '') {
         })
         .then(parks => {
             console.log(`✅ ${parks.length} parques encontrados.`);
+            parksCache[cacheKey] = parks;
 
-            clearMarkers(); // 🧹 Limpiar los marcadores actuales
-            updateParksList(parks); // 🔄 Actualizar la lista en el frontend
-
+            // 🔄 No limpiar los marcadores antes de saber si hay parques
+            clearMarkers();
             if (parks.length > 0) {
-                showParksOnMap(parks); // 📍 Dibujar los parques en el mapa
-                setMapLocation(lat, lng, radius, true); // Ajustar zoom solo si hay parques
+                showParksOnMap(parks);
+                updateParksList(parks);
+                setMapLocation(lat, lng, radius, true);
             } else {
-                console.warn("⚠️ No se encontraron parques con esta actividad.");
+                updateParksList([]); // Si no hay parques, se limpia la lista de manera controlada
             }
         })
         .catch(error => {
             console.error("❌ Error al obtener los parques:", error);
             clearMarkers();
-            updateParksList([]); // ❌ Si no hay parques, limpiar la lista
+            updateParksList([]); // Asegurar que si hay un error, la lista quede vacía
         });
 }
 
 function showParksOnMap(parks) {
-    console.log(`📌 Dibujando ${parks.length} marcadores de parques en el mapa...`);
-
-    clearMarkers(); // 🧹 Limpiar los marcadores antes de dibujar nuevos
+    clearMarkers();
 
     parks.forEach(park => {
         if (!park.latitude || !park.longitude) {
-            console.warn(`⚠️ Parque sin coordenadas: ${park.name}`);
             return;
         }
 
@@ -170,22 +188,17 @@ function showParksOnMap(parks) {
             map: map,
             title: park.name,
             icon: {
-                url: "http://maps.google.com/mapfiles/ms/icons/orange-dot.png", // 🟠 Icono naranja
+                url: "http://maps.google.com/mapfiles/ms/icons/orange-dot.png",
                 scaledSize: new google.maps.Size(40, 40),
             }
         });
 
-        // ✅ Al hacer clic en el marcador, redirige a la página del parque
         marker.addListener("click", () => {
-            console.log(`📍 Clic en marcador: ${park.name}`);
-            window.location.href = `/parques/${park.id}`; // Redirección a la página del parque
+            window.location.href = `/parques/${park.id}`;
         });
 
-        // 🔥 Guardar el marcador en el array para referencia
         markers.push(marker);
     });
-
-    console.log(`✅ ${markers.length} marcadores de parques agregados.`);
 }
 
 function getZoomLevel(radius) {
@@ -195,7 +208,7 @@ function getZoomLevel(radius) {
     if (radius <= 5000) return 13;
     if (radius <= 7000) return 12;
     if (radius <= 10000) return 11;
-    return 10; // Si el radio es mayor, alejar más el zoom
+    return 10;
 }
 
 window.initMap = initMap;

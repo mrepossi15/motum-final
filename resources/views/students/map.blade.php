@@ -27,33 +27,43 @@
 
     <!-- 📜 Fila 2: Lista de Parques y Filtros (60% de la pantalla) -->
     <div class="w-full h-[60vh] bg-[#1E1E1E]  flex flex-col shadow-lg">
-
-        <!-- 🏷️ Encabezado con Botón de Filtros y Borrar Filtros -->
+     <!-- 🏷️ Encabezado con Botón de Filtros y Borrar Filtros -->
         <div class="flex items-center justify-between px-4 pt-4 ">
             <h2 class="text-md text-white">Parques Cercanos</h2>
             <div class="flex space-x-2">
-            <button id="toggle-filters-btn" class="p-2 hover:bg-back transition">
-                    <x-lucide-sliders-horizontal class="w-6 h-6 text-orange-500" />
+            <button id="open-filters-btn" class="p-2 hover:bg-back transition">
+                <x-lucide-sliders-horizontal class="w-6 h-6 text-orange-500" />
             </button>
             <button id="clear-filters-btn" class="hidden bg-red-600 text-white py-1 px-2 rounded-sm hover:bg-red-500 transition flex items-center">
                 <x-lucide-x class="w-5 h-5" />
             </button>
             </div>
         </div>
+        <!-- 📋 Lista de Parques (Oculta por defecto, aparece solo si hay parques) -->
+        <div id="parks-list-container" class="hidden flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3">
+            <div id="parks-list"></div>
+        </div>
+    </div>
+</div>
 
-        <!-- 🎛️ Sección de Filtros (Inicialmente Oculta) -->
-        <div id="filters-section" class="hidden flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-6">
-    
-            <!-- 📍 Input de Dirección con Autocomplete -->
+<!-- 🎛️ Modal de Filtros (Corrigiendo el deslizamiento desde abajo) -->
+<div id="filters-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-end z-50">
+    <div id="filters-content" class="bg-[#1E1E1E] p-6 rounded-t-lg w-full max-w-md shadow-lg relative transform translate-y-full transition-transform duration-300 ease-in-out">
+        <div class="h-1 w-12 bg-gray-500 rounded-full mx-auto mb-3" id="swipe-bar"></div> <!-- AGREGADO -->
+        <button id="close-filters-btn" class="absolute top-3 right-3 text-white hover:text-red-500">
+            <x-lucide-x class="w-6 h-6" />
+        </button>
+        <h2 class="text-lg text-white mb-4">Filtros</h2>
+
+        <div class="space-y-6">
             <div class="relative">
                 <label class="absolute top-0 left-3 -mt-2 bg-gray-900 px-1 text-white text-sm">Buscador</label>
-                <input type="text" id="address-input" class="w-full bg-black text-white border border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500" placeholder="Buscar">
+                <input type="text" id="address-input" class="w-full bg-black text-white border border-gray-500 rounded-sm px-4 py-3" placeholder="Buscar">
             </div>
 
-         <!-- 🎭 Selección de Actividad -->
-            <div class="relative mb-6">
+            <div class="relative">
                 <label class="absolute top-0 left-3 -mt-2 bg-gray-900 px-1 text-white text-sm">Actividades</label>
-                <select id="activity-select" class="w-full bg-black text-white border border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                <select id="activity-select" class="w-full bg-black text-white border border-gray-500 rounded-sm px-4 py-3">
                     <option value="">Todas las actividades</option>
                     @foreach($activities as $activity)
                         <option value="{{ $activity->id }}">{{ $activity->name }}</option>
@@ -61,35 +71,19 @@
                 </select>
             </div>
 
-            <!-- 📏 Selección de Radio (slider con línea completa) -->
-            <div class="relative mb-10 pt-5">
-                <!-- 🔹 Movemos el label un poco más arriba con `top-[-10px]` y le damos `z-10` -->
-                <label class="absolute top-[-10px] px-2 text-white text-sm z-10">Definir Radio</label>
-                
-                <div class="flex items-center space-x-4">
-                    <!-- 🔹 Slider con margen superior para evitar que el label lo pise -->
-                    <input type="range" id="radius-slider" min="1" max="10" value="5" 
-                        class="w-full max-w-[300px] appearance-none bg-white rounded-lg h-1 cursor-pointer">
-
-                    <!-- 🔹 Aseguramos que "5 km" siempre esté en una línea -->
-                    <p id="radius-value" class="text-white text-sm whitespace-nowrap flex-shrink-0">5 km</p>
-                </div>
+            <div class="relative">
+                <label class="absolute top-[-10px] px-2 text-white text-sm">Definir Radio</label>
+                <input type="range" id="radius-slider" min="1" max="10" value="5" class="w-full bg-white rounded-lg h-1">
+                <p id="radius-value" class="text-white text-sm text-right">5 km</p>
             </div>
-
-            <!-- 🛠️ Botón Aplicar Filtros -->
-            <div class="mt-4 flex justify-center">
-                <button id="apply-filters-btn" class="bg-orange-500 text-white  text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
-                    Aplicar
-                </button>
-            </div>
-            
         </div>
 
-        <!-- 📋 Lista de Parques (Oculta por defecto, aparece solo si hay parques) -->
-        <div id="parks-list-container" class="hidden flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3">
-            <div id="parks-list"></div>
+        <div class="mt-6 mb-3 flex justify-center space-x-4">
+            <button id="apply-filters-btn" class="bg-orange-500 text-white  text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
+                Aplicar
+            </button>
+   
         </div>
-
     </div>
 </div>
 
@@ -105,11 +99,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const radiusValue = document.getElementById("radius-value");
     const applyFiltersBtn = document.getElementById("apply-filters-btn");
     const clearFiltersBtn = document.getElementById("clear-filters-btn");
-    const toggleBtn = document.getElementById("toggle-filters-btn");
-    const filtersSection = document.getElementById("filters-section");
+    const openFiltersBtn = document.getElementById("open-filters-btn"); // ✅ BOTÓN DE ABRIR FILTROS
+    const closeFiltersBtn = document.getElementById("close-filters-btn"); // ✅ BOTÓN DE CERRAR FILTROS
+    const filtersModal = document.getElementById("filters-modal"); // ✅ MODAL CORRECTO
+    const filtersContent = document.getElementById("filters-content"); // AGREGADO
     const parksListContainer = document.getElementById("parks-list-container");
     const recenterBtn = document.getElementById("recenter-btn");
     const addressInput = document.getElementById("address-input");
+    const swipeBar = document.getElementById("swipe-bar"); // AGREGADO
 
     let searchRadius = 5000; // Radio inicial en metros
     let selectedActivity = "";
@@ -117,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ⚠️ Verificar que los elementos existen antes de agregar eventos
     if (!radiusSlider || !radiusValue || !applyFiltersBtn || !clearFiltersBtn || 
-        !toggleBtn || !filtersSection || !parksListContainer || !recenterBtn || !addressInput) {
+        !openFiltersBtn || !closeFiltersBtn || !filtersModal || !parksListContainer || !recenterBtn || !addressInput || !filtersContent|| !swipeBar) {
         console.error("❌ Error: Uno o más elementos no se encontraron en el DOM.");
         return;
     }
@@ -127,6 +124,43 @@ document.addEventListener("DOMContentLoaded", function () {
         radiusValue.textContent = `${this.value} km`;
     });
 
+    // 📌 Mostrar el modal cuando se haga clic en "Filtros"
+    openFiltersBtn.addEventListener("click", function () {
+        filtersModal.classList.remove("hidden");
+        setTimeout(() => {
+            filtersContent.classList.remove("translate-y-full"); // MODIFICADO
+        }, 10);
+    });
+
+    closeFiltersBtn.addEventListener("click", function () {
+        filtersContent.classList.add("translate-y-full"); // MODIFICADO
+        setTimeout(() => {
+            filtersModal.classList.add("hidden");
+        }, 300);
+    });
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    swipeBar.addEventListener("touchstart", function (e) {
+        touchStartY = e.touches[0].clientY;
+    });
+
+    swipeBar.addEventListener("touchmove", function (e) {
+        touchEndY = e.touches[0].clientY;
+    });
+
+    swipeBar.addEventListener("touchend", function () {
+        if (touchEndY - touchStartY > 50) { // MODIFICADO - Si el swipe es hacia abajo
+            filtersContent.classList.add("translate-y-full");
+            setTimeout(() => {
+                filtersModal.classList.add("hidden");
+            }, 300);
+        }
+    });
+
+    clearFiltersBtn.addEventListener("click", function () {
+        resetFilters();
+    });
     // 📌 Aplicar filtros al hacer clic en "Aplicar"
     applyFiltersBtn.addEventListener("click", function () {
         searchRadius = radiusSlider.value * 1000; // Convertir km a metros
@@ -141,19 +175,8 @@ document.addEventListener("DOMContentLoaded", function () {
             console.warn("⚠️ No se ha obtenido la ubicación del usuario todavía.");
         }
 
-        filtersSection.classList.add("hidden");
+        filtersModal.classList.add("hidden"); // ✅ Cerrar modal después de aplicar filtros
         clearFiltersBtn.classList.remove("hidden");
-    });
-
-    // 📌 Limpiar filtros y restaurar valores por defecto
-    clearFiltersBtn.addEventListener("click", function () {
-        resetFilters();
-    });
-
-    // 📌 Mostrar filtros y ocultar lista de parques
-    toggleBtn.addEventListener("click", function () {
-        filtersSection.classList.toggle("hidden");
-        parksListContainer.classList.add("hidden"); 
     });
 
     // 📌 Si presiono "Recentrar", restablece la ubicación
@@ -232,14 +255,28 @@ function updateParksList(parks) {
     const parksList = document.getElementById("parks-list");
     const parksListContainer = document.getElementById("parks-list-container");
 
-    parksList.innerHTML = ""; // 🔄 Limpiar la lista antes de agregar nuevos datos
+    parksList.innerHTML = ""; // 🔄 Limpiar antes de agregar nuevos datos
 
-    if (parks.length === 0) {
-        parksListContainer.classList.add("hidden"); // ❌ Ocultar la lista si no hay parques
+    // ✅ Si está en estado "loading", mostrar un indicador de carga
+    if (parks === "loading") {
+        parksListContainer.classList.remove("hidden");
+        parksList.innerHTML = `
+            <p class="text-white text-center py-4"> Buscando parques cercanos...</p>
+        `;
         return;
     }
 
-    parksListContainer.classList.remove("hidden"); // ✅ Mostrar la lista si hay parques
+    // ❌ Si no hay parques, ocultar la lista después de recibir la respuesta
+    if (parks.length === 0) {
+        parksListContainer.classList.remove("hidden");
+        parksList.innerHTML = `
+            <p class="text-white text-center py-4"> No hay parques disponibles.</p>
+        `;
+        return;
+    }
+
+    // ✅ Solo mostrar la lista si hay parques
+    parksListContainer.classList.remove("hidden");
 
     parks.forEach(park => {
         let parkElement = document.createElement("div");
@@ -247,13 +284,11 @@ function updateParksList(parks) {
         parkElement.innerHTML = `
             <img src="${park.photo}" alt="${park.name}" class="w-16 h-16 rounded-sm object-cover">
             
-            <!-- Línea divisoria + Contenedor de texto -->
             <div class="flex flex-col pl-3 border-l border-gray-300 flex-grow">
                 <h3 class="text-sm text-white font-semibold">${park.name}</h3>
                 <p class="text-xs text-gray-500">${formatAddress(park.location) || "Ubicación desconocida"}</p>
                 <p class="text-xs text-white"><strong>${park.distance_km} km</strong></p>
 
-                <!-- 🔥 Botón Ver más (redirige al parque) -->
                 <div class="flex justify-end mt-2">
                     <button class="text-orange-500 text-xs font-semibold hover:underline ver-mas-btn" data-id="${park.id}">
                         Ver más
@@ -262,21 +297,18 @@ function updateParksList(parks) {
             </div>
         `;
 
-        // ✅ Evento al botón "Ver más" para redirigir a la URL correcta
+        // ✅ Evento para redirigir al parque
         parkElement.querySelector(".ver-mas-btn").addEventListener("click", (e) => {
-            e.stopPropagation(); // 🔥 Evita que el clic seleccione el contenedor del parque
-            const parkId = e.target.getAttribute("data-id"); // Obtiene el ID del parque
-            window.location.href = `/parques/${parkId}`; // Redirige a la página del parque
+            e.stopPropagation();
+            const parkId = e.target.getAttribute("data-id");
+            window.location.href = `/parques/${parkId}`;
         });
 
-        // ✅ Evento para centrar el mapa cuando se hace clic en la lista (SIN crear marcador)
+        // ✅ Centrar mapa en el parque cuando se hace clic en la lista
         parkElement.addEventListener("click", () => {
             const lat = parseFloat(park.latitude);
             const lng = parseFloat(park.longitude);
-
             console.log(`📍 Seleccionando parque desde la lista: ${park.name}`);
-
-            // 📌 Centrar mapa en el parque seleccionado
             map.setCenter({ lat, lng });
             map.setZoom(16);
         });
@@ -285,6 +317,9 @@ function updateParksList(parks) {
     });
 }
 
+
+
 </script>
 
 @endsection
+
