@@ -54,6 +54,7 @@ function getUserLocation(forceUpdate = false) {
 
                 if (!forceUpdate && userLat === newLat && userLng === newLng) {
                     console.log("📍 Ubicación ya conocida, evitando llamada a la API.");
+                    loadingSpinner.classList.add("hidden"); // ✅ Ocultar spinner
                     return;
                 }
 
@@ -63,11 +64,15 @@ function getUserLocation(forceUpdate = false) {
 
                 setMapLocation(userLat, userLng);
                 fetchNearbyParks(userLat, userLng, searchRadius, selectedActivity);
+                loadingSpinner.classList.add("hidden");
             },
             (error) => console.warn("❌ No se pudo obtener la ubicación:", error),
             { enableHighAccuracy: true }
         );
-    } 
+    } else {
+        console.warn("❌ Geolocalización no soportada en este navegador.");
+        loadingSpinner.classList.add("hidden");
+    }
 }
 
 function handleAddressSelection(autocomplete) {
@@ -123,19 +128,31 @@ function clearMarkers() {
 
 function fetchNearbyParks(lat, lng, radius, activityId = '') {
     let cacheKey = `${lat},${lng},${radius},${activityId}`;
-    
-    // ✅ Si la consulta ya se hizo, usa la caché y evita la llamada innecesaria
+
+    // ✅ Mostrar spinner antes de la consulta
+    document.getElementById("loading-spinner").classList.remove("hidden");
+    document.getElementById("parks-list").classList.add("hidden"); // Ocultar lista mientras carga
+
+    // ✅ Si la consulta ya está en caché, usa los datos almacenados
     if (parksCache[cacheKey]) {
         console.log("⚡ Usando caché para evitar llamada a la API.");
         updateParksList(parksCache[cacheKey]);
         showParksOnMap(parksCache[cacheKey]);
+
+        // ✅ Ocultar spinner cuando la caché ya tiene datos
+        document.getElementById("loading-spinner").classList.add("hidden");
+        document.getElementById("parks-list").classList.remove("hidden"); // Mostrar lista de parques
         return;
     }
 
-    // 🔄 Si ya se hizo esta consulta, evita repetir la llamada
+    // 🔄 Si ya se hizo esta consulta, evitar repetir la llamada
     if (lastFetchedLocation.lat === lat && lastFetchedLocation.lng === lng &&
         lastFetchedLocation.radius === radius && lastFetchedLocation.activityId === activityId) {
         console.log("🔄 Misma consulta, evitando llamada a la API");
+
+        // ✅ Ocultar spinner si no hay nuevos datos que cargar
+        document.getElementById("loading-spinner").classList.add("hidden");
+        document.getElementById("parks-list").classList.remove("hidden"); // Mostrar lista
         return;
     }
 
@@ -146,9 +163,6 @@ function fetchNearbyParks(lat, lng, radius, activityId = '') {
         url += `&activity_id=${activityId}`;
     }
 
-    // ✅ Mostrar mensaje de carga antes de hacer la solicitud
-    updateParksList("loading");
-
     fetch(url)
         .then(response => {
             if (!response.ok) throw new Error("❌ No se encontraron parques.");
@@ -158,20 +172,22 @@ function fetchNearbyParks(lat, lng, radius, activityId = '') {
             console.log(`✅ ${parks.length} parques encontrados.`);
             parksCache[cacheKey] = parks;
 
-            // 🔄 No limpiar los marcadores antes de saber si hay parques
             clearMarkers();
             if (parks.length > 0) {
                 showParksOnMap(parks);
                 updateParksList(parks);
-                setMapLocation(lat, lng, radius, true);
             } else {
-                updateParksList([]); // Si no hay parques, se limpia la lista de manera controlada
+                updateParksList([]);
             }
         })
         .catch(error => {
             console.error("❌ Error al obtener los parques:", error);
-            clearMarkers();
-            updateParksList([]); // Asegurar que si hay un error, la lista quede vacía
+            updateParksList([]); // Si hay un error, asegurarse de que la lista quede vacía
+        })
+        .finally(() => {
+            // ✅ Ocultar spinner cuando la consulta finaliza
+            document.getElementById("loading-spinner").classList.add("hidden");
+            document.getElementById("parks-list").classList.remove("hidden"); // Mostrar lista
         });
 }
 

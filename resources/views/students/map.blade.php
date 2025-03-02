@@ -40,8 +40,14 @@
             </div>
         </div>
         <!-- 📋 Lista de Parques (Oculta por defecto, aparece solo si hay parques) -->
-        <div id="parks-list-container" class="hidden flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3">
-            <div id="parks-list"></div>
+        <div id="parks-list-container" class="flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3 relative">
+            <!-- 🔄 Spinner de carga -->
+            <div id="loading-spinner" class="absolute inset-0 flex justify-center items-center bg-[#1E1E1E]">
+                <div class="animate-spin border-4 border-t-orange-500 border-gray-300 rounded-full w-12 h-12"></div>
+            </div>
+
+            <!-- 📋 Lista de Parques -->
+            <div id="parks-list" class="hidden"></div>
         </div>
     </div>
 </div>
@@ -86,6 +92,9 @@
         </div>
     </div>
 </div>
+<div id="loading-spinner" class="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50 hidden">
+    <div class="w-12 h-12 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin"></div>
+</div>
 
 <!-- 🛠️ Scripts -->
 <script src="{{ asset('js/mapas/map.js') }}"></script>
@@ -107,13 +116,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const recenterBtn = document.getElementById("recenter-btn");
     const addressInput = document.getElementById("address-input");
     const swipeBar = document.getElementById("swipe-bar"); // AGREGADO
+    const spinner = document.getElementById("loading-spinner"); // <-- ¡Aquí lo definimo
 
     let searchRadius = 5000; // Radio inicial en metros
     let selectedActivity = "";
     let filtersApplied = false;
 
     // ⚠️ Verificar que los elementos existen antes de agregar eventos
-    if (!radiusSlider || !radiusValue || !applyFiltersBtn || !clearFiltersBtn || 
+    if (!spinner || !radiusSlider || !radiusValue || !applyFiltersBtn || !clearFiltersBtn || 
         !openFiltersBtn || !closeFiltersBtn || !filtersModal || !parksListContainer || !recenterBtn || !addressInput || !filtersContent|| !swipeBar) {
         console.error("❌ Error: Uno o más elementos no se encontraron en el DOM.");
         return;
