@@ -412,20 +412,3 @@ function carousel(totalSlides) {
 
 @endsection
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

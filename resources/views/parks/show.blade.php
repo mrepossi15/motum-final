@@ -266,8 +266,9 @@
                     <!-- Contenedor de reseñas iniciales -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-y-2 ">
                         @foreach ($park->reviews->take(2) as $index => $review)
-                            <div class="py-4 rounded-sm flex items-start  space-x-6
-                                        {{ $index % 2 == 0 ? 'lg:pr-14' : 'lg:pl-14' }}">
+                        <div class="py-4 rounded-sm flex items-start space-x-6 
+                                    {{ $index % 2 == 0 ? 'lg:pr-14' : 'lg:pl-14' }}
+                                   max-sm:bg-white max-sm:mt-2 max-sm:shadow-sm max-sm:rounded-lg max-sm:p-4">
                                 <div>
                                
                                     <p class="font-semibold text-gray-900">{{ $review->author }}</p>

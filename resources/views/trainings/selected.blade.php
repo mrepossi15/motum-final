@@ -16,7 +16,7 @@
 @endif
 
 <div class="flex justify-center min-h-screen text-black">
-    <div class="w-full mb-10">
+    <div class="w-full ">
         <!-- 📸 Carrusel de fotos -->
         <div class="relative mx-auto lg:px-[25%] w-full">
             @if ($training->photos->isNotEmpty())
@@ -115,7 +115,7 @@
             @endif
         </div>
 
-        <!-- 📍 Fila 2: Detalles -->
+        <!-- 📍 Fila 2: Prinicpal -->
         <div class="grid grid-cols-1 md:grid-cols-4 px-6 lg:px-[25%] sm:px-[6%] gap-6 items-start">
             <div class="md:col-span-3 sm:col-span-full">
                 <!-- 🏋️ Título del entrenamiento -->
@@ -148,7 +148,10 @@
                     <span>{{ $training->park->name }} - {{ $training->park->location }}</span>
                 </p>
 
-                <p><strong>{{ $training->activity->name }}</strong> - {{ ucfirst($training->level) }}</p>
+                <p class="text-md"><strong>{{ $training->activity->name }}</strong> - 
+                <span class="text-white bg-orange-400 text-sm px-3 py-1 rounded-sm">
+                    {{ ucfirst($training->level) }}</span>
+                </p>
 
                 <!-- 🔥 Calificación y reseñas -->
                 <div class="mt-5 mb-3 flex items-center space-x-4">
@@ -185,7 +188,7 @@
                         <div class="space-y-2">
                             @foreach ($training->prices as $price)
                                 <label class="flex justify-between items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer bg-white hover:bg-gray-100">
-                                    <span class="text-gray-800 font-medium">{{ $price->weekly_sessions }} veces - ${{ number_format($price->price, 0) }}</span>
+                                <span class="text-gray-800 font-medium">{{ $price->weekly_sessions }} {{ $price->weekly_sessions == 1 ? 'vez' : 'veces' }} - ${{ number_format($price->price, 0) }}</span>
                                     <input type="radio" name="weekly_sessions" value="{{ $price->weekly_sessions }}" 
                                             class="form-radio text-orange-500 focus:ring-orange-400" required>
                                 </label>
@@ -205,7 +208,7 @@
             <div class="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
                 <button id="openModal" 
                     class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
-                Comprar
+                    Comprar
                 </button>
             </div>
 
@@ -254,7 +257,7 @@
             @if(session('cart_success'))
                 <div x-data="{ open: true }">
                     <div x-show="open" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                        <div class="bg-black rounded-lg shadow-lg w-96 p-6">
+                        <div class="bg-[#1E1E1E] rounded-lg shadow-lg w-96 p-6">
                             <div class="flex justify-between items-center border-b pb-2">
                                 <h5 class="text-lg font-semibold text-orange-500">¡Agregado al carrito!</h5>
                                 <button @click="open = false" class="text-white hover:text-white">
@@ -278,7 +281,7 @@
             @endif
         </div>
 
-        <!-- 👨‍🏫 Información del entrenador -->
+        <!-- 👨‍🏫 Detalle -->
         <div class="relative mx-auto px-6 border-t mt-4 lg:px-[25%] sm:px-[6%] w-full">
             <div class="flex items-center space-x-3 mt-4">
                 <img src="{{ Storage::url($training->trainer->profile_pic) }}" alt="Foto de {{ $training->trainer->name }}" 
@@ -302,24 +305,44 @@
             
             <hr class="my-4">
             <!-- ⏰ Horarios -->
-            <h3 class="text-lg font-semibold">Horarios</h3>
-            <ul class="list-disc list-inside text-gray-700 mt-3">
-                @forelse ($training->schedules as $schedule)
-                    <li>{{ ucfirst($schedule->day) }}: {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</li>
+            <h3 class="text-lg font-semibold mb-2">Horarios</h3>
+            <div class="space-y-3">
+                @forelse ($training->schedules->groupBy('day') as $day => $schedules)
+                    <div class="bg-gray-50 p-3 rounded-md shadow-sm">
+                        <h4 class="text-black font-semibold">{{ ucfirst($day) }}</h4>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            @foreach ($schedules as $schedule)
+                                <span class="text-white bg-orange-500 text-sm px-3 py-1 rounded-lg">
+                                    {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - 
+                                    {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
                 @empty
-                    <li class="text-gray-500">No hay horarios disponibles.</li>
+                    <p class="text-gray-500">No hay horarios disponibles.</p>
                 @endforelse
-            </ul>
+            </div>
             <hr class="my-4">
             <!-- 💰 Precios -->
             <h3 class="text-lg mt-4 font-semibold">Precios</h3>
-            <ul class="list-disc list-inside text-gray-700 mt-2">
+
+            <div class="grid gap-3 mt-2">
                 @forelse ($training->prices as $price)
-                    <li>{{ $price->weekly_sessions }} veces por semana: ${{ number_format($price->price, 2) }}</li>
+                    <div class="flex items-center bg-gray-50  shadow-sm rounded-lg p-4">
+                        <div class="ml-1 flex-1">
+                        <p class="text-gray-800 font-medium">
+                            {{ $price->weekly_sessions }} {{ $price->weekly_sessions == 1 ? 'vez' : 'veces' }} por semana
+                        </p>
+                        </div>
+                        <span class="text-lg font-semibold text-orange-600">
+                            ${{ number_format($price->price, 2) }}
+                        </span>
+                    </div>
                 @empty
-                    <li class="text-gray-500">No hay precios definidos.</li>
+                    <p class="text-gray-500">No hay precios definidos.</p>
                 @endforelse
-            </ul>
+            </div>
             <hr class="my-4">
             <!-- ⭐ Reseñas -->
             <h3 id="opiniones" class="text-lg font-semibold">Opiniones</h3>
@@ -362,14 +385,12 @@
 
                                         <!-- ❌ Botón de eliminar (solo si es su comentario o admin) -->
                                         @if(auth()->id() === $review->user_id || auth()->user()->role === 'admin')
-                                            <form action="{{ route('reviews.destroy', $review->id) }}" method="POST" class="mt-2">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-500 hover:text-red-700" 
-                                                        onclick="return confirm('¿Seguro que quieres eliminar esta reseña?')">
-                                                    ❌ Eliminar
-                                                </button>
-                                            </form>
+                                            <button type="button" 
+                                                    onclick="openDeleteModal('{{ route('reviews.destroy', $review->id) }}')" 
+                                                    class="flex items-center text-red-500 hover:text-red-700 mt-2 ">
+                                                <x-lucide-x class="w-5 h-5 text-red-500" />
+                                                <span>Eliminar</span>
+                                            </button>
                                         @endif
                                     </div>
                             </div>
@@ -393,9 +414,9 @@
                         <h3 class="text-2xl font-semibold mb-4">Todas las opiniones</h3>
 
                         <!-- 📜 Contenedor de todas las reseñas -->
-                        <div class="overflow-y-auto h-[80vh] space-y-6">
+                        <div class="overflow-y-auto h-[80vh] px-6 space-y-6">
                             @foreach ($training->reviews->sortByDesc('created_at') as $review)
-                                <div class="rounded-md bg-gray-100 p-4 border-b">
+                                <div class="rounded-sm bg-white0 p-4 border-b">
 
                                     <!-- 🏗️ Fila 1: Foto + Nombre + Calificación -->
                                     <div class="flex items-center space-x-3">
@@ -420,16 +441,12 @@
                                     <div class="mt-3">
                                         <p class="text-gray-700 font-light">{{ $review->comment }}</p>
 
-                                        <!-- ❌ Botón de eliminar (solo si es su comentario o admin) -->
                                         @if(auth()->id() === $review->user_id || auth()->user()->role === 'admin')
-                                            <form action="{{ route('reviews.destroy', $review->id) }}" method="POST" class="mt-2">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-500 hover:text-red-700" 
-                                                        onclick="return confirm('¿Seguro que quieres eliminar esta reseña?')">
-                                                    ❌ Eliminar
-                                                </button>
-                                            </form>
+                                            <button type="button" 
+                                                    onclick="openDeleteModal('{{ route('reviews.destroy', $review->id) }}')" 
+                                                    class="text-red-500 hover:text-red-700 mt-2">
+                                                ❌ Eliminar
+                                            </button>
                                         @endif
                                     </div>
 
@@ -441,74 +458,125 @@
             @endif
 
             <hr class="my-4">
-
             <!-- Formulario para agregar reseña -->
-            
+
             @auth
-            @if($hasPurchased)
-                <form x-data="{ loading: false }" @submit="loading = true" action="{{ route('reviews.store') }}" method="POST" class="bg-gray-50 p-4 rounded shadow-md">
+            <div class="mb-20">
+                @if($hasPurchased)
+                <form x-data="{ loading: false, rating: 0 }" 
+                    @submit="loading = true" 
+                    action="{{ route('reviews.store') }}" 
+                    method="POST" 
+                    class="bg-gray-50 p-6 rounded-md shadow-sm ">
+
                     @csrf
                     <input type="hidden" name="training_id" value="{{ $training->id }}">
 
-                    <label for="rating" class="block font-semibold">Calificación:</label>
-                    <select name="rating" id="rating" class="border p-2 rounded w-full mt-1" required>
-                        @for($i = 1; $i <= 5; $i++)
-                            <option value="{{ $i }}">{{ $i }}</option>
-                        @endfor
-                    </select>
+                    <!-- ⭐ Calificación con Estrellas (SVG de Lucide) -->
+                    <label class="block font-semibold text-gray-700 mb-2">Calificación:</label>
+                    <div class="flex space-x-1 mb-4">
+                        @foreach (range(1, 5) as $i)
+                            <button type="button" @click="rating = {{ $i }}" class="focus:outline-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                                    stroke-linejoin="round" class="lucide lucide-star transition"
+                                    :class="rating >= {{ $i }} ? 'text-orange-500 fill-orange-500' : 'text-gray-300 fill-none'">
+                                    <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+                                </svg>
+                            </button>
+                        @endforeach
+                    </div>
+                    <input type="hidden" name="rating" x-model="rating">
 
-                    <label for="comment" class="block font-semibold mt-2">Comentario:</label>
-                    <textarea name="comment" id="comment" class="border p-2 rounded w-full mt-1" rows="3" required></textarea>
+                    <!-- 📝 Comentario -->
+                    <label for="comment" class="block font-semibold text-gray-700">Comentario:</label>
+                    <textarea name="comment" id="comment" 
+                            class="border border-gray-300 p-3 rounded-lg w-full mt-1 focus:ring-2 focus:ring-orange-500 transition" 
+                            rows="3" required></textarea>
 
                     <!-- 🔄 Spinner y Botón -->
-                    <button type="submit" class="mt-2 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition flex items-center justify-center w-full">
+                    <button type="submit" 
+                            class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
                         <span x-show="!loading">Enviar Reseña</span>
+                        
                         <svg x-show="loading" class="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                         </svg>
                     </button>
                 </form>
-            @else
-                <p class="text-gray-500">Debes haber comprado este entrenamiento para dejar una reseña.</p>
-            @endif
+                </div>
+                @else
+                    <p class="text-gray-500">Debes haber comprado este entrenamiento para dejar una reseña.</p>
+                @endif
 
-            @if(session('review_success'))
-            <div x-data="{ open: true }">
-                <!-- 🔲 Fondo Oscuro -->
-                <div x-show="open" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <!-- 📦 Modal -->
-                    <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
-                        
-                        <!-- 🏷️ Encabezado -->
-                        <div class="flex justify-between items-center border-b pb-2">
-                            <h5 class="text-lg font-semibold text-orange-500">✅ ¡Reseña guardada!</h5>
-                            <button @click="open = false" class="text-gray-500 hover:text-gray-700">✖</button>
-                        </div>
+                @if(session('review_success'))
+                <div x-data="{ open: true }">
+                    <!-- 🔲 Fondo Oscuro -->
+                    <div x-show="open" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <!-- 📦 Modal -->
+                        <div class="bg-[#1E1E1E] rounded-lg shadow-lg w-96 p-6">
+                            
+                            <!-- 🏷️ Encabezado -->
+                            <div class="flex justify-between items-center border-b border-gray-600 pb-2">
+                                <h5 class="text-lg font-semibold text-orange-500">✅ ¡Reseña guardada!</h5>
+                                <button @click="open = false" class="text-white hover:text-gray-300">
+                                    <x-lucide-x class="w-6 h-6" />
+                                </button>
+                            </div>
 
-                        <!-- 📜 Contenido -->
-                        <div class="mt-4 text-gray-700">
-                            Tu reseña ha sido enviada correctamente.
-                        </div>
+                            <!-- 📜 Contenido -->
+                            <div class="mt-4 text-white">
+                                Tu reseña ha sido enviada correctamente.
+                            </div>
 
-                        <!-- ✅ Botón de confirmación -->
-                        <div class="mt-4 text-right">
-                            <button @click="open = false" 
-                                    class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition">
-                                Aceptar
-                            </button>
+                            <!-- ✅ Botón de confirmación -->
+                            <div class="mt-4 text-right">
+                                <button @click="open = false" 
+                                        class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition">
+                                    Aceptar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        @endif
+                @endif
             @endauth
         </div>
         
     </div>
 </div>
    
+<div id="delete-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-[#1E1E1E] rounded-lg shadow-lg w-96 p-6 relative">
+        <!-- ❌ Botón para cerrar -->
+        <button onclick="closeDeleteModal()" class="absolute top-4 right-4 text-white hover:text-gray-300">
+            <x-lucide-x class="w-6 h-6" />
+        </button>
 
+                                                <!-- 🏷️ Encabezado -->
+        <h5 class="text-lg font-semibold text-orange-500">Confirmar Eliminación</h5>
+
+                                                <!-- 📜 Contenido -->
+        <p class="mt-4 text-white">¿Estás seguro de que quieres eliminar esta reseña? Esta acción no se puede deshacer.</p>
+
+                                                <!-- ✅ Botones de acción -->
+        <div class="mt-6 flex justify-end space-x-3">
+            <button onclick="closeDeleteModal()" 
+                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                Cancelar
+            </button>
+            <form id="delete-form" method="POST">
+                @csrf
+                @method('DELETE')
+                <button type="submit" 
+                        class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+                    Sí, eliminar
+                </button>
+            </form>
+        </div>
+    </div>  
+</div>                                    
 <!-- Script de Favoritos -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -577,29 +645,41 @@
             floatingButton.addEventListener("click", (event) => handleFavoriteClick(event, floatingButton, floatingIcon));
         }
     });
+    ///modal reviews
+    document.addEventListener("DOMContentLoaded", function() {
+        const modal = document.getElementById("reviews-modal");
+        const openModalButton = document.getElementById("open-reviews-modal"); // Asegúrate de tener un botón con este ID
+        const closeModalButton = document.getElementById("close-reviews-modal");
 
-    document.addEventListener("DOMContentLoaded", function () {
-        let openModalBtn = document.querySelector("#open-reviews-modal");
-        let closeModalBtn = document.querySelector("#close-reviews-modal");
-        let modal = document.querySelector("#reviews-modal");
-
-        if (openModalBtn && closeModalBtn && modal) {
-            openModalBtn.addEventListener("click", () => {
-                modal.classList.remove("hidden");
-            });
-
-            closeModalBtn.addEventListener("click", () => {
-                modal.classList.add("hidden");
-            });
-
-            modal.addEventListener("click", (e) => {
-                if (e.target === modal) {
-                    modal.classList.add("hidden");
-                }
-            });
+        // Función para abrir el modal y bloquear el scroll
+        function openModal() {
+            modal.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden"); // Bloquea el scroll de fondo
         }
-    });
 
+        // Función para cerrar el modal y desbloquear el scroll
+        function closeModal() {
+            modal.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden"); // Habilita el scroll de fondo
+        }
+
+        // Evento para abrir el modal
+        if (openModalButton) {
+            openModalButton.addEventListener("click", openModal);
+        }
+
+        // Evento para cerrar el modal
+        if (closeModalButton) {
+            closeModalButton.addEventListener("click", closeModal);
+        }
+
+        // Cerrar con la tecla ESC
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape") {
+                closeModal();
+            }
+        });
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         let modal = document.getElementById("sessions-modal");
@@ -632,6 +712,24 @@
                 }, 300);
             }
         });
+    });
+ 
+    function openDeleteModal(action) {
+        document.getElementById("delete-modal").classList.remove("hidden");
+        document.getElementById("delete-form").setAttribute("action", action);
+        document.body.classList.add("overflow-hidden"); // Bloquea el scroll
+    }
+
+    function closeDeleteModal() {
+        document.getElementById("delete-modal").classList.add("hidden");
+        document.body.classList.remove("overflow-hidden"); // Restaura el scroll
+    }
+
+    // Cerrar modal con la tecla ESC
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            closeDeleteModal();
+        }
     });
 
 
