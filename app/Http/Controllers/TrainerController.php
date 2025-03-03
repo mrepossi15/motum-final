@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
+use App\Models\ParkReview;
 
 
 
@@ -64,6 +65,7 @@ class TrainerController extends Controller
             'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
             'medical_fit_description' => 'nullable|string|max:355',
             'photo_reference' => 'nullable|array',
+            'rating' => 'nullable|numeric|min:0|max:5',
            
         ]);
         // dd('Validación realizada correctamente');
@@ -124,8 +126,21 @@ class TrainerController extends Controller
                     'location' => $request->location,
                     'opening_hours' => $request->opening_hours,
                     'photo_urls' => json_encode($photoUrls), // Guardar como JSON
+                    'rating' => $request->rating, // ✅ Guardar la calificación
                 ]
             );
+            $reviews = json_decode($request->reviews, true);
+    if (is_array($reviews)) {
+        foreach ($reviews as $review) {
+            ParkReview::create([
+                'park_id' => $park->id,
+                'author' => $review['author'],
+                'rating' => $review['rating'],
+                'text' => $review['text'],
+                'time' => $review['time'],
+            ]);
+        }
+    }
         
         
             $user = User::create($userData);

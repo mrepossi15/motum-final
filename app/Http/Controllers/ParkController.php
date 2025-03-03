@@ -8,6 +8,7 @@ use Algolia\AlgoliaSearch\Api\SearchClient;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use App\Models\Activity;
+use App\Models\ParkReview;
 use App\Models\Favorite;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
@@ -39,8 +40,10 @@ class ParkController extends Controller
             'location' => 'required|string|max:255',
             'opening_hours' => 'nullable|string',
             'photo_reference' => 'nullable|array',
+            'rating' => 'nullable|numeric|min:0|max:5',
+            'reviews' => 'nullable|string', // ✅ Validamos reviews como string JSON
         ]);
-    
+       
         // Procesar opening_hours si no está vacío
         $openingHours = null;
         if (!empty($request->opening_hours)) {
@@ -99,8 +102,21 @@ class ParkController extends Controller
                     'location' => $request->location,
                     'opening_hours' => $openingHours,
                     'photo_urls' => json_encode($photoUrls),  // Guardar la URL de la imagen en la BD
+                    'rating' => $request->rating, // ✅ Guardar la cali
                 ]
             );
+            $reviews = json_decode($request->reviews, true);
+            if (is_array($reviews)) {
+                foreach ($reviews as $review) {
+                    ParkReview::create([
+                        'park_id' => $park->id,
+                        'author' => $review['author'],
+                        'rating' => $review['rating'],
+                        'text' => $review['text'],
+                        'time' => $review['time'],
+                    ]);
+                }
+            }
         
             // Asociar el parque al usuario autenticado
             $user = Auth::user();
@@ -117,18 +133,18 @@ class ParkController extends Controller
     public function show(Request $request, $id)
     {
         $user = auth()->user();
-        $park = Park::with('trainings.activity')->findOrFail($id);
-    
+        $park = Park::with(['trainings.activity', 'reviews'])->findOrFail($id);
+        $photos = json_decode($park->photo_urls, true) ?? [];
         // Verificar si el parque está en favoritos
         $isFavorite = false;
         if ($user) {
             $isFavorite = Favorite::where('user_id', $user->id)
-            ->where('favoritable_id', $park->id)
-            ->where('favoritable_type', Park::class)
-            ->exists();
+                ->where('favoritable_id', $park->id)
+                ->where('favoritable_type', Park::class)
+                ->exists();
         }
     
-        return view('parks.show', compact('park', 'isFavorite'));
+        return view('parks.show', compact('park', 'isFavorite', 'photos'));
     }
     
 

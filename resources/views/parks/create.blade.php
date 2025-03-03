@@ -30,6 +30,8 @@
             <input type="hidden" id="opening_hours" name="opening_hours">
             <input type="hidden" name="role" value="entrenador">
             <input type="hidden" id="photo_references" name="photo_references">
+            <input type="hidden" id="rating" name="rating">
+            <input type="hidden" id="reviews" name="reviews">
 
            
 

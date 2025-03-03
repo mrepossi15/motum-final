@@ -17,6 +17,8 @@ class Park extends Model
         'opening_hours',
         'location', // Nuevo campo
         'photo_urls',
+        'rating', 
+        'reviews',
     ];
 
     public function users()
@@ -37,6 +39,10 @@ class Park extends Model
     {
         return $this->morphMany(Favorite::class, 'favoritable');
     }
+    public function reviews()
+{
+    return $this->hasMany(ParkReview::class);
+}
 }
 
 

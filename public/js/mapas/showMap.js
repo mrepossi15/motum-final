@@ -14,7 +14,7 @@ function initAutocomplete() {
     autocomplete = new google.maps.places.Autocomplete(input, {
         types: ['park'], // Solo parques
         componentRestrictions: { country: 'AR' }, // Solo Argentina
-        fields: ['geometry', 'name', 'formatted_address', 'opening_hours', 'place_id', 'types', 'photos'], // 🔹 Agregar 'photos'
+        fields: ['geometry', 'name', 'formatted_address', 'opening_hours', 'place_id', 'types', 'photos','rating','reviews'], 
     });
 
     // Listener para el evento "place_changed"
@@ -69,7 +69,20 @@ function handlePlaceChanged() {
 
     // Convertir array de fotos a string para enviarlo al backend
     document.getElementById('photo_references').value = JSON.stringify(photoReferences);
+    document.getElementById('rating').value = place.rating ?? 'No disponible';
+    let reviews = [];
+    if (place.reviews && place.reviews.length > 0) {
+        for (let i = 0; i < Math.min(5, place.reviews.length); i++) {
+            reviews.push({
+                author: place.reviews[i].author_name,
+                rating: place.reviews[i].rating,
+                text: place.reviews[i].text,
+                time: place.reviews[i].relative_time_description
+            });
+        }
+    }
 
+    document.getElementById('reviews').value = JSON.stringify(reviews);
     
 }
 

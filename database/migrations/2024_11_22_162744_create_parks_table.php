@@ -19,6 +19,7 @@ return new class extends Migration
         $table->decimal('longitude', 10, 7); // Longitud
         $table->text('opening_hours')->nullable(); // Horarios de apertura
         $table->json('photo_urls')->nullable();
+        $table->decimal('rating', 3, 2)->default(4);
         $table->timestamps();
     });
 }
