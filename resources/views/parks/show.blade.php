@@ -8,13 +8,18 @@
 @php
     use Illuminate\Support\Str;
 @endphp
+@if (session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        {{ session('error') }}
+        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" aria-label="Close">✖</button>
+    </div>
+@endif
 <div class="flex justify-center min-h-screen text-black">
     <div class="w-full mb-10"> <!-- MODIFICADO: Márgenes dinámicos según dispositivo -->
         <!-- Contenido principal -->
         <div class="relative mx-auto lg:px-[25%] w-full"> 
             <!-- Carrusel de Fotos del Parque -->
             @if ($park->photo_urls)
-                @php $photos = json_decode($park->photo_urls, true); @endphp
                 @if (!empty($photos))
                     <div x-data="{ 
                                         activeSlide: 0, 
@@ -404,4 +409,7 @@
 </script>
 
 @endsection
+
+
+
 

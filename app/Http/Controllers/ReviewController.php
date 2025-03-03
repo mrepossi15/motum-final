@@ -55,7 +55,7 @@ class ReviewController extends Controller
     }
 
 
-    return back()->with('success', 'Reseña agregada con éxito.');
+    return redirect()->back()->with('review_success', 'Tu reseña se ha enviado correctamente.');
 }
 public function destroy($id)
 {
