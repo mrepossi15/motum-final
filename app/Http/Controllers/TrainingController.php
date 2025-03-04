@@ -991,41 +991,46 @@ class TrainingController extends Controller
                     'title'     => $training->title,
                     'park'      => ['name' => $training->park->name],
                     'activity'  => ['name' => $training->activity->name],
-                    'schedules' => $training->schedules->map(function ($schedule) use ($today) {
+                    'available_spots' => $training->available_spots, // Capacidad total
+                    'schedules' => $training->schedules->map(function ($schedule) use ($today, $training) {
                         // Verificar si el horario tiene excepciones
                         $exception = $schedule->exceptions->firstWhere('date', $today);
+                        $scheduleDate = $today;
     
-                        Log::info("Verificando excepciones para el horario ID {$schedule->id}: ", [
-                            'date' => $today,
-                            'exception_found' => $exception ? true : false,
-                            'original_start' => $schedule->start_time,
-                            'original_end' => $schedule->end_time,
-                            'exception_start' => $exception ? $exception->start_time : null,
-                            'exception_end' => $exception ? $exception->end_time : null,
-                        ]);
+                        // Calcular reservas activas
+                        $totalReservations = TrainingReservation::where('training_id', $schedule->training_id)
+                            ->where('date', $scheduleDate)
+                            ->where('time', $exception ? $exception->start_time : $schedule->start_time)
+                            ->where('status', 'active')
+                            ->count();
+    
+                        // Calcular cupos restantes
+                        $availableSpots = max($training->available_spots - $totalReservations, 0);
     
                         return [
-                            'id'          => $schedule->id,
-                            'day'         => $schedule->day,
-                            'start_time'  => $exception ? $exception->start_time : $schedule->start_time,
-                            'end_time'    => $exception ? $exception->end_time : $schedule->end_time,
-                            'is_exception'=> (bool) $exception,
+                            'id'             => $schedule->id,
+                            'day'            => $schedule->day,
+                            'start_time'     => $exception ? $exception->start_time : $schedule->start_time,
+                            'end_time'       => $exception ? $exception->end_time : $schedule->end_time,
+                            'is_exception'   => (bool) $exception,
+                            'available_spots' => $availableSpots,
+                            'total_spots'    => $training->available_spots // Total de cupos del entrenamiento
                         ];
                     })->values()
                 ];
             })
             ->values();
-    
-        // Verificar en los logs si las excepciones se están aplicando correctamente
-        Log::info("Entrenamientos obtenidos con excepciones:", $trainings->toArray());
-    
-        $reservations = TrainingReservation::where('user_id', $userId)
-            ->whereIn('status', ['active', 'completed', 'no-show'])
-            ->with('training')
-            ->orderBy('date', 'asc')
-            ->get();
-    
-        return view('reservations.show', compact('trainings', 'reservations'));
-    }
+
+    // Verificar en los logs si las excepciones y cupos se están aplicando correctamente
+    Log::info("Entrenamientos obtenidos con excepciones y cupos disponibles:", $trainings->toArray());
+
+    $reservations = TrainingReservation::where('user_id', $userId)
+        ->whereIn('status', ['active', 'completed', 'no-show'])
+        ->with('training')
+        ->orderBy('date', 'asc')
+        ->get();
+
+    return view('reservations.show', compact('trainings', 'reservations'));
+}
    
 }

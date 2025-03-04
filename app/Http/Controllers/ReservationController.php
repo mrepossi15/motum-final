@@ -16,69 +16,100 @@ use Illuminate\Support\Facades\Log;
 class ReservationController extends Controller
 {
     public function storeReservation(Request $request, $id)
-     {
+    {
         $request->validate([
-            'date' => 'required|date',
+            'date' => 'required|date|after_or_equal:today|before_or_equal:' . Carbon::today()->addDays(4)->toDateString(),
             'time' => 'required',
         ]);
-    
+        
+        
         $user = Auth::user();
         $training = Training::findOrFail($id);
     
-        // 📌 **Actualizar reservas pasadas a 'completed' si la clase ya comenzó**
+        // Marca las reservas pasadas como completadas
         $now = Carbon::now();
         TrainingReservation::where('user_id', $user->id)
             ->whereNull('canceled_at')
             ->where('status', 'active')
             ->whereRaw("STR_TO_DATE(CONCAT(date, ' ', time), '%Y-%m-%d %H:%i:%s') < ?", [$now])
             ->update(['status' => 'completed']);
-    
-        // 📌 **Obtener el pago del usuario para este entrenamiento**
+        
         $payment = Payment::where('user_id', $user->id)->where('training_id', $id)->first();
         if (!$payment) {
-            return back()->with('error', 'No se encontró el pago para este entrenamiento.');
+            return response()->json(['error' => 'No se encontró el pago para este entrenamiento.'], 400);
         }
+    
         $weeklySessions = $payment->weekly_sessions;
     
-        // 📌 **Contar las reservas completadas y no-show de la semana**
+        // Verifica las clases completadas esta semana
         $reservationsThisWeek = TrainingReservation::where('user_id', $user->id)
             ->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
-            ->whereIn('status', ['completed', 'no-show']) // ✅ Solo contar reservas ya usadas
+            ->whereIn('status', ['completed', 'no-show'])
             ->count();
     
         if ($reservationsThisWeek >= $weeklySessions) {
-            return back()->with('error', 'Ya has completado todas tus clases de esta semana.');
+            return response()->json(['error' => 'Ya has completado todas tus clases de esta semana.'], 400);
         }
     
-        // 📌 **Verificar si el usuario tiene una reserva ACTIVA**
-        $existingReservation = TrainingReservation::where('user_id', $user->id)
+        // Verifica si el usuario tiene 2 reservas activas
+        $activeReservations = TrainingReservation::where('user_id', $user->id)
+            ->where('training_id', $id)
+            ->where('status', 'active')
+            ->count();
+    
+        if ($activeReservations >= 2) {
+            return response()->json(['error' => 'Solo puedes tener hasta 2 reservas activas para este entrenamiento.'], 400);
+        }
+    
+        // Nueva validación: Verifica si ya tiene una reserva activa para el mismo día (no importa la hora)
+        $existingReservationForSameDay = TrainingReservation::where('user_id', $user->id)
+            ->where('training_id', $id)
+            ->where('date', $request->date)
             ->where('status', 'active')
             ->first();
     
-        if ($existingReservation) {
-            return back()->with('error', 'Solo puedes tener una reserva activa a la vez.');
+        if ($existingReservationForSameDay) {
+            return response()->json(['error' => 'Ya tienes una reserva activa para este día.'], 400);
         }
     
-        // 📌 **Verificar si hay cupos disponibles**
+        // Evita reservar el MISMO horario más de una vez
+        $existingReservationSameTime = TrainingReservation::where('user_id', $user->id)
+            ->where('training_id', $id)
+            ->where('date', $request->date)
+            ->where('time', $request->time)
+            ->where('status', 'active')
+            ->first();
+    
+        if ($existingReservationSameTime) {
+            return response()->json(['error' => 'Ya tienes una reserva activa para este horario.'], 400);
+        }
+    
+        // Verifica si la fecha seleccionada está dentro de los 4 días permitidos
+        $selectedDate = Carbon::parse($request->date);
+        if ($selectedDate->diffInDays(Carbon::now()) > 4) {
+            return response()->json(['error' => 'No puedes hacer reservas para clases a más de 4 días de anticipación.'], 400);
+        }
+    
+        // Verifica si hay cupos disponibles
         $currentReservations = TrainingReservation::where('training_id', $id)
             ->where('date', $request->date)
             ->where('time', $request->time)
             ->count();
     
         if ($currentReservations >= $training->available_spots) {
-            return back()->with('error', 'No hay cupos disponibles para este horario.');
+            return response()->json(['error' => 'No hay cupos disponibles para este horario.'], 400);
         }
     
-        // 📌 **Crear la reserva**
+        // Crea la reserva
         TrainingReservation::create([
             'user_id' => $user->id,
             'training_id' => $id,
             'date' => $request->date,
             'time' => $request->time,
-            'status' => 'active', // ✅ Nueva reserva en estado activo
+            'status' => 'active',
         ]);
     
-        return redirect()->route('reservations.show')->with('success', 'Reserva realizada con éxito.');
+        return back()->with('success' , 'Reserva realizada con éxito.');
     }
     public function cancelReservation($id) {
         $reservation = TrainingReservation::where('id', $id)
@@ -246,5 +277,37 @@ class ReservationController extends Controller
     $reservation->update(['status' => $request->status]);
 
     return back()->with('success', 'Estado de la reserva actualizado correctamente.');
+}
+public function checkReservation(Request $request, $id)
+{
+    $user = Auth::user();
+    $training = Training::findOrFail($id);
+
+    $payment = Payment::where('user_id', $user->id)->where('training_id', $id)->first();
+    if (!$payment) {
+        return response()->json(['error' => 'No se encontró el pago para este entrenamiento.'], 400);
+    }
+
+    $weeklySessions = $payment->weekly_sessions;
+
+    $reservationsThisWeek = TrainingReservation::where('user_id', $user->id)
+        ->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+        ->whereIn('status', ['completed', 'no-show'])
+        ->count();
+
+    if ($reservationsThisWeek >= $weeklySessions) {
+        return response()->json(['error' => 'Ya has completado todas tus clases de esta semana.'], 400);
+    }
+
+    $existingReservation = TrainingReservation::where('user_id', $user->id)
+        ->where('training_id', $id)
+        ->where('status', 'active')
+        ->first();
+
+    if ($existingReservation) {
+        return response()->json(['error' => 'Solo puedes tener una reserva activa por entrenamiento.'], 400);
+    }
+
+    return response()->json(['success' => 'Puedes reservar esta clase.']);
 }
 }

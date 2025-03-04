@@ -244,6 +244,9 @@ Route::delete('/entrenamiento/{id}/delete', [ReservationController::class, 'canc
 Route::patch('/reservations/{id}/update-status', [ReservationController::class, 'updateReservationStatus'])
     ->name('reservations.updateStatus')
     ->middleware('auth');
+    Route::get('/entrenamiento/{id}/verificar-reserva', [ReservationController::class, 'checkReservation'])
+    ->middleware('auth')
+    ->name('check.reservation');
 
     /*
 |--------------------------------------------------------------------------
