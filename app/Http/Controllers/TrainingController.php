@@ -981,7 +981,7 @@ class TrainingController extends Controller
         $today = Carbon::now()->format('Y-m-d');
     
         $trainings = Payment::where('user_id', $userId)
-            ->with(['training.schedules.exceptions', 'training.park', 'training.activity'])
+            ->with(['training.schedules.exceptions', 'training.park', 'training.activity', 'training.trainer'])
             ->get()
             ->pluck('training')
             ->unique()
@@ -989,22 +989,20 @@ class TrainingController extends Controller
                 return [
                     'id'        => $training->id,
                     'title'     => $training->title,
-                    'park'      => ['name' => $training->park->name],
-                    'activity'  => ['name' => $training->activity->name],
-                    'available_spots' => $training->available_spots, // Capacidad total
+                    'trainer'   => ['name' => optional($training->trainer)->name ?? 'No disponible'],
+                    'park'      => ['name' => optional($training->park)->name ?? 'No disponible'],
+                    'activity'  => ['name' => optional($training->activity)->name ?? 'No disponible'],
+                    'available_spots' => $training->available_spots,
                     'schedules' => $training->schedules->map(function ($schedule) use ($today, $training) {
-                        // Verificar si el horario tiene excepciones
                         $exception = $schedule->exceptions->firstWhere('date', $today);
                         $scheduleDate = $today;
     
-                        // Calcular reservas activas
                         $totalReservations = TrainingReservation::where('training_id', $schedule->training_id)
                             ->where('date', $scheduleDate)
                             ->where('time', $exception ? $exception->start_time : $schedule->start_time)
                             ->where('status', 'active')
                             ->count();
     
-                        // Calcular cupos restantes
                         $availableSpots = max($training->available_spots - $totalReservations, 0);
     
                         return [
@@ -1014,23 +1012,54 @@ class TrainingController extends Controller
                             'end_time'       => $exception ? $exception->end_time : $schedule->end_time,
                             'is_exception'   => (bool) $exception,
                             'available_spots' => $availableSpots,
-                            'total_spots'    => $training->available_spots // Total de cupos del entrenamiento
+                            'total_spots'    => $training->available_spots
                         ];
                     })->values()
                 ];
             })
             ->values();
+    
+        Log::info("Entrenamientos obtenidos con excepciones y cupos disponibles:", $trainings->toArray());
+    
+        $reservations = TrainingReservation::where('user_id', $userId)
+    ->whereIn('status', ['active', 'completed', 'no-show'])
+    ->with(['training.schedules', 'training.park', 'training.activity', 'training.trainer'])
+    ->orderBy('date', 'asc')
+    ->get()
+    ->map(function ($reservation) {
+        $schedule = $reservation->training->schedules
+            ->firstWhere('start_time', $reservation->time);
 
-    // Verificar en los logs si las excepciones y cupos se están aplicando correctamente
-    Log::info("Entrenamientos obtenidos con excepciones y cupos disponibles:", $trainings->toArray());
+        $reservation->end_time = $schedule ? $schedule->end_time : 'No definido';
 
-    $reservations = TrainingReservation::where('user_id', $userId)
-        ->whereIn('status', ['active', 'completed', 'no-show'])
-        ->with('training')
-        ->orderBy('date', 'asc')
-        ->get();
+        // 🔥 Calcular cupos disponibles en la reserva
+        $totalReservations = TrainingReservation::where('training_id', $reservation->training_id)
+            ->where('date', $reservation->date)
+            ->where('time', $reservation->time)
+            ->where('status', 'active')
+            ->count();
 
-    return view('reservations.show', compact('trainings', 'reservations'));
-}
+        $availableSpots = max($reservation->training->available_spots - $totalReservations, 0);
+
+        return [
+            'id'        => $reservation->id,
+            'date'      => $reservation->date,
+            'time'      => $reservation->time,
+            'end_time'  => $reservation->end_time,
+            'status'    => $reservation->status,
+            'available_spots' => $availableSpots, // 🔥 Agregado para que aparezcan los cupos en reservas
+            'training'  => [
+                'title'    => $reservation->training->title,
+                'park'     => ['name' => optional($reservation->training->park)->name ?? 'No disponible'],
+                'activity' => ['name' => optional($reservation->training->activity)->name ?? 'No disponible'],
+                'trainer'  => ['name' => optional($reservation->training->trainer)->name ?? 'No disponible'],
+                'available_spots' => $availableSpots, // 🔥 También aquí por si lo usa en la vista
+            ],
+        ];
+    });
+    
+        return view('reservations.show', compact('trainings', 'reservations'));
+    }
+    
    
 }

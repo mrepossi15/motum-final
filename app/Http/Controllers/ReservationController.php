@@ -99,17 +99,21 @@ class ReservationController extends Controller
         if ($currentReservations >= $training->available_spots) {
             return response()->json(['error' => 'No hay cupos disponibles para este horario.'], 400);
         }
-    
-        // Crea la reserva
+     // 🔥 OBTENER EL HORARIO DE FINALIZACIÓN DESDE `training_schedules`
+
+
+        // Crea la reserva con el horario de finalización correcto
         TrainingReservation::create([
-            'user_id' => $user->id,
-            'training_id' => $id,
-            'date' => $request->date,
-            'time' => $request->time,
-            'status' => 'active',
+        'user_id' => $user->id,
+        'training_id' => $id,
+        'date' => $request->date,
+        'time' => $request->time,
+        'end_time' => $request->end_time, // ✅ Ahora guardamos el horario de fin correctamente
+        'status' => 'active',
         ]);
     
-        return back()->with('success' , 'Reserva realizada con éxito.');
+        return redirect()->route('reservations.show', ['#reservas'])
+        ->with('success', '¡Reserva creada exitosamente!');
     }
     public function cancelReservation($id) {
         $reservation = TrainingReservation::where('id', $id)

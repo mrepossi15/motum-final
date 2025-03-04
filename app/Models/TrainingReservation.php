@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class TrainingReservation extends Model {
     use HasFactory;
 
-    protected $fillable = ['training_id', 'user_id', 'date', 'time','canceled_at', 'status'];
+    protected $fillable = ['training_id', 'user_id', 'date', 'time','end_time', 'canceled_at', 'status'];
 
     public function training() {
         return $this->belongsTo(Training::class);

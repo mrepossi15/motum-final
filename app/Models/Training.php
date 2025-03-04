@@ -41,6 +41,7 @@ class Training extends Model
     {
         return $this->hasMany(TrainingSchedule::class);
     }
+    
 
     // Relación con precios de entrenamiento
     public function prices()
