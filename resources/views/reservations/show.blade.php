@@ -3,118 +3,114 @@
 @section('title', 'Mis Entrenamientos')
 
 @section('content')
-<main class="container mx-auto px-4 py-6">
-    <h2 class="text-2xl font-semibold mb-4">Mis Entrenamientos</h2>
-    
-    <div class="space-y-4">
-        @forelse($trainings as $training)
-            @php
-                $hasActiveReservation = $reservations->where('training_id', $training->id)
-                    ->where('status', 'active')
-                    ->isNotEmpty();
-            @endphp
-            
-            <div class="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-                <h5 class="text-lg font-medium">{{ $training->title }}</h5>
-                <p><strong>Parque:</strong> {{ $training->park->name }}</p>
-                <p><strong>Actividad:</strong> {{ $training->activity->name }}</p>
-                <p>
-                    <strong>Cupos Disponibles:</strong> 
-                    {{ $training->available_spots - $training->reservations->count() }} / {{ $training->available_spots }}
-                </p>
-                
-                @if ($hasActiveReservation)
-                    <button class="bg-gray-400 text-white px-4 py-2 rounded mt-2" disabled>
-                        🚫 Ya tienes una reserva activa
-                    </button>
-                @else
-                    <a href="{{ route('reserve.training.view', $training->id) }}" 
-                       class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mt-2 inline-block">
-                        📅 Reservar Entrenamiento
-                    </a>
-                @endif
-            </div>
-        @empty
-            <p class="text-gray-500">No has comprado entrenamientos aún.</p>
-        @endforelse
-    </div>
 
-    <h2 class="text-2xl font-semibold mt-6 mb-4">Mis Reservas</h2>
+<div class="flex justify-center min-h-screen text-black bg-gray-100">
+    <div class="w-full max-w-7xl mx-auto p-4 lg:px-10"  x-data="trainingsData()">
+        <h2 class="text-2xl font-semibold mb-4">Mis Entrenamientos</h2>
 
-    @if($reservations->isEmpty())
-        <p class="text-gray-500">No tienes reservas aún.</p>
-    @else
+        <!-- Calendario semanal -->
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
                 <thead>
-                    <tr class="bg-gray-100 text-left">
-                        <th class="p-3">Entrenamiento</th>
-                        <th class="p-3">Fecha</th>
-                        <th class="p-3">Hora</th>
-                        <th class="p-3">Cupos Disponibles</th>
-                        <th class="p-3">Estado</th>
-                        <th class="p-3">Acción</th>
+                    <tr class="bg-gray-100 text-center">
+                        @foreach(["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as $index => $day)
+                            <th class="p-3 cursor-pointer "
+                            :class="selectedDay === {{ $index + 1 }} ? 'bg-orange-500 text-white' : ''"
+                            @click="selectedDay = {{ $index + 1 }}">
+                            {{ $day }}
+                            </th>
+                        @endforeach
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($reservations as $reservation)
-                    <tr class="border-b">
-                        <td class="p-3">{{ $reservation->training->title }}</td>
-                        <td class="p-3">{{ $reservation->date }}</td>
-                        <td class="p-3">{{ $reservation->time }}</td>
-                        <td class="p-3">
-                            @php
-                                $totalReservations = \App\Models\TrainingReservation::where('training_id', $reservation->training->id)
-                                    ->where('date', $reservation->date)
-                                    ->where('time', $reservation->time)
-                                    ->count();
-                                $cuposRestantes = $reservation->training->available_spots - $totalReservations;
-                            @endphp
-                            {{ $cuposRestantes }} / {{ $reservation->training->available_spots }}
-                        </td>
-                        <td class="p-3">
-                            @if($reservation->status === 'active')
-                                <span class="bg-green-500 text-white px-2 py-1 rounded text-sm">Activa</span>
-                            @elseif($reservation->status === 'completed')
-                                <span class="bg-blue-500 text-white px-2 py-1 rounded text-sm">Completada</span>
-                            @elseif($reservation->status === 'no-show')
-                                <span class="bg-yellow-500 text-white px-2 py-1 rounded text-sm">No asistió</span>
-                            @endif
-                        </td>
-                        <td class="p-3">
-                            @php
-                                $classDateTime = \Carbon\Carbon::parse("{$reservation->date} {$reservation->time}");
-                                $now = \Carbon\Carbon::now();
-                                $canCancel = $now->diffInHours($classDateTime, false) >= 4;
-                            @endphp
-    
-                            @if($reservation->status === 'active')
-                                @if ($canCancel)
-                                    <form action="{{ route('cancel.reservation', $reservation->id) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">
-                                            Cancelar
-                                        </button>
-                                    </form>
-                                @else
-                                    <button class="bg-gray-400 text-white px-4 py-2 rounded text-sm" disabled>
-                                        ❌ No puedes cancelar a menos de 4 horas
-                                    </button>
-                                @endif
-                            @else
-                                <span class="text-gray-500 text-sm">No modificable</span>
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
             </table>
         </div>
-    @endif
 
-    <a href="{{ url()->previous() }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded mt-4 inline-block">
-        ⬅️ Atrás
-    </a>
-</main>
+        <!-- Lista de entrenamientos para el día seleccionado -->   
+        <div class="mt-6">
+            <h3 class="text-xl font-semibold mb-4">Entrenamientos para el día seleccionado</h3>
+            
+            <template x-for="schedule in schedulesForDay()" :key="schedule.id">
+                <div class="bg-white shadow-md rounded-lg p-4 border mb-4 border-gray-200">
+                    <h5 class="text-lg font-medium" x-text="schedule.training.title"></h5>
+                    <p><strong>Parque:</strong> <span x-text="schedule.training.park.name"></span></p>
+                    <p><strong>Actividad:</strong> <span x-text="schedule.training.activity.name"></span></p>
+
+                    <h4 class="text-lg font-semibold mt-2">Horario:</h4>
+                    <span class="text-white px-3 py-1 rounded-lg"
+                        :class="schedule.is_exception ? 'bg-red-500' : 'bg-orange-500'"
+                        x-text="schedule.start_time + ' - ' + schedule.end_time">
+                    </span>
+
+                    <p x-show="schedule.is_exception" class="text-sm text-red-600 mt-1">Horario modificado para hoy</p>
+                </div>
+            </template>
+        </div>
+
+        <!-- Lista de reservas activas -->
+        <h2 class="text-2xl font-semibold mt-6 mb-4">Mis Reservas Activas</h2>
+        @if($reservations->isEmpty())
+            <p class="text-gray-500">No tienes reservas activas aún.</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
+                    <thead>
+                        <tr class="bg-gray-100 text-left">
+                            <th class="p-3">Entrenamiento</th>
+                            <th class="p-3">Fecha</th>
+                            <th class="p-3">Hora</th>
+                            <th class="p-3">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($reservations as $reservation)
+                            <tr class="border-b">
+                                <td class="p-3">{{ $reservation->training->title }}</td>
+                                <td class="p-3">{{ $reservation->date }}</td>
+                                <td class="p-3">{{ $reservation->time }}</td>
+                                <td class="p-3">
+                                    <span class="bg-green-500 text-white px-2 py-1 rounded text-sm">Activa</span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+</div>
+
+<script>
+function trainingsData() {
+    return {
+        selectedDay: new Date().getDay() === 0 ? 7 : new Date().getDay(), // Convertir Domingo (0) a 7
+        trainings: {!! json_encode($trainings) !!},
+
+        dayMap: {
+            "Lunes": 1,
+            "Martes": 2,
+            "Miércoles": 3,
+            "Jueves": 4,
+            "Viernes": 5,
+            "Sábado": 6,
+            "Domingo": 7
+        },
+
+        schedulesForDay() {
+            console.log("Filtrando entrenamientos para el día:", this.selectedDay);
+
+            const filteredSchedules = this.trainings
+                .flatMap(training => training.schedules.map(schedule => ({
+                    ...schedule,
+                    training: training
+                })))
+                .filter(schedule => this.dayMap[schedule.day] == this.selectedDay)
+                .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+            console.log("Entrenamientos encontrados para el día:", filteredSchedules);
+            return filteredSchedules;
+        }
+    };
+}
+</script>
+
 @endsection

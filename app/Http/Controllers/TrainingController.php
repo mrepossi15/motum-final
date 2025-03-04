@@ -976,23 +976,55 @@ class TrainingController extends Controller
 
         return view('trainings.detail', compact('training'));
     }
-    public function myTrainings() {
+    public function myTrainings(Request $request) {
         $userId = Auth::id();
+        $today = Carbon::now()->format('Y-m-d');
     
-        // Obtener los entrenamientos que el alumno ha comprado
         $trainings = Payment::where('user_id', $userId)
-            ->with('training')
+            ->with(['training.schedules.exceptions', 'training.park', 'training.activity'])
             ->get()
             ->pluck('training')
-            ->unique();
+            ->unique()
+            ->map(function ($training) use ($today) {
+                return [
+                    'id'        => $training->id,
+                    'title'     => $training->title,
+                    'park'      => ['name' => $training->park->name],
+                    'activity'  => ['name' => $training->activity->name],
+                    'schedules' => $training->schedules->map(function ($schedule) use ($today) {
+                        // Verificar si el horario tiene excepciones
+                        $exception = $schedule->exceptions->firstWhere('date', $today);
     
-        // Obtener solo las reservas activas
+                        Log::info("Verificando excepciones para el horario ID {$schedule->id}: ", [
+                            'date' => $today,
+                            'exception_found' => $exception ? true : false,
+                            'original_start' => $schedule->start_time,
+                            'original_end' => $schedule->end_time,
+                            'exception_start' => $exception ? $exception->start_time : null,
+                            'exception_end' => $exception ? $exception->end_time : null,
+                        ]);
+    
+                        return [
+                            'id'          => $schedule->id,
+                            'day'         => $schedule->day,
+                            'start_time'  => $exception ? $exception->start_time : $schedule->start_time,
+                            'end_time'    => $exception ? $exception->end_time : $schedule->end_time,
+                            'is_exception'=> (bool) $exception,
+                        ];
+                    })->values()
+                ];
+            })
+            ->values();
+    
+        // Verificar en los logs si las excepciones se están aplicando correctamente
+        Log::info("Entrenamientos obtenidos con excepciones:", $trainings->toArray());
+    
         $reservations = TrainingReservation::where('user_id', $userId)
-            ->whereIn('status', ['active', 'completed', 'no-show']) // Filtrar por estado
+            ->whereIn('status', ['active', 'completed', 'no-show'])
             ->with('training')
             ->orderBy('date', 'asc')
             ->get();
-        
+    
         return view('reservations.show', compact('trainings', 'reservations'));
     }
    

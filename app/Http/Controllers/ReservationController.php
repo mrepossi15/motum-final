@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class ReservationController extends Controller
 {
-    public function storeReservation(Request $request, $id) {
+    public function storeReservation(Request $request, $id)
+     {
         $request->validate([
             'date' => 'required|date',
             'time' => 'required',

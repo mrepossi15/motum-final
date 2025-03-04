@@ -130,17 +130,17 @@ class TrainerController extends Controller
                 ]
             );
             $reviews = json_decode($request->reviews, true);
-    if (is_array($reviews)) {
-        foreach ($reviews as $review) {
-            ParkReview::create([
-                'park_id' => $park->id,
-                'author' => $review['author'],
-                'rating' => $review['rating'],
-                'text' => $review['text'],
-                'time' => $review['time'],
-            ]);
+        if (is_array($reviews)) {
+            foreach ($reviews as $review) {
+                ParkReview::create([
+                    'park_id' => $park->id,
+                    'author' => $review['author'],
+                    'rating' => $review['rating'],
+                    'text' => $review['text'],
+                    'time' => $review['time'],
+                ]);
+            }
         }
-    }
         
         
             $user = User::create($userData);
