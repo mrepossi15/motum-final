@@ -66,6 +66,11 @@
                                     Mis entrenamientos
                                 </a>
                              </li>
+                             <li>
+                                <a href="{{ route('favorites.view') }}" class="text-orange-500 hover:underline {{ request()->routeIs('favorites.view') ? 'font-bold' : '' }}">
+                                    Mis favorites
+                                </a>
+                             </li>
                         @endif
 
                         <!-- Cerrar sesión -->

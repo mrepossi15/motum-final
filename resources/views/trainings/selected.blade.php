@@ -15,63 +15,76 @@
     </div>
 @endif
 
-<div class="flex justify-center min-h-screen text-black">
-    <div class="w-full ">
+<div class="flex justify-center min-h-screen text-black bg-gray-100">
+    <div class="w-full max-w-7xl mx-auto  lg:px-10">
         <!-- 📸 Carrusel de fotos -->
-        <div class="relative mx-auto lg:px-[25%] w-full">
+        <div class="relative mx-auto w-full"> 
+            <!-- Carrusel de Fotos del Entrenamiento -->
             @if ($training->photos->isNotEmpty())
                 @php
-                    $trainingPhotos = $training->photos->pluck('photo_path')->map(fn($path) => asset('storage/' . $path))->toArray();
+                    $photos = $training->photos->pluck('photo_path')->map(fn($path) => asset('storage/' . $path))->toArray();
                 @endphp
 
                 <div x-data="{ 
                         activeSlide: 0, 
-                        slides: {{ json_encode($trainingPhotos) }},
+                        slides: {{ json_encode($photos) }},
                         showModal: false,
-                        next() { this.activeSlide = (this.activeSlide + 1) % this.slides.length },
-                        prev() { this.activeSlide = this.activeSlide === 0 ? this.slides.length - 1 : this.activeSlide - 1 }
+                        next() { 
+                            this.activeSlide = (this.activeSlide + 1) % this.slides.length 
+                        },
+                        prev() { 
+                            this.activeSlide = this.activeSlide === 0 ? this.slides.length - 1 : this.activeSlide - 1 
+                        }
                     }" class="relative w-full my-3">
-
-                    <!-- 🖥️ Vista en Computadoras -->
-                    <div class="hidden lg:grid gap-2"
-                        :class="{
-                            'grid-cols-1': slides.length === 1,
-                            'grid-cols-2': slides.length === 2 || slides.length === 3,
-                            'grid-cols-10': slides.length >= 4
-                        }">
-
-                        <!-- 🖼️ Foto en pantalla completa -->
-                        <template x-if="slides.length === 1">
-                            <img :src="slides[0]" 
-                                alt="Foto principal de entrenamiento"
-                                class="w-full h-[450px] object-cover cursor-pointer rounded"
+                    
+                    <!-- 🖥️ Modo Computadora (Grid de 2 columnas) -->
+                    <div class="hidden lg:grid grid-cols-10 gap-2">
+                        <!-- 📸 Imagen principal (70%) -->
+                        <div class="col-span-7">
+                            <img src="{{ asset($photos[0]) }}"
+                                alt="Foto principal de {{ $training->title }}"
+                                class="w-full h-[350px] object-cover cursor-pointer"
                                 @click="showModal = true; activeSlide = 0">
-                        </template>
+                        </div>
 
-                        <!-- 🖼️ Dos fotos en columnas -->
-                        <template x-if="slides.length === 2">
-                            <div class="grid grid-cols-2 gap-2">
-                                <img :src="slides[0]" class="w-full h-[350px] object-cover cursor-pointer rounded" @click="showModal = true; activeSlide = 0">
-                                <img :src="slides[1]" class="w-full h-[350px] object-cover cursor-pointer rounded" @click="showModal = true; activeSlide = 1">
-                            </div>
-                        </template>
-
-                        <!-- 🖼️ Tres fotos (una grande y dos pequeñas) -->
-                        <template x-if="slides.length === 3">
-                            <div class="grid grid-cols-2 gap-2">
-                                <img :src="slides[0]" class="w-full h-[350px] object-cover cursor-pointer rounded" @click="showModal = true; activeSlide = 0">
-                                <div class="flex flex-col gap-2">
-                                    <img :src="slides[1]" class="w-full h-[170px] object-cover cursor-pointer rounded" @click="showModal = true; activeSlide = 1">
-                                    <img :src="slides[2]" class="w-full h-[170px] object-cover cursor-pointer rounded" @click="showModal = true; activeSlide = 2">
-                                </div>
-                            </div>
-                        </template>
+                        <!-- 📸 Columna derecha (30%) -->
+                        <div class="col-span-3">
+                            @if(isset($photos[1]))
+                                <img src="{{ asset($photos[1]) }}"
+                                    alt="Foto secundaria"
+                                    class="w-full h-[350px] object-cover cursor-pointer"
+                                    @click="showModal = true; activeSlide = 1">
+                            @endif
+                        </div>
                     </div>
 
-                    <!-- 📱 Vista en móviles (carrusel con indicadores) -->
-                    <div class="lg:hidden relative w-full">
-                        <img :src="slides[activeSlide]" class="w-full h-[300px] object-cover cursor-pointer rounded"
-                             @touchstart="startSwipe($event)" @touchend="endSwipe($event)">
+                    <!-- 📱 Modo Tablet / iPhone (Carrusel con flechas) -->
+                    <div class="lg:hidden relative w-full" x-data="{
+                    
+                        activeSlide: 0, 
+                        slides: {{ json_encode($photos) }},
+                        touchStartX: 0,
+                        touchEndX: 0,
+                        startSwipe(event) { this.touchStartX = event.touches[0].clientX; },
+                        endSwipe(event) { 
+                            this.touchEndX = event.changedTouches[0].clientX;
+                            let diff = this.touchStartX - this.touchEndX;
+                            if (Math.abs(diff) > 50) {
+                                if (diff > 0) { this.activeSlide = (this.activeSlide + 1) % this.slides.length; } 
+                                else { this.activeSlide = (this.activeSlide - 1 + this.slides.length) % this.slides.length; }
+                            }
+                        }
+                    }">
+                        <img :src="slides[activeSlide]"
+                            alt="Foto de {{ $training->title }}"
+                            class="w-full h-[300px] object-cover"
+                            @touchstart="startSwipe($event)"
+                            @click="showModal = true; activeSlide = 1"
+                            @touchend="endSwipe($event)">
+                            
+                            
+
+                        <!-- Indicadores -->
                         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
                             <template x-for="(photo, index) in slides" :key="index">
                                 <button @click="activeSlide = index" 
@@ -81,19 +94,27 @@
                         </div>
                     </div>
 
-                    <!-- 📸 Modal de imágenes -->
+                    <!-- 📸 Modal de Imágenes -->
                     <template x-if="showModal">
                         <div class="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center" @click="showModal = false">
                             <div class="relative w-full max-w-4xl mx-auto shadow-lg" @click.stop>
+                                
+                                <!-- ❌ Botón de Cerrar -->
                                 <button class="absolute top-4 right-4 text-black p-2 rounded-full focus:outline-none z-50" type="button" @click="showModal = false">
                                     <x-lucide-x class="w-6 h-6 text-black" />
                                 </button>
+
+                                <!-- 📸 Contenedor de Imagen -->
                                 <div class="relative">
-                                    <img :src="slides[activeSlide]" alt="Foto del entrenamiento" class="w-full max-h-[80vh] object-contain rounded">
+                                    <img :src="slides[activeSlide]" alt="Foto del entrenamiento" class="w-full max-h-[80vh] object-contain">
+
+                                    <!-- ⬅ Botón Anterior -->
                                     <button class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md" 
                                             @click.stop="prev()">
                                         <x-lucide-chevron-left class="w-6 h-6 text-orange-500" />
                                     </button>
+
+                                    <!-- ➡ Botón Siguiente -->
                                     <button class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md" 
                                             @click.stop="next()">
                                         <x-lucide-chevron-right class="w-6 h-6 text-orange-500" />
@@ -103,12 +124,13 @@
                         </div>
                     </template>
 
-                    <!-- ❤️ Botón flotante de favoritos -->
+                    <!-- Botón flotante dentro de la imagen (para tablets y celulares) -->
                     <button id="floating-favorite-btn" 
-                        class="absolute top-4 right-4 p-2 rounded-full bg-white shadow-md"
+                        class="absolute top-4 right-4 p-2 rounded-full bg-white shadow-md md:hidden"
                         data-id="{{ $training->id }}" 
                         data-type="training"
                         data-favorite="{{ $isFavorite ? 'true' : 'false' }}">
+                        
                         <x-lucide-heart :class="$isFavorite ? 'w-6 h-6 text-orange-500 fill-current' : 'w-6 h-6 text-orange-500 stroke-current'" id="floating-favorite-icon" />
                     </button>
                 </div>
@@ -116,8 +138,8 @@
         </div>
 
         <!-- 📍 Fila 2: Prinicpal -->
-        <div class="grid grid-cols-1 md:grid-cols-4 px-6 lg:px-[25%] sm:px-[6%] gap-6 items-start">
-            <div class="md:col-span-3 sm:col-span-full">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-24 px-4 md:pb-6">
+            <div class="md:col-span-2">
                 <!-- 🏋️ Título del entrenamiento -->
                 <h1 class="text-2xl sm:text-3xl my-2 font-bold text-gray-900 flex items-center">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-sm flex items-center justify-center p-2 mr-2">
@@ -148,8 +170,8 @@
                     <span>{{ $training->park->name }} - {{ $training->park->location }}</span>
                 </p>
 
-                <p class="text-md"><strong>{{ $training->activity->name }}</strong> - 
-                <span class="text-white bg-orange-400 text-sm px-3 py-1 rounded-sm">
+                <p class="text-md"><strong>{{ $training->activity->name }} -</strong>  
+                <span class="text-white bg-orange-500 text-sm px-3 py-1 rounded-sm">
                     {{ ucfirst($training->level) }}</span>
                 </p>
 
@@ -176,9 +198,10 @@
                 </div>
             </div>
            <!-- 🛒 Botón de compra en Desktop -->
-            <div class="hidden md:flex justify-end mb-4">
-                <form action="{{ route('cart.add') }}" method="POST" 
-                    class="bg-white p-5 rounded-2xl shadow-lg w-full md:w-[400px] border border-gray-200">
+           <div class="bg-white shadow-lg rounded-lg p-4 
+                        md:sticky md:top-4 md:self-start h-auto w-full 
+                        fixed bottom-0 left-0 md:relative z-50 md:z-auto border-t md:border-none">
+                <form action="{{ route('cart.add') }}" method="POST" >
                     @csrf
                     <input type="hidden" name="training_id" value="{{ $training->id }}">
 
@@ -190,7 +213,7 @@
                                 <label class="flex justify-between items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer bg-white hover:bg-gray-100">
                                 <span class="text-gray-800 font-medium">{{ $price->weekly_sessions }} {{ $price->weekly_sessions == 1 ? 'vez' : 'veces' }} - ${{ number_format($price->price, 0) }}</span>
                                     <input type="radio" name="weekly_sessions" value="{{ $price->weekly_sessions }}" 
-                                            class="form-radio text-orange-500 focus:ring-orange-400" required>
+                                            class="form-radio text-orange-500 focus:ring-orange-600" required>
                                 </label>
                             @endforeach
                         </div>
@@ -198,7 +221,7 @@
 
                     <!-- 🛒 Botón de compra -->
                     <button type="submit" 
-                            class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
+                    class="bg-orange-500 text-white font-semibold w-full py-3 rounded-md mt-4 hover:bg-orange-600 transition">
                         Comprar 
                     </button>
                 </form>
@@ -207,7 +230,7 @@
             <!-- 📱 Mobile: Botón fijo abajo -->
             <div class="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
                 <button id="openModal" 
-                    class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
+                    class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-600 transition">
                     Comprar
                 </button>
             </div>
@@ -237,7 +260,7 @@
                                 <label class="flex justify-between items-center border border-gray-500 rounded-lg px-4 py-2 cursor-pointer bg-black hover:border-orange-500 text-white">
                                     <span class="text-white font-medium">{{ $price->weekly_sessions }} veces - ${{ number_format($price->price, 0) }}</span>
                                     <input type="radio" name="weekly_sessions" value="{{ $price->weekly_sessions }}" 
-                                        class="form-radio text-orange-500 focus:ring-orange-400" required>
+                                        class="form-radio text-orange-500 focus:ring-orange-500" required>
                                 </label>
                             @endforeach
                         </div>
@@ -245,7 +268,7 @@
                         <!-- 🛒 Botón de Confirmación -->
                         <div class="mt-6 mb-3 flex justify-center space-x-4">
                             <button type="submit" 
-                                    class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
+                                    class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-500 transition">
                                 Confirmar reserva
                             </button>
                         </div>
@@ -282,7 +305,7 @@
         </div>
 
         <!-- 👨‍🏫 Detalle -->
-        <div class="relative mx-auto px-6 border-t mt-4 lg:px-[25%] sm:px-[6%] w-full">
+        <div class="relative mx-auto px-6 border-t   w-full">
             <div class="flex items-center space-x-3 mt-4">
                 <img src="{{ Storage::url($training->trainer->profile_pic) }}" alt="Foto de {{ $training->trainer->name }}" 
                      class="w-12 h-12 rounded-full border border-gray-300 object-cover">
@@ -495,15 +518,17 @@
                             rows="3" required></textarea>
 
                     <!-- 🔄 Spinner y Botón -->
-                    <button type="submit" 
-                            class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
-                        <span x-show="!loading">Enviar Reseña</span>
-                        
-                        <svg x-show="loading" class="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                        </svg>
-                    </button>
+                    <div class="flex justify-end">
+                        <button type="submit" 
+                                class="bg-orange-500 text-white text-md font-semibold px-6 py-3 rounded-md w-full sm:w-auto md:w-1/3 lg:w-1/4 hover:bg-orange-600 transition">
+                            <span x-show="!loading">Enviar Reseña</span>
+
+                            <svg x-show="loading" class="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </form>
                 </div>
                 @else

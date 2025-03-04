@@ -14,10 +14,10 @@
         <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" aria-label="Close">✖</button>
     </div>
 @endif
-<div class="flex justify-center min-h-screen text-black">
-    <div class="w-full mb-10"> <!-- MODIFICADO: Márgenes dinámicos según dispositivo -->
+<div class="flex justify-center min-h-screen text-black bg-gray-100">
+    <div class="w-full max-w-7xl mx-auto lg:px-10 mb-20">
         <!-- Contenido principal -->
-        <div class="relative mx-auto lg:px-[25%] w-full"> 
+        <div class="relative mx-auto w-full"> 
             <!-- Carrusel de Fotos del Parque -->
             @if ($park->photo_urls)
                 @if (!empty($photos))
@@ -95,6 +95,7 @@
                                             alt="Foto de {{ $park->name }}"
                                             class="w-full h-[300px] object-cover"
                                             @touchstart="startSwipe($event)"
+                                            @click="showModal = true; activeSlide = 1"
                                             @touchend="endSwipe($event)">
 
                                         <!-- Indicadores -->
@@ -140,7 +141,7 @@
                                     </template>
                                     <!-- Botón flotante dentro de la imagen (para tablets y celulares) -->
                                     <button id="floating-favorite-btn" 
-                                        class="absolute top-4 right-4 p-2 rounded-full  bg-white shadow-md md:hidden"
+                                        class="absolute top-4 right-4 p-2 rounded-full  bg-white shadow-md "
                                         data-id="{{ $park->id }}" 
                                         data-type="park"
                                         data-favorite="{{ $isFavorite ? 'true' : 'false' }}">
@@ -152,7 +153,7 @@
             @endif
         </div>
                 <!-- Fila 2: Detalles -->
-        <div class="grid grid-cols-1 md:grid-cols-4 px-6 lg:px-[25%] sm:px-[6%] gap-6 items-start">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-24 px-4 md:pb-6">
             <div class="md:col-span-3 sm:col-span-full ">
                 <h1 class="text-2xl sm:text-3xl my-2 font-bold text-gray-900 flex items-center">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-sm flex items-center justify-center p-2 mr-2">
@@ -200,23 +201,10 @@
                     </div>
                 </div>
             </div>
-        
-                    <!-- Botón estándar (para computadoras) -->
-            <div class="hidden md:flex justify-end mb-4">
-                <button id="favorite-btn" 
-                    class="px-4 py-2 rounded transition border border-black text-black 
-                            hover:text-orange-500 hover:border-orange-500 flex items-center space-x-2"
-                    data-id="{{ $park->id }}" 
-                    data-type="park"
-                    data-favorite="{{ $isFavorite ? 'true' : 'false' }}">
-
-                    <x-lucide-heart :class="$isFavorite ? 'w-5 h-5 text-orange-500 fill-current' : 'w-5 h-5 text-orange-500 stroke-current'" id="favorite-icon" />
-                    <span>{{ $isFavorite ? 'Guardado' : 'Guardar' }}</span>
-                </button>
-            </div>
+    
         </div>  
              <!-- Fila 3: Data -->
-        <div class="relative mx-auto px-6 border-t mt-4 lg:px-[25%] sm:px-[6%] w-full"> 
+        <div class="relative mx-auto px-6 border-t mt-4 w-full"> 
                 <h3 class="text-lg mt-4 font-semibold">Horarios de Apertura</h3>
                 <div class=" mt-2">
                     @if ($park->opening_hours)

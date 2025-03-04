@@ -741,9 +741,11 @@ class TrainingController extends Controller
     public function select(Request $request, $id)
     {
         $user = auth()->user();
-        $training = Training::with(['trainer', 'park', 'activity', 'schedules', 'prices', 'reviews.user'])->findOrFail($id);
+        $training = Training::with(['trainer', 'park', 'activity', 'schedules', 'prices', 'reviews.user', 'photos'])
+            ->findOrFail($id);
 
-        // Verificar si el usuario ha comprado este entrenamiento
+        ;
+
         $hasPurchased = false;
         if ($user) {
             $hasPurchased = \App\Models\Payment::where('user_id', $user->id)
@@ -751,7 +753,6 @@ class TrainingController extends Controller
                 ->exists();
         }
 
-        // Validar si el usuario ya ha guardado este entrenamiento en favoritos
         $isFavorite = false;
         if ($user) {
             $isFavorite = \App\Models\Favorite::where('user_id', $user->id)
@@ -759,14 +760,10 @@ class TrainingController extends Controller
                 ->where('favoritable_type', Training::class)
                 ->exists();
         }
-        
 
-        // Validar si se está enviando un día (por ejemplo, 'Lunes')
         $selectedDay = $request->query('day'); 
         $filteredSchedules = $selectedDay
-            ? $training->schedules->filter(function ($schedule) use ($selectedDay) {
-                return $schedule->day === $selectedDay;
-            })
+            ? $training->schedules->filter(fn($schedule) => $schedule->day === $selectedDay)
             : $training->schedules;
 
         $role = auth()->user()->role;
@@ -779,7 +776,6 @@ class TrainingController extends Controller
     }
     public function showTrainings(Request $request, $parkId, $activityId)
     {
-        
         // Buscar el parque y la actividad
         $park = Park::findOrFail($parkId);
         $activity = Activity::findOrFail($activityId);
@@ -787,7 +783,7 @@ class TrainingController extends Controller
         // Obtener los filtros del request
         $selectedDays = $request->input('day') ? explode(',', $request->input('day')) : [];
         $selectedHours = $request->input('start_time') ? explode(',', $request->input('start_time')) : [];
-        $selectedLevels = $request->input('level') ? explode(',', $request->input('level')) : []; // 🔹 Filtro de nivel
+        $selectedLevels = $request->input('level') ? explode(',', $request->input('level')) : [];
     
         // Filtrar entrenamientos
         $query = Training::where('park_id', $park->id)
@@ -801,32 +797,47 @@ class TrainingController extends Controller
             });
         }
     
-        // Aplicar filtro de horarios (permitiendo que los entrenamientos comiencen en la hora seleccionada o dentro de los siguientes 59 minutos)
+        // Aplicar filtro de horarios
         if (!empty($selectedHours)) {
             $query->whereHas('schedules', function ($q) use ($selectedHours) {
                 $q->where(function ($subQuery) use ($selectedHours) {
                     foreach ($selectedHours as $hour) {
-                        $startRange = date('H:i:s', strtotime($hour)); // Hora seleccionada
-                        $endRange = date('H:i:s', strtotime($hour . ' +59 minutes')); // Hasta 59 min después
+                        $startRange = date('H:i:s', strtotime($hour));
+                        $endRange = date('H:i:s', strtotime($hour . ' +59 minutes'));
                         $subQuery->orWhereBetween('start_time', [$startRange, $endRange]);
                     }
                 });
             });
         }
     
-        // 🔹 Aplicar filtro de nivel
+        // Aplicar filtro de nivel
         if (!empty($selectedLevels)) {
             $query->whereIn('level', $selectedLevels);
         }
     
-        // Obtener entrenamientos filtrados
-        $trainings = $query->get();
+        // Paginar los entrenamientos (21 por página)
+        $trainings = $query->paginate(21);
+    
+        // Obtener lista de favoritos del usuario autenticado
+        $favorites = auth()->check()
+            ? auth()->user()->favorites()->where('favoritable_type', Training::class)->pluck('favoritable_id')->toArray()
+            : [];
     
         // Lista de días de la semana y niveles
         $daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        $levels = ['Principiante', 'Intermedio', 'Avanzado']; // 🔹 Niveles disponibles
+        $levels = ['Principiante', 'Intermedio', 'Avanzado'];
     
-        return view('trainings.catalog', compact('park', 'activity', 'trainings', 'daysOfWeek', 'levels', 'selectedDays', 'selectedHours', 'selectedLevels'));
+        return view('trainings.catalog', compact(
+            'park',
+            'activity',
+            'trainings',
+            'daysOfWeek',
+            'levels',
+            'selectedDays',
+            'selectedHours',
+            'selectedLevels',
+            'favorites'
+        ));
     }
 
   

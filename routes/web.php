@@ -271,7 +271,7 @@ Route::get('/trainings/{id}/detail', [TrainingController::class, 'detail'])
 
 
 Route::post('/favorites/toggle', [FavoriteController::class, 'toggleFavorite'])->name('favorites.toggle');
-Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.view');
 
 /*
 |--------------------------------------------------------------------------

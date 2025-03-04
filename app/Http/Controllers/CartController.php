@@ -29,8 +29,16 @@ class CartController extends Controller
 
     public function viewCart()
     {
-        $cartItems = Cart::with('training.trainer')->where('user_id', auth()->id())->get();
-        return view('cart.view', compact('cartItems'));
+        // Obtener los ítems del carrito del usuario autenticado
+        $cartItems = Cart::with(['training.trainer', 'training.prices'])->where('user_id', auth()->id())->get();
+    
+        // Calcular el total del carrito
+        $cartTotal = $cartItems->sum(function ($item) {
+            $price = optional($item->training->prices->where('weekly_sessions', $item->weekly_sessions)->first())->price ?? 0;
+            return $price * ($item->quantity ?? 1);
+        });
+    
+        return view('cart.view', compact('cartItems', 'cartTotal'));
     }
     
     public function remove(Request $request)

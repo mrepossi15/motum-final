@@ -73,17 +73,17 @@ class FavoriteController extends Controller
         $user = Auth::user();
     
         $favoriteParks = Favorite::where('user_id', $user->id)
-            ->where('favoritable_type', Park::class) // ✅ Ahora usa el modelo completo
+            ->where('favoritable_type', Park::class)
             ->with('favoritable')
-            ->get();
+            ->get()
+            ->filter(fn($favorite) => $favorite->favoritable !== null); // 🔥 Filtra los que no tienen relación válida
     
         $favoriteTrainings = Favorite::where('user_id', $user->id)
-            ->where('favoritable_type', Training::class) // ✅ Ahora usa el modelo completo
+            ->where('favoritable_type', Training::class)
             ->with('favoritable')
-            ->get();
-   
+            ->get()
+            ->filter(fn($favorite) => $favorite->favoritable !== null); // 🔥 Filtra los que no tienen relación válida
     
-
-    return view('favorites.index', compact('favoriteParks', 'favoriteTrainings', ));
+        return view('favorites.view', compact('favoriteParks', 'favoriteTrainings'));
     }
 }
