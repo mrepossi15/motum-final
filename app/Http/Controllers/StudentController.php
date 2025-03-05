@@ -36,7 +36,7 @@ class StudentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
-            'phone' => 'required|string|max:255|unique:users', // Validar Collector ID
+            'phone' => 'nullable|string|max:255|unique:users', // Validar Collector ID
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
             'profile_pic_description' => 'nullable|string|max:255',
             'birth' => 'date', // Fecha de nacimiento
@@ -98,7 +98,7 @@ class StudentController extends Controller
             'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
             'biography' => 'nullable|string|max:1000',
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
-            'phone' => 'required|string|max:255|unique:users', // Validar Collector ID
+            'phone' => 'nullable|string|max:255|unique:users', // Validar Collector ID
             'birth' => 'date',
             'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);

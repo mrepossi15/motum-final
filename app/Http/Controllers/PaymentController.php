@@ -75,7 +75,7 @@ class PaymentController extends Controller
 
     public function success(Request $request)
     {
-        return redirect('/my-trainings')->with('success', 'El pago se realizó con éxito.');
+        return redirect('/mis-entrenamientos')->with('success', 'El pago se realizó con éxito.');
     }
 
     public function failure()

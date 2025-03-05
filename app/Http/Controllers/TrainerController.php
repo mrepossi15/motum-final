@@ -179,6 +179,7 @@ class TrainerController extends Controller
         // Lógica del calendario
         $startOfWeek = Carbon::now()->startOfWeek();
         $groupedTrainings = []; // Carga aquí los entrenamientos agrupados si es necesario
+        
 
         return view('trainer.calendar', compact('user', 'startOfWeek', 'groupedTrainings', 'parks'));
     }

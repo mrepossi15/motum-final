@@ -2,10 +2,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const parkDropdownMenu = document.getElementById('parkDropdownMenu');
     const parkDropdown = document.getElementById('parkDropdown');
     const dropdownIcon = document.getElementById('dropdownIcon');
-    const addTrainingButton = document.getElementById('add-training-button');
+    const addTrainingButtonMobile = document.getElementById('add-training-button-mobile');
+    const addTrainingButtonDesktop = document.getElementById('add-training-button-desktop');
     const calendarContainer = document.getElementById('calendar-container');
     const trainingsList = document.getElementById('trainings-list');
-    const weekRange = document.getElementById('week-range');
     const monthTitle = document.getElementById('month-title');
 
     const state = {
@@ -45,11 +45,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    addTrainingButton.addEventListener('click', function () {
+    addTrainingButtonMobile.addEventListener('click', function () {
         console.log("selectedParkId en el botón:", state.selectedParkId); // Verifica el valor antes de redirigir
         const url = `/trainings/create?park_id=${state.selectedParkId || ''}`;
         window.location.href = url;
     });
+    addTrainingButtonDesktop.addEventListener('click', function () {
+        console.log("selectedParkId en el botón:", state.selectedParkId); // Verifica el valor antes de redirigir
+        const url = `/trainings/create?park_id=${state.selectedParkId || ''}`;
+        window.location.href = url;
+    });
+    
 
     document.getElementById('prev-week')?.addEventListener('click', () => changeWeek(-7));
     document.getElementById('next-week')?.addEventListener('click', () => changeWeek(7));
@@ -62,40 +68,91 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadWeek() {
         calendarContainer.innerHTML = '';
         const endOfWeek = new Date(state.currentWeekStart);
-        endOfWeek.setDate(state.currentWeekStart.getDate() + 6); // Calculate end of the week
-
-        weekRange.textContent = `${formatDateToArg(state.currentWeekStart)} - ${formatDateToArg(endOfWeek)}`;
+        endOfWeek.setDate(state.currentWeekStart.getDate() + 6); // Calcular fin de la semana
+    
+       
         monthTitle.textContent = `${getMonthName(state.currentWeekStart.getMonth())} ${state.currentWeekStart.getFullYear()}`;
-
-        const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-
+    
+        const dayNames = [
+            ["Lunes", "Lun", "L"], 
+            ["Martes", "Mar", "M"], 
+            ["Miércoles", "Mié", "M"], 
+            ["Jueves", "Jue", "J"], 
+            ["Viernes", "Vie", "V"], 
+            ["Sábado", "Sáb", "S"], 
+            ["Domingo", "Dom", "D"]
+        ];
+    
+        // Obtener la fecha actual
+        const today = new Date();
+        const todayFormatted = formatDateToArg(today); // Formato de la fecha para comparación
+    
         for (let i = 0; i < 7; i++) {
             const currentDate = new Date(state.currentWeekStart);
-            currentDate.setDate(currentDate.getDate() + i); // Adjust each day based on start of the week
-
-            const dayName = dayNames[i];
-
+            currentDate.setDate(currentDate.getDate() + i); // Ajustar cada día basado en el inicio de la semana
+    
+            const [fullName, mediumName, shortName] = dayNames[i]; // Extraer nombres en distintos tamaños
+    
+            // Formatear la fecha en distintos formatos según el tamaño de pantalla
+            const day = currentDate.getDate().toString().padStart(2, '0'); // dd
+            const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // mm
+            const yearFull = currentDate.getFullYear(); // aaaa
+            const yearShort = yearFull.toString().slice(-2); // aa
+    
+            const dateFull = `${day}/${month}/${yearFull}`; // dd/mm/aaaa
+            const dateMedium = `${day}/${month}/${yearShort}`; // dd/mm/aa
+            const dateShort = `${day}`; // dd
+    
             const dayColumn = document.createElement('div');
-            dayColumn.className = 'p-3 text-center border rounded-lg day-column';
-            if (dayName === state.selectedDay) {
-                dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold');
+            dayColumn.className = 'p-3 text-center border border-gray-800 rounded-lg day-column shadow-sm cursor-pointer transition'; 
+    
+            // Formatear la fecha actual para comparación con `selectedDay`
+            const currentDateFormatted = formatDateToArg(currentDate);
+    
+            if (currentDateFormatted === todayFormatted) {
+                // Si es el día actual, aplicamos el fondo y quitamos el borde
+                dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold', 'shadow-sm', 'border-0');
+                state.selectedDay = fullName; // Asegurar que el estado refleje la selección
+            } else {
+                dayColumn.classList.add('border-gray-800'); // Mantener el borde en los demás días
             }
-
+    
             dayColumn.innerHTML = `
-                <div class="font-bold">${dayName}</div>
-                <div class="text-sm">${formatDateToArg(currentDate)}</div>
+                <!-- 🖥 Versión de escritorio -->
+                <div class="hidden lg:inline font-bold">${fullName}</div>
+    
+                <!-- 📱 Versión de tablet -->
+                <div class="hidden md:inline lg:hidden font-bold">${mediumName}</div>
+    
+                <!-- 📱 Versión de móvil -->
+                <div class="inline md:hidden font-bold">${shortName}</div>
+    
+                <!-- Fechas formateadas según pantalla -->
+                <div class="text-sm">
+                    <span class="hidden lg:inline">${dateFull}</span> <!-- 🖥 dd/mm/aaaa -->
+                    <span class="hidden md:inline lg:hidden">${dateMedium}</span> <!-- 📱 dd/mm/aa -->
+                    <span class="inline md:hidden">${dateShort}</span> <!-- 📱 dd -->
+                </div>
             `;
-
+    
             dayColumn.addEventListener('click', () => {
-                document.querySelectorAll('.day-column').forEach(day => day.classList.remove('bg-orange-500', 'text-white', 'font-bold'));
-                dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold');
-                state.selectedDay = dayName;
+                // Remover estilos de los otros días
+                document.querySelectorAll('.day-column').forEach(day => {
+                    day.classList.remove('bg-orange-500', 'text-white', 'font-bold', 'border-0');
+                    day.classList.add('border-gray-800'); // Vuelve a poner el borde a los demás
+                });
+    
+                // Aplicar estilos al día seleccionado
+                dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold', 'border-0');
+                dayColumn.classList.remove('border-gray-800'); // Quita el borde del seleccionado
+    
+                state.selectedDay = fullName;
                 loadTrainings();
             });
-
+    
             calendarContainer.appendChild(dayColumn);
         }
-
+    
         loadTrainings();
     }
 
@@ -149,24 +206,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const trainingHtml = sortedTrainings.map(training => {
             const sessions = training.sessions !== undefined ? `${training.sessions} sesiones` : 'No definido';
             const statusClass = training.status === 'cancelled' ? 'text-red-500' : 'text-green-500';
-            const statusText = training.is_exception ? 'Modificado' : 'Activo';
-        
+            const statusText = training.is_exception ? `<p class="${statusClass}">Estado: Modificado</p>` : '';
+    
+            const trainingUrl = `/entrenamientos/${training.training_id}?date=${training.date}&time=${training.start_time}`;
+    
             return `
-                <div class="p-4 mb-3 border rounded-lg bg-white shadow-sm">
-                    <h3 class="text-lg font-semibold">${training.title}</h3>
-                    <p><strong>Día:</strong> ${training.day} (${training.date})</p>
-                    <p><strong>Hora:</strong> ${training.start_time} - ${training.end_time}</p>
-                    <p class="${statusClass}">Estado: ${statusText}</p>
-                    <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 view-training"
-                        data-id="${training.training_id}" 
-                        data-date="${training.date}"
-                        data-time="${training.start_time}">
-                        Ver Detalle
-                    </button>
-                </div>
+                <a href="${trainingUrl}" class="block">
+                    <div class="p-4 border border-gray-200 rounded-lg shadow-sm bg-white mb-4 cursor-pointer hover:shadow-md transition">
+                        <h5 class="text-xl font-semibold mb-2">${training.title}</h5>
+                        <p class="text-gray-700"><strong>Día:</strong> ${training.day} (${training.date})</p>
+                        <p class="text-gray-700"><strong>Hora:</strong> ${training.start_time} - ${training.end_time}</p>
+                        <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+                            Ver Detalle
+                        </button>
+                    </div>
+                </a>
             `;
         }).join('');
-
+    
         trainingsList.innerHTML = trainingHtml;
 
         document.querySelectorAll('.view-training').forEach(button => {
