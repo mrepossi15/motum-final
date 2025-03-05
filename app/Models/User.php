@@ -32,7 +32,7 @@ class User extends Authenticatable
         'birth',
         'especialty',
         'mercado_pago_email',
-        'collector_id', 
+        'phone', 
         'medical_fit'
 
     ];
@@ -107,6 +107,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Favorite::class);
     }
+    public function activities()
+{
+    return $this->belongsToMany(Activity::class, 'activity_user');
+}
         
 
 

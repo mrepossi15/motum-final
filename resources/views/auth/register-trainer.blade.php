@@ -23,11 +23,11 @@
             <!-- Contraseña -->
            <x-form.input type="password" name="password" label="Contraseña *" placeholder="Crea una contraseña" />
            <div class="mb-4">
-    <label for="collector_id" class="block text-sm font-medium text-gray-700">Collector ID (Opcional)</label>
-    <input type="text" name="collector_id" id="collector_id" 
+    <label for="phone" class="block text-sm font-medium text-gray-700">Collector ID (Opcional)</label>
+    <input type="text" name="phone" id="phone" 
            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 
-           @error('collector_id') border-red-500 @enderror" 
-           value="{{ old('collector_id') }}">
+           @error('phone') border-red-500 @enderror" 
+           value="{{ old('phone') }}">
     <p class="mt-1 text-sm text-gray-500">Ingresa tu Collector ID de Mercado Pago.</p>
     @error('collector_id')
         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>

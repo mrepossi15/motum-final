@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Activity;
 
 class UserController extends Controller
 {
@@ -50,6 +51,22 @@ class UserController extends Controller
         Auth::logout();
         return redirect()->route('login')->with('success', 'Sesión cerrada exitosamente.');
     } 
+    public function storeActivities(Request $request)
+{
+    $user = auth()->user();
+    $user->activities()->sync($request->activities); // Vincula actividades
+
+    return redirect()->route('students.profile', ['id' => auth()->id()])->with('success', 'Tus actividades han sido guardadas.');
+     
+}
+
+public function showActivities()
+{
+    $activities = Activity::all(); // Obtener todas las actividades disponibles
+    $user = auth()->user();
+
+    return view('auth.activitiesSelect', compact('activities', 'user'));
+}
     
 }
 

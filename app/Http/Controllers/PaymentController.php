@@ -87,4 +87,20 @@ class PaymentController extends Controller
     {
         return redirect('/cart/view')->with('warning', 'El pago está pendiente de confirmación.');
     }
+    public function dashboard()
+    {
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+    
+        // Obtener los pagos del usuario con la información del entrenamiento
+        $payments = Payment::where('user_id', $user->id)
+                    ->with('training') // Carga los datos del entrenamiento relacionado
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+    
+        // Retornar la vista con los datos
+        return view('payments.dashboard', compact('payments'));
+    }
+
+    
 }

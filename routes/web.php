@@ -28,6 +28,8 @@ Route::post('/iniciar-sesion', [UserController::class, 'login'])
     ->name('login.process');
 Route::post('/cerrar-sesion', [UserController::class, "logout"])
     ->name('logout.process');
+Route::post('/user/activities', [UserController::class, 'storeActivities'])->name('user.activities');
+Route::get('/students/activities', [UserController::class, 'showActivities'])->name('auth.activitiesSelect');
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +71,7 @@ Route::get('/mapa', [studentController::class, 'map'])
     ->middleware(['auth', 'role:alumno']);
 
 Route::get('/trainers/{id}', [StudentController::class, 'showTrainerProfile'])->name('students.trainerProfile');
+Route::get('/students/info', [StudentController::class, 'detail'])->name('students.info')->middleware('auth');
 
     /*
 |--------------------------------------------------------------------------
@@ -303,3 +306,4 @@ Route::get('/payment/success', [PaymentController::class, 'success'])->name('pay
 Route::get('/payment/failure', [PaymentController::class, 'failure'])->name('payment.failure');
 Route::get('/payment/pending', [PaymentController::class, 'pending'])->name('payment.pending');
 Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook']);
+Route::get('/payments/dashboard', [PaymentController::class, 'dashboard'])->name('payments.dashboard')->middleware('auth');

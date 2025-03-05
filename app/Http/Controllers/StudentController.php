@@ -36,6 +36,7 @@ class StudentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
+            'phone' => 'required|string|max:255|unique:users', // Validar Collector ID
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
             'profile_pic_description' => 'nullable|string|max:255',
             'birth' => 'date', // Fecha de nacimiento
@@ -61,6 +62,7 @@ class StudentController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone ?? null,
             'password' => Hash::make($request->password),
             'role' => 'alumno', // Rol automático para alumnos
             'profile_pic' => $input['profile_pic'] ?? null,
@@ -96,12 +98,13 @@ class StudentController extends Controller
             'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
             'biography' => 'nullable|string|max:1000',
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
+            'phone' => 'required|string|max:255|unique:users', // Validar Collector ID
             'birth' => 'date',
             'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
         ]);
     
         $user = Auth::user();
-        $user->fill($request->only(['name', 'email', 'birth', 'biography']));
+        $user->fill($request->only(['name', 'email', 'birth', 'biography', 'phone']));
     
         // 👉 Procesar la imagen de perfil usando el trait
         if ($request->hasFile('profile_pic')) {
@@ -159,6 +162,11 @@ class StudentController extends Controller
 
     return view('students.trainerProfile', compact('trainer', 'parks', 'trainings', 'experiences', 'reviews'));
 }
+public function detail()
+    {
+        $user = Auth::user();
+        return view('students.info', compact('user'));
+    }
 
 
 }

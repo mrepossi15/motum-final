@@ -22,5 +22,9 @@ class Activity extends Model
     {
         return $this->hasManyThrough(Park::class, Training::class, 'activity_id', 'id', 'id', 'park_id');
     }
+    public function users()
+{
+    return $this->belongsToMany(User::class, 'activity_user');
+}
 }
 

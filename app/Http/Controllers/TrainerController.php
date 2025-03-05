@@ -41,7 +41,7 @@ class TrainerController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'mercado_pago_email' => 'required|email|unique:users',
-            'collector_id' => 'required|string|max:255|unique:users', // Validar Collector ID
+            'phone' => 'required|string|max:255|unique:users', // Validar Collector ID
             'password' => 'required|min:6|confirmed',
             'certification' => 'required|string|max:255',
             'biography' => 'nullable|string|max:500',
@@ -70,7 +70,7 @@ class TrainerController extends Controller
         ]);
         // dd('Validación realizada correctamente');
         $userData = $request->only([
-            'name', 'email',  'mercado_pago_email','password', 'certification', 'biography', 'especialty', 'birth','collector_id'
+            'name', 'email',  'mercado_pago_email','password', 'certification', 'biography', 'especialty', 'birth','phone'
         ]);
         $userData['role'] = 'entrenador';
         $userData['password'] = Hash::make($request->password);
@@ -311,7 +311,7 @@ class TrainerController extends Controller
                 'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
                 'mercado_pago_email' => 'nullable|email|unique:users,mercado_pago_email,' . auth()->id(),
                 'certification' => 'nullable|string|max:255',
-                'collector_id' => 'nullable|string|max:255|unique:users', // Validar Collector ID
+                'phone' => 'nullable|string|max:255|unique:users', // Validar Collector ID
                 'biography' => 'nullable|string|max:500',
                 'especialty' => 'nullable|string|max:255',
                 'birth' => 'nullable|date',
@@ -336,7 +336,7 @@ class TrainerController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'mercado_pago_email' => $request->mercado_pago_email,
-                'collector_id' =>$request->collector_id,
+                'phone' =>$request->phone,
                 'certification' => $request->certification,
                 'biography' => $request->biography,
                 'especialty' => $request->especialty,
