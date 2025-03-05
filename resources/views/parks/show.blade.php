@@ -236,8 +236,8 @@
                         @php $activity = $trainings->first()->activity; @endphp
                         @if ($activity) 
                         <a href="{{ route('trainings.catalog', ['park' => $park->id, 'activity' => $activity->id]) }}" 
-                        class="block activity-card p-3 sm:p-4 md:p-5 text-center shadow-md rounded-lg bg-white 
-                                hover:shadow-xl hover:border-orange-500 hover:bg-orange-300 transition duration-300 ease-in-out transform hover:-translate-y-1">
+                        class="block activity-card  hover:scale-105 cursor-pointer p-3 sm:p-4 md:p-5 text-center shadow-md rounded-lg bg-white 
+                                hover:shadow-xl hover:border-orange-500 border transition duration-300 ease-in-out transform hover:-translate-y-1">
                             <h5 class="text-black font-bold text-lg sm:text-xl">{{ $activity->name }}</h5>
                             <p class="hidden md:block text-sm text-gray-700">{{ $trainings->count() }} entrenamiento/s</p>
                         </a>

@@ -509,5 +509,24 @@ class TrainerController extends Controller
         $user = Auth::user();
         return view('trainer.info', compact('user'));
     }
+    public function students($training_id)
+    {
+        $training = Training::findOrFail($training_id);
+        $students = $training->students()->paginate(10); // 🔹 Aquí aplicamos la paginación correctamente
+    
+        return view('trainer.students', compact('training', 'students'));
+    }
+
+    public function studentDetail($student_id)
+    {
+        $student = User::with(['payments.training'])->findOrFail($student_id);
+    
+        // Filtrar solo los entrenamientos que tienen relación con este entrenador
+        $trainings = $student->payments->map(function ($payment) {
+            return $payment->training;
+        })->unique(); // Elimina entrenamientos duplicados
+    
+        return view('trainer.studentDetail', compact('student', 'trainings'));
+    }
     
 }

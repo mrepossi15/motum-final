@@ -81,7 +81,7 @@ return [
 
     'locale' => 'ess',
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => 'es',
 
     'faker_locale' => 'en_US',
 

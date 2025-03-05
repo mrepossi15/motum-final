@@ -78,5 +78,10 @@ class Training extends Model
 {
     return $this->reviews()->avg('rating') ?? 0;
 }
+public function activeStudents()
+{
+    return $this->belongsToMany(User::class, 'payments', 'training_id', 'user_id')
+        ->where('payments.created_at', '>=', now()->subDays(30));
+}
  
 }

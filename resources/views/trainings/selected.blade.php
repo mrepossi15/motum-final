@@ -132,9 +132,6 @@
                             @touchstart="startSwipe($event)"
                             @click="showModal = true; activeSlide = 1"
                             @touchend="endSwipe($event)">
-                            
-                            
-
                         <!-- Indicadores -->
                         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
                             <template x-for="(photo, index) in slides" :key="index">
@@ -322,7 +319,7 @@
                     <!-- 🏷️ Opciones de precio -->
                     <div class="mb-4 bg-gray-100 px-3 py-4 rounded-md">
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Sesiones por semana</label>
-                        <div class="space-y-2">
+                        <div class="space-y-4">
                             @foreach ($training->prices as $price)
                             <label class="flex justify-between items-center border bg-white text-white hover:border-orange-500 border border-gray-500 rounded-md px-4 py-[10px] mt-2 appearance-none">
                                     <span class="text-gray-800 font-medium">{{ $price->weekly_sessions }} {{ $price->weekly_sessions == 1 ? 'vez' : 'veces' }} - ${{ number_format($price->price, 0) }}</span>
@@ -369,7 +366,7 @@
             @endif
         </div>
 
-        <!-- 👨‍🏫 Detalle -->
+        <!-- 👨‍🏫 Fila 3-->
         <div class="relative mx-auto px-6 border-t   w-full">
             <div class="flex items-center space-x-3 mt-4">
                 <img src="{{ Storage::url($training->trainer->profile_pic) }}" alt="Foto de {{ $training->trainer->name }}" 
@@ -387,14 +384,13 @@
                 </div>
             </div>
             <hr class="my-4">
+
             <!-- 📝 Descripción -->
             <h3 class="text-lg mt-4 font-semibold">Descripción</h3>
             <p class="mt-2">{{ $training->description ?? 'No especificada' }}</p>
-            
             <hr class="my-4">
             <!-- ⏰ Horarios -->
             <h3 class=" font-semibold text-lg text-gray-900 mb-4">Horarios de Entrenamiento</h3>
-
             <div class="space-y-4 ">
                 @forelse ($training->schedules->groupBy('day') as $day => $schedules)
                     <div class=" border-b border-gray-200  pb-4   ">
@@ -423,10 +419,9 @@
 
             <!-- 💰 Precios -->
             <h3 class=" font-semibold text-lg  text-gray-900 mb-4">Precios del Entrenamiento</h3>
-
             <div class="space-y-3  ">
                 @forelse ($training->prices as $price)
-                    <div class="flex items-center  border-gray-200 border-b  ">
+                    <div class="flex items-center  border-gray-200 border-b pb-2 ">
                         <!-- Icono -->
                         <x-lucide-wallet class="w-6 h-6 text-orange-500 mr-3" />
 
@@ -447,6 +442,7 @@
                 @endforelse
             </div>
             <hr class="my-4">
+
             <!-- ⭐ Reseñas -->
             <h3 id="opiniones" class="text-lg font-semibold my-3">Opiniones</h3>
             @if ($training->reviews->isEmpty())
@@ -473,7 +469,7 @@
                                                 @for ($i = 1; $i <= 5; $i++)
                                                     <x-lucide-star class="w-4 h-4 {{ $i <= $review->rating ? 'text-orange-500 fill-current' : 'text-gray-300' }}" />
                                                 @endfor
-                                                <span class="text-sm text-gray-500">• <strong>Hace {{ $review->created_at->diffForHumans() }}</strong></span>
+                                                <p class="text-sm text-gray-500"><strong>{{ \Carbon\Carbon::parse($review->created_at)->locale('es')->diffForHumans() }}</strong></p>
                                             </div>
                                         </div>
                                 </div>
@@ -498,9 +494,15 @@
                 </div>
 
                 <!-- Botón para abrir el modal -->
-                <div class="flex justify-end mt-2">
-                    <button id="open-reviews-modal" class="text-orange-500 font-semibold underline hover:underline">Ver más opiniones</button>
-                </div>
+               
+                @if ($training->reviews->count() > 2)
+                    <!-- Botón para abrir el modal -->
+                    <div class="flex justify-end mt-2">
+                        <button id="open-reviews-modal" class="text-orange-500 font-semibold underline hover:underline">
+                            Ver más opiniones
+                        </button>
+                    </div>
+                @endif
 
                 <!-- Modal de reseñas -->
                 <div id="reviews-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50">
@@ -526,14 +528,16 @@
 
                                         <!-- 👤 Nombre + ⭐ Calificación -->
                                         <div>
-                                            <p class="font-semibold text-gray-900 leading-tight">{{ $review->user->name }}</p>
-                                            <div class="flex items-center space-x-1 mt-1">
+                                        <p class="font-semibold text-gray-900 leading-tight">{{ $review->user->name }}</p>
+                                        <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-1 mt-1">
+                                            <div class="flex space-x-1">
                                                 @for ($i = 1; $i <= 5; $i++)
                                                     <x-lucide-star class="w-4 h-4 {{ $i <= $review->rating ? 'text-orange-500 fill-current' : 'text-gray-300' }}" />
                                                 @endfor
-                                                <span class="text-sm text-gray-500">• <strong>Hace {{ $review->created_at->diffForHumans() }}</strong></span>
                                             </div>
+                                            <p class="text-sm text-gray-500"><strong>Hace {{ \Carbon\Carbon::parse($review->created_at)->locale('es')->diffForHumans() }}</strong></p>
                                         </div>
+                                    </div>
                                     </div>
 
                                     <!-- 🏗️ Fila 2: Comentario + Botón de eliminar -->
@@ -555,10 +559,9 @@
                     </div>
                 </div>
             @endif
-
             <hr class="my-4">
-            <!-- Formulario para agregar reseña -->
 
+            <!-- Formulario para agregar reseña -->
             @auth
             <div class="mb-20">
                 @if($hasPurchased)
@@ -570,7 +573,6 @@
 
                     @csrf
                     <input type="hidden" name="training_id" value="{{ $training->id }}">
-
                     <!-- ⭐ Calificación con Estrellas -->
                     <label class="block font-semibold text-gray-800 mb-2">Calificación:</label>
                     <div class="flex space-x-1 mb-4">
@@ -583,8 +585,8 @@
                             </button>
                         @endforeach
                     </div>
+                    
                     <input type="hidden" name="rating" x-model="rating">
-
                     <!-- 📝 Comentario -->
                     <label for="comment" class="block font-semibold text-gray-800">Comentario:</label>
                     <textarea name="comment" id="comment" 
@@ -603,12 +605,12 @@
                         </button>
                     </div>
                 </form>
-                </div>
-                @else
-                    <p class="text-gray-500">Debes haber comprado este entrenamiento para dejar una reseña.</p>
-                @endif
+            </div>
+            @else
+                <p class="text-gray-500">Debes haber comprado este entrenamiento para dejar una reseña.</p>
+            @endif
 
-                @if(session('review_success'))
+            @if(session('review_success'))
                 <div x-data="{ open: true }">
                     <!-- 🔲 Fondo Oscuro -->
                     <div x-show="open" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -675,8 +677,9 @@
         </div>
     </div>  
 </div>                                    
-<!-- Script de Favoritos -->
+
 <script>
+    //favoritos
     document.addEventListener("DOMContentLoaded", function () {
         let desktopButton = document.querySelector("#favorite-btn");
         let floatingButton = document.querySelector("#floating-favorite-btn");
@@ -811,7 +814,7 @@
             }
         });
     });
- 
+    //CONFIRMRAR BORRAR
     function openDeleteModal(action) {
         document.getElementById("delete-modal").classList.remove("hidden");
         document.getElementById("delete-form").setAttribute("action", action);

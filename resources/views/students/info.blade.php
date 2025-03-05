@@ -8,10 +8,19 @@
     
     <!-- Botón de edición flotante en la esquina superior derecha -->
     <div class="absolute top-4 right-4">
-        <a href="{{ route('students.edit') }}" class= "text-orange-500 px-4 py-2 flex items-center space-x-2 hover:underline transition">
-            <x-lucide-pencil class="w-4 h-4" />
-            <span>Editar</span>
-        </a>
+            <!-- 📱 Versión para Móvil (botón negro con icono naranja) -->
+            <a href="{{ route('students.edit') }}"
+                class="sm:hidden flex items-center space-x-2  text-white px-2 py-2 rounded-lg transition hover:bg-gray-800">
+                <x-lucide-pencil class="w-5 h-5 text-orange-500" />
+                <span class="sr-only">Editar</span>
+            </a>
+
+            <!-- 🖥️ Versión para Tablet y Computadora (link con subrayado en hover) -->
+            <a href="{{ route('students.edit') }}"
+                class="hidden sm:flex text-orange-500 px-4 py-2 items-center space-x-2 hover:underline transition">
+                <x-lucide-pencil class="w-4 h-4" />
+                <span>Editar</span>
+            </a>
     </div>
     
     <div class="bg-white rounded-lg shadow-md p-4">

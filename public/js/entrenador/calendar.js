@@ -189,6 +189,16 @@ document.addEventListener('DOMContentLoaded', function () {
             trainingsList.innerHTML = `<p class="text-center text-red-500">Error: ${error.message}</p>`;
         }
     }
+    const formatTime = (time) => {
+        return new Date(`1970-01-01T${time}Z`).toLocaleTimeString('es-AR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+    };
+    
+   
+    
 
     function renderTrainings(data) {
         trainingsList.innerHTML = '';
@@ -212,10 +222,11 @@ document.addEventListener('DOMContentLoaded', function () {
     
             return `
                 <a href="${trainingUrl}" class="block">
-                    <div class="p-4 border border-gray-200 rounded-lg shadow-sm bg-white mb-4 cursor-pointer hover:shadow-md transition">
+                    <div class="p-4 border border-gray-200 hover:scale-105 cursor-pointer rounded-lg shadow-sm bg-white mb-4 cursor-pointer hover:shadow-md transition">
                         <h5 class="text-xl font-semibold mb-2">${training.title}</h5>
-                        <p class="text-gray-700"><strong>Día:</strong> ${training.day} (${training.date})</p>
-                        <p class="text-gray-700"><strong>Hora:</strong> ${training.start_time} - ${training.end_time}</p>
+                        <p class="text-gray-700"><strong>Día:</strong> ${training.day}</p>
+                        
+                        <p class="text-gray-700"><strong>Hora:</strong> ${formatTime(training.start_time)} - ${formatTime(training.end_time)}</p>
                         <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
                             Ver Detalle
                         </button>

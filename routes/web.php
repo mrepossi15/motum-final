@@ -138,6 +138,9 @@ Route::middleware(['auth', 'role:entrenador'])->group(function () {
     Route::get('/trainer/payments', [TrainerController::class, 'trainerPayments'])->name('trainer.payments');
 });
 Route::get('/trainer/info', [TrainerController::class, 'detail'])->name('trainer.info')->middleware('auth');
+
+Route::get('/trainer/{training_id}/students', [TrainerController::class, 'students'])->name('trainer.students');
+Route::get('/trainer/student/{student_id}', [TrainerController::class, 'studentDetail'])->name('trainer.studentDetail');
 /*
 |--------------------------------------------------------------------------
 | Rutas para ParkController 
