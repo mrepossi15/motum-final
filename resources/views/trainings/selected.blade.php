@@ -38,24 +38,75 @@
                     }" class="relative w-full my-3">
                     
                     <!-- 🖥️ Modo Computadora (Grid de 2 columnas) -->
-                    <div class="hidden lg:grid grid-cols-10 gap-2">
-                        <!-- 📸 Imagen principal (70%) -->
-                        <div class="col-span-7">
-                            <img src="{{ asset($photos[0]) }}"
-                                alt="Foto principal de {{ $training->title }}"
-                                class="w-full h-[350px] object-cover cursor-pointer"
-                                @click="showModal = true; activeSlide = 0">
-                        </div>
+                    <div class="hidden lg:grid grid-cols-4 gap-2">
+                        <!-- Caso: Solo 1 foto -->
+                        @if(count($photos) === 1)
+                            <div class="col-span-4">
+                                <img src="{{ asset($photos[0]) }}"
+                                    alt="Foto principal de {{ $training->title }}"
+                                    class="w-full h-[350px] object-cover cursor-pointer"
+                                    @click="showModal = true; activeSlide = 0">
+                            </div>
 
-                        <!-- 📸 Columna derecha (30%) -->
-                        <div class="col-span-3">
-                            @if(isset($photos[1]))
+                            <!-- Caso: 2 fotos -->
+                        @elseif(count($photos) === 2)
+                            <div class="col-span-3">
+                                <img src="{{ asset($photos[0]) }}"
+                                    alt="Foto principal"
+                                    class="w-full h-[350px] object-cover cursor-pointer"
+                                    @click="showModal = true; activeSlide = 0">
+                            </div>
+                            <div class="col-span-1">
                                 <img src="{{ asset($photos[1]) }}"
                                     alt="Foto secundaria"
                                     class="w-full h-[350px] object-cover cursor-pointer"
                                     @click="showModal = true; activeSlide = 1">
-                            @endif
-                        </div>
+                            </div>
+
+                            <!-- Caso: 3 fotos -->
+                        @elseif(count($photos) === 3)
+                            <div class="col-span-3">
+                                <img src="{{ asset($photos[0]) }}"
+                                    alt="Foto principal"
+                                    class="w-full h-[350px] object-cover cursor-pointer"
+                                    @click="showModal = true; activeSlide = 0">
+                            </div>
+                            <div class="col-span-1 grid grid-rows-2 gap-2">
+                                <img src="{{ asset($photos[1]) }}"
+                                    alt="Foto secundaria"
+                                    class="w-full h-[170px] object-cover cursor-pointer"
+                                    @click="showModal = true; activeSlide = 1">
+                                <img src="{{ asset($photos[2]) }}"
+                                    alt="Foto terciaria"
+                                    class="w-full h-[170px] object-cover cursor-pointer"
+                                    @click="showModal = true; activeSlide = 2">
+                            </div>
+
+                        <!-- Caso: 4 fotos -->
+                        @elseif(count($photos) >= 4)
+                            <div class="col-span-3">
+                                <img src="{{ asset($photos[0]) }}"
+                                    alt="Foto principal"
+                                    class="w-full h-[350px] object-cover cursor-pointer"
+                                    @click="showModal = true; activeSlide = 0">
+                            </div>
+                            <div class="col-span-1 grid grid-rows-2 gap-2">
+                                <img src="{{ asset($photos[1]) }}"
+                                    alt="Foto secundaria"
+                                    class="w-full h-[170px] object-cover cursor-pointer"
+                                    @click="showModal = true; activeSlide = 1">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <img src="{{ asset($photos[2]) }}"
+                                        alt="Foto terciaria"
+                                        class="w-full h-[170px] object-cover cursor-pointer"
+                                        @click="showModal = true; activeSlide = 2">
+                                    <img src="{{ asset($photos[3]) }}"
+                                        alt="Foto cuarta"
+                                        class="w-full h-[170px] object-cover cursor-pointer"
+                                        @click="showModal = true; activeSlide = 3">
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- 📱 Modo Tablet / iPhone (Carrusel con flechas) -->
@@ -97,25 +148,41 @@
                     <!-- 📸 Modal de Imágenes -->
                     <template x-if="showModal">
                         <div class="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center" @click="showModal = false">
-                            <div class="relative w-full max-w-4xl mx-auto shadow-lg" @click.stop>
-                                
+                            <div class="relative w-full max-w-4xl mx-auto shadow-lg" @click.stop
+                                x-data="{ 
+                                    touchStartX: 0, 
+                                    touchEndX: 0, 
+                                    startSwipe(event) { this.touchStartX = event.touches[0].clientX; },
+                                    endSwipe(event) { 
+                                        this.touchEndX = event.changedTouches[0].clientX;
+                                        let diff = this.touchStartX - this.touchEndX;
+                                        if (Math.abs(diff) > 50) {
+                                            if (diff > 0) { next(); } 
+                                            else { prev(); }
+                                        }
+                                    }
+                                }"
+                                @touchstart="startSwipe($event)" 
+                                @touchend="endSwipe($event)"
+                            >
+
                                 <!-- ❌ Botón de Cerrar -->
-                                <button class="absolute top-4 right-4 text-black p-2 rounded-full focus:outline-none z-50" type="button" @click="showModal = false">
-                                    <x-lucide-x class="w-6 h-6 text-black" />
+                                <button class="absolute top-4 right-4 p-2 rounded-full  z-50 focus:outline-none" type="button" @click="showModal = false">
+                                    <x-lucide-x class="w-6 h-6 text-gray-900" />
                                 </button>
 
                                 <!-- 📸 Contenedor de Imagen -->
                                 <div class="relative">
                                     <img :src="slides[activeSlide]" alt="Foto del entrenamiento" class="w-full max-h-[80vh] object-contain">
-
-                                    <!-- ⬅ Botón Anterior -->
-                                    <button class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md" 
+                                    
+                                    <!-- ⬅ Botón Anterior (solo en lg+) -->
+                                    <button class="hidden lg:flex absolute top-1/2 left-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md" 
                                             @click.stop="prev()">
                                         <x-lucide-chevron-left class="w-6 h-6 text-orange-500" />
                                     </button>
 
-                                    <!-- ➡ Botón Siguiente -->
-                                    <button class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md" 
+                                    <!-- ➡ Botón Siguiente (solo en lg+) -->
+                                    <button class="hidden lg:flex absolute top-1/2 right-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md" 
                                             @click.stop="next()">
                                         <x-lucide-chevron-right class="w-6 h-6 text-orange-500" />
                                     </button>
@@ -138,7 +205,7 @@
         </div>
 
         <!-- 📍 Fila 2: Prinicpal -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-24 px-4 md:pb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-4 px-4 md:pb-6">
             <div class="md:col-span-2">
                 <!-- 🏋️ Título del entrenamiento -->
                 <h1 class="text-2xl sm:text-3xl my-2 font-bold text-gray-900 flex items-center">
@@ -177,8 +244,8 @@
 
                 <!-- 🔥 Calificación y reseñas -->
                 <div class="mt-5 mb-3 flex items-center space-x-4">
-                    <div class="p-4 rounded-lg bg-gray-50 shadow-sm flex items-center space-x-3">
-                        <div class="bg-orange-500 text-white px-3 py-2 rounded-md text-lg font-bold">
+                    <div class="p-4 rounded-md bg-gray-50 shadow-sm flex items-center space-x-3">
+                        <div class="bg-orange-500 text-white px-3 py-2 rounded-sm text-lg font-bold">
                             {{ number_format($averageRating, 1) }}
                         </div>
                         <div>
@@ -197,37 +264,7 @@
                     </div>
                 </div>
             </div>
-           <!-- 🛒 Botón de compra en Desktop -->
-           <div class="bg-white shadow-lg rounded-lg p-4 
-                        md:sticky md:top-4 md:self-start h-auto w-full 
-                        fixed bottom-0 left-0 md:relative z-50 md:z-auto border-t md:border-none">
-                <form action="{{ route('cart.add') }}" method="POST" >
-                    @csrf
-                    <input type="hidden" name="training_id" value="{{ $training->id }}">
-
-                    <!-- 🏷️ Opciones de precio -->
-                    <div class="mb-4 bg-gray-100 px-3 py-4 rounded-md">
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Sesiones por semana</label>
-                        <div class="space-y-2">
-                            @foreach ($training->prices as $price)
-                                <label class="flex justify-between items-center border border-gray-300 rounded-lg px-3 py-2 cursor-pointer bg-white hover:bg-gray-100">
-                                <span class="text-gray-800 font-medium">{{ $price->weekly_sessions }} {{ $price->weekly_sessions == 1 ? 'vez' : 'veces' }} - ${{ number_format($price->price, 0) }}</span>
-                                    <input type="radio" name="weekly_sessions" value="{{ $price->weekly_sessions }}" 
-                                            class="form-radio text-orange-500 focus:ring-orange-600" required>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- 🛒 Botón de compra -->
-                    <button type="submit" 
-                    class="bg-orange-500 text-white font-semibold w-full py-3 rounded-md mt-4 hover:bg-orange-600 transition">
-                        Comprar 
-                    </button>
-                </form>
-            </div>
-
-            <!-- 📱 Mobile: Botón fijo abajo -->
+            <!-- 📱 Btn de selección de sesiones en Mobile -->
             <div class="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
                 <button id="openModal" 
                     class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-600 transition">
@@ -257,14 +294,14 @@
 
                         <div class="space-y-2">
                             @foreach ($training->prices as $price)
-                                <label class="flex justify-between items-center border border-gray-500 rounded-lg px-4 py-2 cursor-pointer bg-black hover:border-orange-500 text-white">
+                                <label class="flex justify-between items-center border bg-black text-white hover:border-orange-500 border border-gray-500 rounded-sm px-4 py-[14px] mt-2 appearance-none">
                                     <span class="text-white font-medium">{{ $price->weekly_sessions }} veces - ${{ number_format($price->price, 0) }}</span>
                                     <input type="radio" name="weekly_sessions" value="{{ $price->weekly_sessions }}" 
                                         class="form-radio text-orange-500 focus:ring-orange-500" required>
                                 </label>
                             @endforeach
                         </div>
-
+                        
                         <!-- 🛒 Botón de Confirmación -->
                         <div class="mt-6 mb-3 flex justify-center space-x-4">
                             <button type="submit" 
@@ -274,6 +311,34 @@
                         </div>
                     </form>
                 </div>
+            </div>
+
+            <!-- 🛒 Botón de compra en Desktop (oculto en móvil) -->
+            <div class="hidden md:block bg-white shadow-lg rounded-lg p-4 md:sticky md:top-4 md:self-start h-auto w-full border-t md:border-none">
+                <form action="{{ route('cart.add') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="training_id" value="{{ $training->id }}">
+                    
+                    <!-- 🏷️ Opciones de precio -->
+                    <div class="mb-4 bg-gray-100 px-3 py-4 rounded-md">
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Sesiones por semana</label>
+                        <div class="space-y-2">
+                            @foreach ($training->prices as $price)
+                            <label class="flex justify-between items-center border bg-white text-white hover:border-orange-500 border border-gray-500 rounded-md px-4 py-[10px] mt-2 appearance-none">
+                                    <span class="text-gray-800 font-medium">{{ $price->weekly_sessions }} {{ $price->weekly_sessions == 1 ? 'vez' : 'veces' }} - ${{ number_format($price->price, 0) }}</span>
+                                    <input type="radio" name="weekly_sessions" value="{{ $price->weekly_sessions }}" 
+                                            class="form-radio text-orange-500 focus:ring-orange-600" required>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- 🛒 Botón de compra -->
+                    <button type="submit" 
+                    class="bg-orange-500 text-white font-semibold w-full py-3 rounded-md mt-4 hover:bg-orange-600 transition">
+                        Comprar 
+                    </button>
+                </form>
             </div>
 
             <!-- 🛒 Modal de Aceptación del Carrito -->
@@ -328,14 +393,22 @@
             
             <hr class="my-4">
             <!-- ⏰ Horarios -->
-            <h3 class="text-lg font-semibold mb-2">Horarios</h3>
-            <div class="space-y-3">
+            <h3 class=" font-semibold text-lg text-gray-900 mb-4">Horarios de Entrenamiento</h3>
+
+            <div class="space-y-4 ">
                 @forelse ($training->schedules->groupBy('day') as $day => $schedules)
-                    <div class="bg-gray-50 p-3 rounded-md shadow-sm">
-                        <h4 class="text-black font-semibold">{{ ucfirst($day) }}</h4>
-                        <div class="flex flex-wrap gap-2 mt-2">
+                    <div class=" border-b border-gray-200  pb-4   ">
+                        <!-- Día de la Semana -->
+                        <h4 class="text-balck0\ text-lg font-semibold flex items-center">
+                            <x-lucide-calendar-days class="w-5 h-5 mr-2 text-orange-500" /> 
+                            {{ ucfirst($day) }}
+                        </h4>
+
+                        <!-- Lista de Horarios -->
+                        <div class="flex flex-wrap gap-2 mt-3">
                             @foreach ($schedules as $schedule)
-                                <span class="text-white bg-orange-500 text-sm px-3 py-1 rounded-lg">
+                                <span class="flex items-center text-sm text-white bg-orange-500 px-3 py-1 rounded-sm ">
+                                    <x-lucide-clock class="w-4 h-4 mr-1 text-white" /> 
                                     {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - 
                                     {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
                                 </span>
@@ -343,51 +416,54 @@
                         </div>
                     </div>
                 @empty
-                    <p class="text-gray-500">No hay horarios disponibles.</p>
+                    <p class="text-gray-500 text-center">No hay horarios disponibles.</p>
                 @endforelse
             </div>
-            <hr class="my-4">
-            <!-- 💰 Precios -->
-            <h3 class="text-lg mt-4 font-semibold">Precios</h3>
+            <hr class="my-4 ">
 
-            <div class="grid gap-3 mt-2">
+            <!-- 💰 Precios -->
+            <h3 class=" font-semibold text-lg  text-gray-900 mb-4">Precios del Entrenamiento</h3>
+
+            <div class="space-y-3  ">
                 @forelse ($training->prices as $price)
-                    <div class="flex items-center bg-gray-50  shadow-sm rounded-lg p-4">
-                        <div class="ml-1 flex-1">
-                        <p class="text-gray-800 font-medium">
-                            {{ $price->weekly_sessions }} {{ $price->weekly_sessions == 1 ? 'vez' : 'veces' }} por semana
-                        </p>
+                    <div class="flex items-center  border-gray-200 border-b  ">
+                        <!-- Icono -->
+                        <x-lucide-wallet class="w-6 h-6 text-orange-500 mr-3" />
+
+                        <!-- Descripción -->
+                        <div class="flex-1">
+                            <p class="text-gray-800 font-medium ">
+                                {{ $price->weekly_sessions }} {{ $price->weekly_sessions == 1 ? 'vez' : 'veces' }} por semana
+                            </p>
                         </div>
-                        <span class="text-lg font-semibold text-orange-600">
-                            ${{ number_format($price->price, 2) }}
+
+                        <!-- Precio -->
+                        <span class="text-lg font-bold text-orange-600">
+                            ${{ number_format($price->price, 0, ',', '.') }}
                         </span>
                     </div>
                 @empty
-                    <p class="text-gray-500">No hay precios definidos.</p>
+                    <p class="text-gray-500 text-center">No hay precios definidos.</p>
                 @endforelse
             </div>
             <hr class="my-4">
             <!-- ⭐ Reseñas -->
-            <h3 id="opiniones" class="text-lg font-semibold">Opiniones</h3>
+            <h3 id="opiniones" class="text-lg font-semibold my-3">Opiniones</h3>
             @if ($training->reviews->isEmpty())
                 <p class="text-gray-500">No hay reseñas para este entrenamiento.</p>
             @else
                 <!-- Contenedor de reseñas iniciales -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-y-2">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4  gap-y-2">
                     @foreach ($training->reviews->take(2) as $index => $review)
-                        <div class="py-4 rounded-sm flex items-start space-x-6 
-                                    {{ $index % 2 == 0 ? 'lg:pr-14' : 'lg:pl-14' }}
-                                   max-sm:bg-white max-sm:mt-2 max-sm:shadow-sm max-sm:rounded-lg max-sm:p-4">
-                                    
+                        <div class="bg-gray-50 py-4 px-6 rounded-md shadow-md flex items-start space-x-6">           
                             <div>
-                            
                                 <!-- ⭐ Calificación -->
                                 <div class="grid grid-cols-12 gap-4 items-center">
                                         <!-- 🖼️ Foto del usuario -->
                                         <div class="col-span-2 flex justify-center">
-                                        <img src="{{ $review->user->profile_pic ? Storage::url($review->user->profile_pic) : asset('images/default-avatar.png') }}" 
-                                        alt="Foto de {{ $review->user->name }}" 
-                                        class="w-14 h-14 rounded-full border border-gray-300 object-cover">
+                                            <img src="{{ $review->user->profile_pic ? Storage::url($review->user->profile_pic) : asset('images/default-avatar.png') }}" 
+                                            alt="Foto de {{ $review->user->name }}" 
+                                            class="w-14 h-14 rounded-full border border-gray-300 object-cover">
                                         </div>
 
                                         <!-- 👤 Nombre + ⭐ Calificación -->
@@ -400,22 +476,22 @@
                                                 <span class="text-sm text-gray-500">• <strong>Hace {{ $review->created_at->diffForHumans() }}</strong></span>
                                             </div>
                                         </div>
-                                    </div>
+                                </div>
 
-                                    <!-- 🏗️ Fila 2: Comentario + Botón de eliminar -->
-                                    <div class="mt-3">
-                                        <p class="text-gray-700 font-light">{{ $review->comment }}</p>
+                                <!-- 🏗️ Fila 2: Comentario + Botón de eliminar -->
+                                <div class="mt-3">
+                                    <p class="text-gray-700 font-light">{{ $review->comment }}</p>
 
-                                        <!-- ❌ Botón de eliminar (solo si es su comentario o admin) -->
-                                        @if(auth()->id() === $review->user_id || auth()->user()->role === 'admin')
-                                            <button type="button" 
-                                                    onclick="openDeleteModal('{{ route('reviews.destroy', $review->id) }}')" 
-                                                    class="flex items-center text-red-500 hover:text-red-700 mt-2 ">
-                                                <x-lucide-x class="w-5 h-5 text-red-500" />
-                                                <span>Eliminar</span>
-                                            </button>
-                                        @endif
-                                    </div>
+                                    <!-- ❌ Botón de eliminar (solo si es su comentario o admin) -->
+                                    @if(auth()->id() === $review->user_id || auth()->user()->role === 'admin')
+                                        <button type="button" 
+                                                 onclick="openDeleteModal('{{ route('reviews.destroy', $review->id) }}')" 
+                                                 class="flex items-center text-red-500 hover:text-red-700 mt-2 ">
+                                            <x-lucide-x class="w-5 h-5 text-red-500" />
+                                            <span>Eliminar</span>
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -427,8 +503,8 @@
                 </div>
 
                 <!-- Modal de reseñas -->
-                <div id="reviews-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-                    <div class="bg-white rounded-lg shadow-lg max-w-4xl w-full p-8 relative h-[90vh] overflow-hidden">
+                <div id="reviews-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50">
+                    <div id="reviews-content" class="bg-white p-6 rounded-lg w-full max-w-md md:max-w-4xl shadow-lg relative transform transition-transform duration-300 ease-in-out h-[90vh] overflow-hidden">
                         <!-- ❌ Botón para cerrar -->
                         <button id="close-reviews-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">
                             &times;
@@ -437,9 +513,9 @@
                         <h3 class="text-2xl font-semibold mb-4">Todas las opiniones</h3>
 
                         <!-- 📜 Contenedor de todas las reseñas -->
-                        <div class="overflow-y-auto h-[80vh] px-6 space-y-6">
+                        <div class="overflow-y-auto h-[80vh]  space-y-6">
                             @foreach ($training->reviews->sortByDesc('created_at') as $review)
-                                <div class="rounded-sm bg-white0 p-4 border-b">
+                                <div class="rounded-sm bg-white p-2 border-b">
 
                                     <!-- 🏗️ Fila 1: Foto + Nombre + Calificación -->
                                     <div class="flex items-center space-x-3">
@@ -466,9 +542,9 @@
 
                                         @if(auth()->id() === $review->user_id || auth()->user()->role === 'admin')
                                             <button type="button" 
-                                                    onclick="openDeleteModal('{{ route('reviews.destroy', $review->id) }}')" 
-                                                    class="text-red-500 hover:text-red-700 mt-2">
-                                                ❌ Eliminar
+                                                onclick="openDeleteModal('{{ route('reviews.destroy', $review->id) }}')" 
+                                                class="text-red-500 hover:text-red-700 mt-2">
+                                                Eliminar
                                             </button>
                                         @endif
                                     </div>
@@ -490,39 +566,36 @@
                     @submit="loading = true" 
                     action="{{ route('reviews.store') }}" 
                     method="POST" 
-                    class="bg-gray-50 p-6 rounded-md shadow-sm ">
+                    class="bg-gray-50 p-6 rounded-lg shadow-md border border-gray-200">
 
                     @csrf
                     <input type="hidden" name="training_id" value="{{ $training->id }}">
 
-                    <!-- ⭐ Calificación con Estrellas (SVG de Lucide) -->
-                    <label class="block font-semibold text-gray-700 mb-2">Calificación:</label>
+                    <!-- ⭐ Calificación con Estrellas -->
+                    <label class="block font-semibold text-gray-800 mb-2">Calificación:</label>
                     <div class="flex space-x-1 mb-4">
                         @foreach (range(1, 5) as $i)
-                            <button type="button" @click="rating = {{ $i }}" class="focus:outline-none">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
-                                    stroke-linejoin="round" class="lucide lucide-star transition"
-                                    :class="rating >= {{ $i }} ? 'text-orange-500 fill-orange-500' : 'text-gray-300 fill-none'">
-                                    <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                                </svg>
+                            <button type="button" @click="rating = rating === {{ $i }} ? 0 : {{ $i }}" class="focus:outline-none">
+                            <x-lucide-star 
+                                class="w-5 h-5 transition-transform duration-200 transform scale-100 hover:scale-110"
+                                x-bind:class="rating >= {{ $i }} ? 'text-orange-500 fill-orange-500' : 'text-gray-300 fill-none'"
+                            />
                             </button>
                         @endforeach
                     </div>
                     <input type="hidden" name="rating" x-model="rating">
 
                     <!-- 📝 Comentario -->
-                    <label for="comment" class="block font-semibold text-gray-700">Comentario:</label>
+                    <label for="comment" class="block font-semibold text-gray-800">Comentario:</label>
                     <textarea name="comment" id="comment" 
-                            class="border border-gray-300 p-3 rounded-lg w-full mt-1 focus:ring-2 focus:ring-orange-500 transition" 
-                            rows="3" required></textarea>
+                        class="border border-gray-300 p-3 rounded-md w-full mt-1 focus:ring-2 focus:ring-orange-500 transition resize-none" 
+                        rows="3" required></textarea>
 
                     <!-- 🔄 Spinner y Botón -->
-                    <div class="flex justify-end">
+                    <div class="flex justify-end mt-4">
                         <button type="submit" 
-                                class="bg-orange-500 text-white text-md font-semibold px-6 py-3 rounded-md w-full sm:w-auto md:w-1/3 lg:w-1/4 hover:bg-orange-600 transition">
+                            class="bg-orange-500 text-white text-md  px-6 py-3 rounded-md w-full sm:w-auto md:w-1/3 lg:w-1/4 hover:bg-orange-600 transition flex items-center justify-center">
                             <span x-show="!loading">Enviar Reseña</span>
-
                             <svg x-show="loading" class="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
