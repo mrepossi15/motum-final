@@ -93,7 +93,7 @@ class User extends Authenticatable
     }
     public function experiences()
     {
-        return $this->hasMany(UserExperience::class);
+        return $this->hasMany(UserExperience::class, 'user_id');
     }
     public function payments()
     {

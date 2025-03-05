@@ -433,66 +433,80 @@ class TrainerController extends Controller
 
         return view('trainer.show-trainings', compact('trainings'));
     }
+    public function indexExperience()
+    {
+        $experiences = UserExperience::where('user_id', auth()->id())->orderBy('year_start', 'desc')->get();
+        return view('trainer.experience', compact('experiences'));
+    }
     
     public function storeExperience(Request $request)
     {
-        $request->validate([
-            'experiences' => 'required|array',
-            'experiences.*.role' => 'required|string|max:255',
-            'experiences.*.company' => 'nullable|string|max:255',
-            'experiences.*.year_start' => 'required|integer|min:1900|max:' . now()->year,
-            'experiences.*.year_end' => 'nullable|integer|min:1900|max:' . now()->year,
-            'experiences.*.currently_working' => 'sometimes|boolean', // 🔥 Cambia 'nullable' por 'sometimes'
-        ]);
-    
-        $user = auth()->user();
-    
-        // Guardar experiencias
-        foreach ($request->experiences as $experience) {
-            // Si no existe `currently_working`, asignarle 0
-            $currentlyWorking = $experience['currently_working'] ?? 0;
-    
-            $user->experiences()->create([
-                'role' => $experience['role'],
-                'company' => $experience['company'] ?? null,
-                'year_start' => $experience['year_start'],
-                'year_end' => $currentlyWorking ? null : $experience['year_end'],
-                'currently_working' => $currentlyWorking,
-            ]);
-        }
-    
-        return redirect()->route('trainer.profile')->with('success', 'Experiencia registrada exitosamente.');
-    }
-    public function updateExperience(Request $request, $id)
-    {
-        $request->validate([
+        $validated = $request->validate([
             'role' => 'required|string|max:255',
             'company' => 'nullable|string|max:255',
             'year_start' => 'required|integer|min:1900|max:' . now()->year,
             'year_end' => 'nullable|integer|min:1900|max:' . now()->year,
-            'currently_working' => 'sometimes|boolean',
+            'currently_working' => 'boolean',
         ]);
     
-        $experience = auth()->user()->experiences()->findOrFail($id);
+        $validated['user_id'] = auth()->id();
+        $validated['year_end'] = $request->currently_working ? null : $request->year_end;
     
-        $currentlyWorking = $request->has('currently_working') ? $request->currently_working : 0;
+        UserExperience::create($validated);
     
-        $experience->update([
-            'role' => $request->role,
-            'company' => $request->company ?? null,
-            'year_start' => $request->year_start,
-            'year_end' => $currentlyWorking ? null : $request->year_end, // Si está trabajando, year_end será null
-            'currently_working' => $currentlyWorking,
-        ]);
-    
-        return redirect()->route('trainer.profile')->with('success', 'Experiencia actualizada exitosamente.');
+        return redirect()->route('trainer.experience')->with('success', 'Experiencia guardada correctamente.');
     }
+    
+    public function editExperience($id)
+    {
+        $experience = UserExperience::where('user_id', auth()->id())->findOrFail($id);
+        return response()->json($experience);
+    }
+    
+    public function updateExperience(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'role' => 'required|string|max:255',
+            'company' => 'nullable|string|max:255',
+            'year_start' => 'required|integer|min:1900|max:' . now()->year,
+            'year_end' => 'nullable|integer|min:1900|max:' . now()->year,
+            'currently_working' => 'boolean',
+        ]);
+    
+        $experience = UserExperience::where('user_id', auth()->id())->findOrFail($id);
+        $validated['year_end'] = $request->currently_working ? null : $request->year_end;
+    
+        $experience->update($validated);
+    
+        return redirect()->route('trainer.experience')->with('success', 'Experiencia actualizada exitosamente.');
+    }
+    
     public function destroyExperience($id)
     {
-        $experience = auth()->user()->experiences()->findOrFail($id);
+        $experience = UserExperience::where('user_id', auth()->id())->findOrFail($id);
         $experience->delete();
-
-        return redirect()->route('trainer.profile')->with('success', 'Experiencia eliminada correctamente.');
+    
+        return redirect()->route('trainer.experience')->with('success', 'Experiencia eliminada correctamente.');
+    }
+    public function myPark()
+    {
+        $parks = Park::all(); // Obtener todos los parques asociados
+        return view('trainer.parks', compact('parks'));
+    }
+    public function trainerPayments()
+    {
+        $trainerId = Auth::id(); // Obtener el ID del entrenador autenticado
+        
+        $payments = Payment::whereHas('training', function ($query) use ($trainerId) {
+            $query->where('trainer_id', $trainerId);
+        })->with(['user', 'training'])->orderBy('created_at', 'desc')->get();
+        
+        return view('trainer.payments', compact('payments'));
+    }
+    public function detail()
+    {
+        $user = Auth::user();
+        return view('trainer.info', compact('user'));
     }
     
 }

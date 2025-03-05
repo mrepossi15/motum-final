@@ -769,7 +769,7 @@ class TrainingController extends Controller
         $role = auth()->user()->role;
 
         if ($role === 'entrenador' || $role === 'admin') {
-            return view('trainer.show', compact('training', 'filteredSchedules', 'selectedDay', 'isFavorite'));
+            return view('trainings.detail', compact('training', 'filteredSchedules', 'selectedDay', 'isFavorite'));
         } else {
             return view('trainings.selected', compact('training', 'filteredSchedules', 'selectedDay', 'hasPurchased', 'isFavorite'));
         }

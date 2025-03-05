@@ -70,5 +70,16 @@ public function destroy($id)
 
     return back()->with('success', 'Reseña eliminada correctamente.');
 }
+public function show($trainer_id)
+{
+    $trainer = User::where('id', $trainer_id)->where('role', 'entrenador')->firstOrFail();
+    $reviews = Review::where('trainer_id', $trainer_id)
+        ->with('user') // Cargar la relación del usuario que dejó la reseña
+        ->latest()
+        ->get();
+        
+
+    return view('reviews.trainer', compact('trainer', 'reviews'));
+}
 }
 

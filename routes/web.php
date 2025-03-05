@@ -73,6 +73,7 @@ Route::get('/mapa', [studentController::class, 'map'])
 Route::get('/trainers/{id}', [StudentController::class, 'showTrainerProfile'])->name('students.trainerProfile');
 Route::get('/students/info', [StudentController::class, 'detail'])->name('students.info')->middleware('auth');
 
+
     /*
 |--------------------------------------------------------------------------
 | Rutas para TrainerController 
@@ -104,22 +105,19 @@ Route::get('/entrenador/perfil', [TrainerController::class, 'showTrainerProfile'
 Route::get('/trainer/profile/edit', [TrainerController::class, 'editTrainerProfile'])
     ->name('trainer.edit')
     ->middleware(['auth', 'role:entrenador']);
-//Modificar perfil entrenador
- Route::put('/trainer/profile/update', [TrainerController::class, 'updateTrainer'])
+//Vista Editar perfil
+Route::get('/trainer/profile/update', [TrainerController::class, 'updateTrainerProfile'])
     ->name('trainer.update')
     ->middleware(['auth', 'role:entrenador']);
-//Experiencia dnetrenador
-Route::post('/store/experience', [TrainerController::class, 'storeExperience'])
-    ->name('trainer.storeExperience');
-Route::put('/trainer/experience/{id}', [TrainerController::class, 'updateExperience'])
-    ->name('trainer.experience.update')
-    ->middleware(['auth', 'role:entrenador']);
 
-Route::delete('/trainer/experience/{id}', [TrainerController::class, 'destroyExperience'])
-    ->name('trainer.experience.destroy')
-    ->middleware(['auth', 'role:entrenador']);
-
-
+//Modificar perfil entrenador
+Route::middleware(['auth', 'role:entrenador'])->prefix('trainer/experiences')->group(function () {
+    Route::get('/', [TrainerController::class, 'indexExperience'])->name('trainer.experience');
+    Route::post('/', [TrainerController::class, 'storeExperience'])->name('trainer.experience.store');
+    Route::get('/{id}/edit', [TrainerController::class, 'editExperience'])->name('trainer.experience.edit');
+    Route::put('/{id}', [TrainerController::class, 'updateExperience'])->name('trainer.experience.update');
+    Route::delete('/{id}', [TrainerController::class, 'destroyExperience'])->name('trainer.experience.destroy');
+});
 // Todos los entrenamientos del entrenador
 
 Route::get('/trainer/trainings', [TrainerController::class, 'showTrainerTrainings'])
@@ -132,8 +130,14 @@ Route::get('/entrenamientos/{id}', [TrainingController::class, 'showAll'])
 ->name('trainer.showAll')
 ->middleware(['auth', 'role:entrenador']);
 
+//Mis parques vista
+Route::get('trainer/parks', [TrainerController::class, 'myPark'])->name('trainer.parks');
 
-
+//pagos al entrendor 
+Route::middleware(['auth', 'role:entrenador'])->group(function () {
+    Route::get('/trainer/payments', [TrainerController::class, 'trainerPayments'])->name('trainer.payments');
+});
+Route::get('/trainer/info', [TrainerController::class, 'detail'])->name('trainer.info')->middleware('auth');
 /*
 |--------------------------------------------------------------------------
 | Rutas para ParkController 
@@ -267,6 +271,10 @@ Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])
 
 Route::get('/trainings/{id}/detail', [TrainingController::class, 'detail'])
 ->name('trainings.detail')
+->middleware(['auth', 'role:entrenador']);
+
+Route::get('/trainers/{trainer}/reviews', [ReviewController::class, 'show'])
+->name('reviews.trainer')
 ->middleware(['auth', 'role:entrenador']);
 
 /*
