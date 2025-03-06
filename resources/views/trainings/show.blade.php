@@ -195,15 +195,23 @@
                             <button class="bg-white text-black px-3 py-1 rounded-md shadow" onclick="toggleDropdown()">
                                 <i class="bi bi-three-dots-vertical"></i>
                             </button>
+                            
 
                             <!-- Menú desplegable -->
                             <ul id="dropdownMenu" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md hidden z-20">
-                                <li>
-                                    <a href="{{ route('trainings.edit', ['id' => $training->id, 'date' => $selectedDate ?? now()->toDateString()]) }}" 
-                                        class="block px-4 py-2 text-sm text-black hover:bg-gray-100">
-                                        Editar
-                                    </a>
-                                </li>
+                            <li>
+                            @if ($isEditAccessible)
+    <a href="{{ route('trainings.edit', ['id' => $training->id, 'date' => $selectedDate, 'time' => $selectedTime]) }}" 
+       class="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+        Editar
+    </a>
+@else
+    <button class="bg-gray-300 text-gray-600 text-sm px-4 py-2 rounded-md w-full cursor-not-allowed" disabled>
+        {{ $editMessage }}
+    </button>
+@endif
+                               
+                            </li>
 
                                 <li>
                                     <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 
@@ -220,8 +228,8 @@
         </div>
 
         <!-- 📍 Fila 2: Prinicpal -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-4 px-4 md:pb-6">
-            <div class="md:col-span-2">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-2 pb-4 px-4 md:pb-6">
+            <div class="sm:col-span-2">
                 <!-- 🏋️ Título del entrenamiento -->
                 <h1 class="text-2xl sm:text-3xl my-2 font-bold text-gray-900 flex items-center">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-sm flex items-center justify-center p-2 mr-2">
@@ -252,25 +260,38 @@
                     <span>{{ $training->park->name }} - {{ $training->park->location }}</span>
                 </p>
             </div>
-            <!-- 📱 Btn de selección de sesiones en Mobile -->
-            <div class="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
-                <div class="flex justify-center">
+           <!-- 📱 Btn de selección de sesiones en Mobile (SOLO en móviles) -->
+            <div class="sm:flex sm:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
+                <div class="flex justify-center w-full">
                     <div class="w-full max-w-[400px]">
-                        
-                            @if ($isClassAccessible)
-                                <a href="{{ $reservationDetailUrl }}" >
+                        @if ($isClassAccessible)
+                            <a href="{{ $reservationDetailUrl }}">
                                 <button id="apply-filters-btn" class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
-                                        Tomar lista
+                                    Tomar lista
                                 </button>
-                                </a>
-                            @else
-                                <button  class="bg-orange-300 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition" disabled>
-                                    {{ $accessMessage }}
-                                </button>
-                            @endif
-                        
+                            </a>
+                        @else
+                            <button class="bg-orange-300 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition" disabled>
+                                {{ $accessMessage }}
+                            </button>
+                        @endif
                     </div>
                 </div>
+            </div>
+
+            <!-- 🛒 Botón de compra en Desktop (Tablet y Computadora) -->
+            <div class="hidden sm:block bg-white shadow-lg rounded-lg p-4 md:sticky md:top-4 md:self-start h-auto w-full border-t md:border-none">
+                @if ($isClassAccessible)
+                    <a href="{{ $reservationDetailUrl }}">
+                        <button id="apply-filters-btn" class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
+                            Tomar lista
+                        </button>
+                    </a>
+                @else
+                    <button class="bg-orange-300 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition" disabled>
+                        {{ $accessMessage }}
+                    </button>
+                @endif
             </div>
 
             <!-- 📱 Modal de selección de sesiones en Mobile -->
@@ -314,21 +335,7 @@
                 </div>
             </div>
 
-            <!-- 🛒 Botón de compra en Desktop (oculto en móvil) -->
-            <div class="hidden md:block bg-white shadow-lg rounded-lg p-4 md:sticky md:top-4 md:self-start h-auto w-full border-t md:border-none">
-                @if ($isClassAccessible)
-                    <a href="{{ $reservationDetailUrl }}" >
-                    <button id="apply-filters-btn" class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition">
-                            Tomar lista
-                    </button>
-                    </a>
-                @else
-                    <button  class="bg-orange-300 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-400 transition" disabled>
-                        {{ $accessMessage }}
-                    </button>
-                @endif
-            </div>
-
+           
             <!-- 🛒 Modal de Aceptación del Carrito -->
             @if(session('cart_success'))
                 <div x-data="{ open: true }">
@@ -401,8 +408,8 @@
                             $schedule = $filteredSchedules->first();
                         @endphp
                         <p class="text-gray-700">
-                            {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') ?? 'No disponible' }} - 
-                            {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') ?? 'No disponible' }}
+                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - 
+                        {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
                         </p>
 
                         @if($schedule->is_exception)

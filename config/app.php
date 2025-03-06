@@ -66,7 +66,7 @@ return [
     |
     */
 
-    'timezone' => 'America/Argentina/Buenos_Aires', // Asegúrate de que esté correcta
+'timezone' => 'America/Argentina/Buenos_Aires',
 
     /*
     |--------------------------------------------------------------------------

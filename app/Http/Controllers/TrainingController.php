@@ -37,6 +37,7 @@ class TrainingController extends Controller
     }
     public function store(Request $request)
     {
+        
         if (!Auth::user()->medical_fit) {
             return redirect()->back()->with('error', 'Debes subir un apto médico antes de crear un entrenamiento.');
         }
@@ -163,6 +164,7 @@ class TrainingController extends Controller
     
         // 🔍 Buscar excepciones para la fecha seleccionada
         $filteredSchedules = $training->schedules;
+        
     
         if ($selectedDate) {
             $exceptions = TrainingException::whereIn('training_schedule_id', $training->schedules->pluck('id'))
@@ -196,7 +198,13 @@ class TrainingController extends Controller
             if (!$selectedSchedule) {
                 $selectedSchedule = $training->schedules->first();
             }
-    
+            if ($selectedSchedule) {
+                $selectedSchedule->start_time = \Carbon\Carbon::parse($selectedSchedule->start_time)
+                    ->setTimezone('America/Argentina/Buenos_Aires');
+        
+                $selectedSchedule->end_time = \Carbon\Carbon::parse($selectedSchedule->end_time)
+                    ->setTimezone('America/Argentina/Buenos_Aires');
+            }
             // Pasar solo un horario a la vista
             $filteredSchedules = collect([$selectedSchedule]);
         }
@@ -233,6 +241,20 @@ class TrainingController extends Controller
                 $accessMessage = "Acceso cerrado";
             }
         }
+        $isEditAccessible = false;
+        $editMessage = "Fecha u hora no especificadas";
+
+    if ($selectedDate && $selectedTime) {
+        $classStartTime = Carbon::parse("$selectedDate $selectedTime");
+        $now = now();
+
+        if ($now->diffInHours($classStartTime, false) > 4) {
+            $isEditAccessible = true;
+            $editMessage = "Edición disponible.";
+        } else {
+            $editMessage = "La edición se cierra 4 horas antes del entrenamiento.";
+        }
+    }
     
         Log::info('🔍 Verificación de acceso:', [
             'selectedDate' => $selectedDate,
@@ -242,7 +264,16 @@ class TrainingController extends Controller
             'isClassAccessible' => $isClassAccessible,
             'now' => now()->toDateTimeString(),
             'accessMessage' => $accessMessage,
+            
         ]);
+        Log::info('🔍 Verificación de acceso a edición:', [
+            'selectedDate' => $selectedDate,
+            'selectedTime' => $selectedTime,
+            'classStartTime' => $classStartTime ?? null,
+            'isEditAccessible' => $isEditAccessible,
+            'now' => now()->toDateTimeString(),
+            'editMessage' => $editMessage,
+        ]); 
     
         // 📌 Definir vista según el rol
         $role = auth()->user()->role;
@@ -250,7 +281,7 @@ class TrainingController extends Controller
     
         return view($view, compact(
             'training', 'filteredSchedules', 'selectedTime', 'selectedDate', 'filteredReservations',
-            'isClassAccessible', 'accessMessage', 'reservationDetailUrl'
+            'isClassAccessible', 'accessMessage', 'reservationDetailUrl', 'isEditAccessible','editMessage'
         ));
     }
    
@@ -258,18 +289,23 @@ class TrainingController extends Controller
     {
         $training = Training::with(['schedules.exceptions', 'prices'])->findOrFail($id);
         $selectedDate = $request->query('date') ?? now()->toDateString();
-    
+        $selectedTime = $request->query('time') ?? null; // Captura el parámetro de la URL
+            if ($selectedTime) {
+                $selectedTime = urldecode($selectedTime); // Decodifica si está en formato URL
+            }
+
         // Convertir el nombre del día a español
         $dayName = ucfirst(Carbon::parse($selectedDate)->locale('es')->isoFormat('dddd'));
     
         Log::info('🚀 Iniciando edición', [
             'training_id' => $id,
             'selected_date' => $selectedDate,
+            'selected_time' => $selectedTime,
             'day_name' => $dayName
         ]);
     
         // Obtener horarios base y excepciones
-        $filteredSchedules = $training->schedules->map(function ($schedule) use ($selectedDate, $dayName) {
+        $filteredSchedules = $training->schedules->map(function ($schedule) use ($selectedDate, $selectedTime, $dayName) {
             $exception = $schedule->exceptions->firstWhere('date', $selectedDate);
     
             Log::info('🔬 Procesando horario:', [
@@ -280,26 +316,30 @@ class TrainingController extends Controller
                 'exception' => $exception ? $exception->toArray() : 'Ninguna'
             ]);
     
+            $startTime = $exception ? $exception->start_time : $schedule->start_time;
+    
             return (object) [
                 'id'          => $schedule->id,
                 'day'         => $schedule->day,
-                'start_time'  => $exception ? $exception->start_time : $schedule->start_time,
-                'end_time'    => $exception ? $exception->end_time   : $schedule->end_time,
+                'start_time'  => $startTime,
+                'end_time'    => $exception ? $exception->end_time : $schedule->end_time,
                 'is_exception'=> $exception ? true : false,
             ];
-        })->filter(function ($schedule) use ($dayName) {
-            return strtolower($schedule->day) === strtolower($dayName);
+        })->filter(function ($schedule) use ($dayName, $selectedTime) {
+            return strtolower($schedule->day) === strtolower($dayName) && 
+                   ($selectedTime ? $schedule->start_time == $selectedTime : true);
         });
     
         Log::info('👉 Horarios filtrados:', $filteredSchedules->toArray());
     
-        // Si no hay horarios base, buscar excepciones directas
         if ($filteredSchedules->isEmpty()) {
             $exceptions = TrainingException::whereHas('schedule.training', function ($query) use ($id) {
                 $query->where('id', $id);
-            })->where('date', $selectedDate)->get();
+            })->where('date', $selectedDate)
+              ->where('start_time', $selectedTime) // Filtrar por hora
+              ->get();
     
-            Log::info('🔍 Excepciones encontradas para la fecha:', $exceptions->toArray());
+            Log::info('🔍 Excepciones encontradas para la fecha y hora:', $exceptions->toArray());
     
             foreach ($exceptions as $exception) {
                 $filteredSchedules->push((object) [
@@ -314,11 +354,10 @@ class TrainingController extends Controller
     
         Log::info('✅ Horarios finales para mostrar:', $filteredSchedules->toArray());
     
-        // Cargar actividades y parques
         $activities = Activity::all();
         $parks = Park::all();
     
-        return view('trainings.edit', compact('training', 'activities', 'parks', 'filteredSchedules', 'selectedDate'));
+        return view('trainings.edit', compact('training', 'activities', 'parks', 'filteredSchedules', 'selectedDate', 'selectedTime'));
     }
     
     public function update(Request $request, $id)
@@ -375,7 +414,7 @@ class TrainingController extends Controller
             return redirect()->route('trainings.show', [
                 'id' => $training->id,
                 'date' => $selectedDate,
-                'time' => $request->input('schedule.start_time.0') // Agrega el nuevo horario actualizado
+                'time' => $request->input("schedule.start_time." . array_key_first($request->input('schedule.start_time')))
             ])->with('success', 'Entrenamiento actualizado solo para la fecha seleccionada.');
     
         } catch (\Exception $e) {

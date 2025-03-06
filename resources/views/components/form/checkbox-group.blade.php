@@ -1,6 +1,6 @@
 @props(['name', 'label' => null, 'options' => [], 'selected' => [], 'hideLabel' => false])
 
-<div class="relative space-y-2">
+<div class="relative ">
     <!-- Label flotante (oculto si `hideLabel` es true) -->
     @if (!$hideLabel)
         <label class="absolute -top-2 left-3 bg-white px-1 text-black text-sm">
@@ -9,9 +9,9 @@
     @endif
 
     <!-- Contenedor de checkboxes en una grilla -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 mt-3">
+    <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
         @foreach ($options as $option)
-            <label class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 cursor-pointer transition">
+            <label class="flex items-center gap-2  rounded-md hover:bg-gray-100 cursor-pointer transition">
                 <input
                     type="checkbox"
                     name="{{ $name }}[]"

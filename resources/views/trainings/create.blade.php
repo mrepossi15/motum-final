@@ -88,79 +88,119 @@
 
             <!-- Paso 3: Horarios y precios -->
             <div x-show="step === 3" class="space-y-6">
-    
-    <!-- Sección: Días y Horarios -->
-    <div class="border-b border-gray-300  p-4">
-        <div class="flex justify-between items-center mb-4">
-            <h5 class="text-lg font-semibold text-gray-700">Días y Horarios</h5>
-            <button type="button" id="add-schedule" 
-                class=" text-orange-500 px-4 py-2 rounded-md hover:underline transition">
-                + Agregar Horario
-            </button>
+                       <!-- Sección: Días y Horarios -->
+        <div class="border-b border-gray-300  p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-lg font-semibold text-gray-700">Días y Horarios</h5>
+                <button type="button" id="add-schedule" 
+                        class=" text-orange-500  py-2 rounded-md hover:underline transition">
+                        + Agregar 
+                </button>
+            </div>
+
+            <div id="schedule-container" class="space-y-3">
+                    @php $schedules = old('schedule.days', [[]]); @endphp
+                    @foreach ($schedules as $index => $scheduleDays)
+                        <div class=" pb-4">
+                            <!-- Días de la semana -->
+                            <x-form.checkbox-group 
+                            name="schedule[days][{{ $index }}][]" 
+                            label="Días"
+                            :options="['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']"
+                            :selected="old('schedule.days.' . $index, [])"
+                            hideLabel="true"
+                            />
+
+                            <!-- Horario en una sola fila -->
+                            <div class="grid grid-cols-2 gap-4 mt-6">
+                                <x-form.input type="time" name="schedule[start_time][{{ $index }}]" label="Inicio *" required />
+                                <x-form.input type="time" name="schedule[end_time][{{ $index }}]" label="Fin *" required />
+                            </div>
+
+                            
+                        </div>
+                    @endforeach
+            </div>
         </div>
 
-        <div id="schedule-container" class="space-y-3">
-            @php $schedules = old('schedule.days', [[]]); @endphp
-            @foreach ($schedules as $index => $scheduleDays)
-                <div class=" relative">
-                    <!-- Días de la semana -->
-                    <x-form.checkbox-group 
-                    name="schedule[days][{{ $index }}][]" 
-                    label="Días"
-                    :options="['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']"
-                    :selected="old('schedule.days.' . $index, [])"
-                    hideLabel="true"
-                />
+            <!-- Sección: Precios -->
+        <div class=" px-4">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-lg font-semibold text-gray-700">Precios por Sesiones Semanales</h5>
+                
+                <button type="button" id="add-price-button" 
+                    class="text-orange-500  py-2 rounded-md hover:underline transition whitespace-nowrap">
+                    + Agregar
+                </button>
+            </div>
 
-                    <!-- Horario en una sola fila -->
-                    <div class="grid grid-cols-2 gap-4 mt-2">
-                        <x-form.input type="time" name="schedule[start_time][{{ $index }}]" label="Inicio *" required />
-                        <x-form.input type="time" name="schedule[end_time][{{ $index }}]" label="Fin *" required />
-                    </div>
-
-                    
-                </div>
-            @endforeach
-        </div>
-    </div>
-
-    <!-- Sección: Precios -->
-    <div class=" p-4">
-        <div class="flex justify-between items-center mb-4">
-            <h5 class="text-lg font-semibold text-gray-700">Precios por Sesiones Semanales</h5>
-            <button type="button" id="add-price-button" 
-            class=" text-orange-500 px-4 py-2 rounded-md hover:underline transition">
-                + Agregar Precio
-            </button>
-        </div>
-
-        <div id="prices" class="space-y-3">
-            @if(old('prices.weekly_sessions'))
-                @foreach (old('prices.weekly_sessions') as $index => $session)
-                    <div class="border border-gray-200 rounded-md p-3 shadow-sm bg-gray-50">
-                        <div class="grid grid-cols-2 gap-4">
+            <div id="prices" class="space-y-3">
+                @if(old('prices.weekly_sessions'))
+                    @foreach (old('prices.weekly_sessions') as $index => $session)
+                        <div class="border border-gray-200 rounded-md p-3 shadow-sm bg-gray-50">
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <x-form.input type="number" name="prices[weekly_sessions][]" label="Veces/Semana *" required />
+                                <x-form.input type="number" name="prices[price][]" label="Precio *" required />
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
                             <x-form.input type="number" name="prices[weekly_sessions][]" label="Veces/Semana *" required />
-                            <x-form.input type="number" name="prices[price][]" label="Precio *" required />
+                            <x-form.input type="number" name="prices[price][]" label="Precio *" required textarea="$" />
                         </div>
                     </div>
-                @endforeach
-            @else
-                <div class="">
-                    <div class="grid grid-cols-2 gap-4">
-                        <x-form.input type="number" name="prices[weekly_sessions][]" label="Veces/Semana *" required />
-                        <x-form.input type="number" name="prices[price][]" label="Precio *" required textarea="$" />
-                    </div>
-                </div>
-            @endif
+                @endif
+            </div>
         </div>
-    </div>
+                
 
-</div>
+            </div>
 
             <!-- Paso 4: Imágenes -->
-            <div x-show="step === 4" class="space-y-4">
-                <x-form.file name="photos[]" label="Fotos del Entrenamiento *" accept="image/*" multiple required />
-                <x-form.input name="photos_description[]" label="Descripción de la Foto (Opcional)" placeholder="Ej: Clase de Yoga al aire libre" />
+            <div x-show="step === 4" class="space-y-4" x-data="photoPreview()">
+                <div class="relative">
+                    <!-- Label flotante -->
+                    <label for="photos" 
+                        class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">
+                        Fotos del Entrenamiento *
+                    </label>
+
+                    <!-- Input con diseño limpio y bordes dinámicos -->
+                    <input
+                        type="file"
+                        id="photos"
+                        name="photos[]"
+                        accept="image/*"
+                        multiple
+                        class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
+                        @error('photos') border-red-500 @enderror"
+                        @change="previewImages(event)"
+                    >
+
+                    <!-- Mensaje de error con ícono de advertencia -->
+                    @error('photos')
+                        <div class="flex items-center mt-1 text-red-500 text-xs">
+                            <!-- Ícono de advertencia -->
+                            <x-lucide-cross class="h-4 w-4 mr-1 text-red-500" />
+                            <p>⚠️ {{ $message }}</p>
+                        </div>
+                    @enderror
+                </div>
+
+                <!-- Vista previa de imágenes -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                    <template x-for="(photo, index) in photos" :key="index">
+                        <div class="relative w-full h-24 overflow-hidden rounded-sm shadow-sm ">
+                            <img :src="photo.url" class="w-full h-full object-cover">
+                            <!-- Botón para eliminar imagen -->
+                            <button @click="removeImage(index)" class="absolute top-1 right-1 w-6 h-6 flex items-center justify-center ">
+                                <x-lucide-square-x class="h-4 w-4 text-red-500" />
+                            </button>
+                        </div>
+                    </template>
+                </div>
             </div>
 
             <!-- Botones de Navegación -->
@@ -180,14 +220,19 @@
                 </button>
 
                 
-                <button type="submit" 
-                        class="bg-green-500 text-white px-4 py-2 rounded-md"
-                        x-show="step === 4">
-                    Guardar Entrenamiento
-                </button>
+                <button type="submit"
+            class="bg-green-500 text-white px-4 py-2 rounded-md"
+            x-show="step === 4"
+            x-bind:disabled="submitting"
+            @click="submitting = true">
+        Guardar Entrenamiento
+    </button>
             </div>
             </div>
         </form>
     </div>
 </div>
+@push('scripts')
+<script src="{{ asset('js/entrenamientos/create.js') }}"></script>
+@endpush
 @endsection

@@ -84,7 +84,8 @@ Route::middleware(['auth'])->group(function () {
 | Rutas para TrainerController 
 |--------------------------------------------------------------------------
 */
-
+Route::get('/trainings/create/step1', [TrainingController::class, 'step1'])->name('trainings.step1');
+Route::post('/trainings/create/step1', [TrainingController::class, 'storeStep1']);
 // Registro de entrenadores
 Route::get('/registro/entrenador', [TrainerController::class, 'registerTrainer'])
     ->name('register.trainer');

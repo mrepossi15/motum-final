@@ -4,119 +4,116 @@ document.addEventListener('DOMContentLoaded', function () {
     const pricesContainer = document.getElementById('prices');
     const addPriceButton = document.getElementById('add-price-button');
 
-    document.getElementById('schedule-container').addEventListener('change', function () {
-        const maxDays = getTotalSelectedDays();
-        document.querySelectorAll('input[name="prices[weekly_sessions][]"]').forEach(input => {
-            input.max = maxDays;
-        });
-    });
-    
-    // Añadir bloque de horario dinámico
+    // Agregar Horario
     addScheduleButton.addEventListener('click', () => {
         const index = scheduleContainer.children.length;
-    
+
         const scheduleBlock = document.createElement('div');
-        scheduleBlock.classList.add('border', 'rounded', 'p-3', 'mb-3', 'schedule-item');
-    
+        scheduleBlock.classList.add('pb-4');
+
         scheduleBlock.innerHTML = `
-            <div class="space-y-4">
-                <!-- Checkbox Group -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Días:</label>
-                    <div class="flex flex-wrap gap-2 mt-1">
-                        ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(day => `
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" name="schedule[days][${index}][]" value="${day}" class="h-4 w-4 text-orange-500 focus:ring-orange-500">
-                                <span class="ml-2">${day}</span>
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-    
-                <!-- Hora de Inicio -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700" for="schedule[start_time][${index}]">Hora de Inicio *</label>
-                    <input type="time" name="schedule[start_time][${index}]" class="w-full px-3 py-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500">
-                </div>
-    
-                <!-- Hora de Fin -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700" for="schedule[end_time][${index}]">Hora de Fin *</label>
-                    <input type="time" name="schedule[end_time][${index}]" class="w-full px-3 py-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500">
-                </div>
-    
-                <!-- Botón Eliminar -->
-                <div class="text-end">
-                    <button type="button" class="btn btn-danger btn-sm remove-schedule text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded">
-                        Eliminar
-                    </button>
+          <div class="border-t pt-4">
+            <!-- Días de la semana -->
+            <div>
+                <label class="sr-only">Días</label>
+                <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                    ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(day => `
+                        <label class="flex items-center gap-2 rounded-md hover:bg-gray-100 cursor-pointer transition">
+                            <input type="checkbox" name="schedule[days][${index}][0][]" value="${day}" class="h-5 w-5 text-orange-500 focus:ring-orange-500">
+                            <span class="text-black">${day}</span>
+                        </label>
+                    `).join('')}
                 </div>
             </div>
+
+            <!-- Horario en una sola fila -->
+             <div class="grid grid-cols-2 gap-4 mt-6 mb-b border-t">
+                 <div class="relative">
+                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Inicio*</label>
+                    <input type="time" name="schedule[start_time][${index}]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                </div>
+
+                 <div class="relative">
+                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Fin*</label>
+                    <input type="time" name="schedule[end_time][${index}]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                </div>
+            </div>
+
+            <!-- Botón para eliminar horario -->
+            <div class="text-end mt-2">
+                <button type="button" class="text-red-500 hover:bg-gray-50 px-3 py-1 rounded remove-schedule">
+                    Eliminar
+                </button>
+            </div>
+        </div>
         `;
-    
-        // Eliminar bloque al hacer clic en "Eliminar"
+
         scheduleBlock.querySelector('.remove-schedule').addEventListener('click', () => {
             scheduleBlock.remove();
         });
-    
+
         scheduleContainer.appendChild(scheduleBlock);
     });
 
-    // Añadir bloque de precios dinámico
+    // Agregar Precio
     addPriceButton.addEventListener('click', () => {
         const index = pricesContainer.children.length;
-        const maxDays = getTotalSelectedDays();
-    
+        
         const priceBlock = document.createElement('div');
-        priceBlock.classList.add('border', 'rounded', 'p-3', 'mb-3');
-    
+        priceBlock.classList.add('pb-4');
+
         priceBlock.innerHTML = `
-            <div class="space-y-4">
-                <!-- Veces por Semana -->
-                <div>
-                    <label for="prices[weekly_sessions][${index}]" class="block text-sm font-medium text-gray-700">Veces por Semana *</label>
-                    <input type="number" name="prices[weekly_sessions][]" min="1" max="${maxDays}" placeholder="Ej: 2" required
-                        class="w-full px-3 py-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500">
+        <div class="border-t">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="relative">
+                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Veces/Semana*</label>
+                    <input type="number" name="prices[weekly_sessions][]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
                 </div>
-    
-                <!-- Precio -->
-                <div>
-                    <label for="prices[price][${index}]" class="block text-sm font-medium text-gray-700">Precio *</label>
-                    <input type="number" name="prices[price][]" step="0.01" placeholder="Ej: 500.00" required
-                        class="w-full px-3 py-2 border rounded-lg focus:ring-orange-500 focus:border-orange-500">
-                </div>
-    
-                <!-- Botón Eliminar -->
-                <div class="text-end">
-                    <button type="button" class="btn btn-danger btn-sm remove-price text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded">
-                        Eliminar
-                    </button>
+
+                 <div class="relative">
+                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Precio*</label>
+                    <input type="number" name="prices[price][]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
                 </div>
             </div>
+
+            <!-- Botón para eliminar precio -->
+            <div class="text-end mt-2">
+                <button type="button" class="text-red-500 hover:bg-gray-600 px-3 py-1 rounded remove-price">
+                    Eliminar
+                </button>
+            </div>
+        </div>
         `;
-    
-        pricesContainer.appendChild(priceBlock);
-    
-        // Eliminar bloque al hacer clic en "Eliminar"
+
         priceBlock.querySelector('.remove-price').addEventListener('click', () => {
             priceBlock.remove();
         });
+
+        pricesContainer.appendChild(priceBlock);
     });
-
-    // Validar antes de enviar el formulario
-    document.querySelector('form').addEventListener('submit', (event) => {
-        const weeklySessionsInputs = document.querySelectorAll('input[name^="prices[weekly_sessions]"]');
-        const weeklySessionsValues = Array.from(weeklySessionsInputs).map(input => input.value);
-        const uniqueValues = new Set(weeklySessionsValues);
-
-        if (weeklySessionsValues.length !== uniqueValues.size) {
-            event.preventDefault();
-            alert("No puedes agregar más de un precio con la misma cantidad de sesiones por semana.");
-        }
-    });
-
-    // Obtener total de días seleccionados
-    function getTotalSelectedDays() {
-        return document.querySelectorAll('input[name^="schedule[days]"]:checked').length;
-    }
 });
+function photoPreview() {
+    return {
+        photos: [],
+        fileList: [],
+        previewImages(event) {
+            this.photos = [];
+            this.fileList = Array.from(event.target.files);
+            this.fileList.forEach((file, index) => {
+                let reader = new FileReader();
+                reader.onload = e => this.photos.push({ url: e.target.result, file: file });
+                reader.readAsDataURL(file);
+            });
+        },
+        removeImage(index) {
+            this.photos.splice(index, 1);
+            this.fileList.splice(index, 1);
+            this.updateFileInput();
+        },
+        updateFileInput() {
+            let dataTransfer = new DataTransfer();
+            this.fileList.forEach(file => dataTransfer.items.add(file));
+            document.getElementById('photos').files = dataTransfer.files;
+        }
+    };
+}

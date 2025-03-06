@@ -3,60 +3,60 @@
 @section('title', 'Editar Entrenamiento')
 
 @section('content')
-<div class="container mx-auto py-6">
-    <h1 class="text-2xl font-bold text-orange-600 mb-4">Editar Entrenamiento para el {{ $selectedDate }}</h1>
-    <div class="bg-gray-100 p-3 rounded">
-    <h3 class="text-lg font-semibold">📝 Horarios Cargados para el {{ $selectedDate }}:</h3>
-    <pre>{{ print_r($filteredSchedules, true) }}</pre>
-</div>
-    <form action="{{ route('trainings.update', $training->id) }}" method="POST" enctype="multipart/form-data">
-        @csrf
-        @method('PUT')
+<div class="max-w-4xl mx-auto p-4 mt-6">
+    <a href="{{ route('trainer.calendar') }}" class="text-orange-500 font-medium">&lt; Volver a calendario</a>
 
-        <input type="hidden" name="selected_date" value="{{ $selectedDate }}">
+    <div class="bg-white rounded-lg mt-6 shadow-md p-4">
+        <h1 class="text-2xl font-bold text-black-500 mb-4">Editar Entrenamiento para el {{ $selectedDate }}</h1>
 
-       
+        <form action="{{ route('trainings.update', $training->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            @csrf
+            @method('PUT')
 
-        <!-- **Horario para la Fecha Seleccionada** -->
-        <div class="bg-white p-4 rounded-lg shadow mb-6">
-    <h2 class="text-lg font-semibold mb-4">Horario para el {{ $selectedDate }}</h2>
+            <input type="hidden" name="selected_date" value="{{ $selectedDate }}">
 
-    @foreach ($filteredSchedules as $schedule)
-    <input type="hidden" name="schedule_id[]" value="{{ $schedule->id }}">
-
-    <div class="border rounded-lg p-4 mb-4">
-        <h3 class="text-md font-semibold mb-2">Horario #{{ $loop->iteration }} 
-            @if($schedule->is_exception)
-                <span class="text-red-500">(Modificado para esta fecha)</span>
-            @endif
-        </h3>
-
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium">Hora de Inicio:</label>
-                <input type="time" name="schedule[start_time][{{ $schedule->id }}]"
-                       value="{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}"
-                       class="w-full p-2 border rounded-md" required>
+            <!-- Horarios -->
+            <div class="border-b border-gray-300 p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-lg font-semibold text-gray-700">Días y Horarios</h5>
+                    <button type="button" id="add-schedule" class="text-orange-500 py-2 rounded-md hover:underline transition">
+                        + Agregar
+                    </button>
+                </div>
+                
+                <div id="schedule-container" class="space-y-3">
+                    @foreach ($filteredSchedules as $schedule)
+                        <input type="hidden" name="schedule_id[]" value="{{ $schedule->id }}">
+                        <div class="pb-4">
+                            <!-- Horario en una sola fila -->
+                            <div class="grid grid-cols-2 gap-4 mt-6">
+                                <x-form.input type="time" name="schedule[start_time][{{ $schedule->id }}]" 
+                                    label="Inicio *" 
+                                    value="{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}" 
+                                    required />
+                                <x-form.input type="time" name="schedule[end_time][{{ $schedule->id }}]" 
+                                    label="Fin *" 
+                                    value="{{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}" 
+                                    required />
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <input type="hidden" name="selected_date" value="{{ $selectedDate }}">
+                    <input type="hidden" name="selected_time" value="{{ $selectedTime }}">
             </div>
 
-            <div>
-                <label class="block text-sm font-medium">Hora de Fin:</label>
-                <input type="time" name="schedule[end_time][{{ $schedule->id }}]"
-                       value="{{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}"
-                       class="w-full p-2 border rounded-md" required>
+    
+
+            <!-- Botones de acción -->
+            <div class="flex justify-between">
+            <a href="{{ route('trainings.show', ['id' => $training->id, 'date' => $selectedDate, 'time' => $selectedTime]) }}" 
+   class="bg-gray-500 text-white px-4 py-2 rounded">
+    Cancelar
+</a>
+                <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">Guardar Cambios</button>
             </div>
-        </div>
+        </form>
     </div>
-@endforeach
-</div>
-   
-
-      
-        <!-- **Botones de Acción** -->
-        <div class="flex justify-end gap-4">
-            <a href="{{ route('trainings.show', ['id' => $training->id, 'date' => $selectedDate]) }}" class="bg-gray-500 text-white px-4 py-2 rounded">Cancelar</a>
-            <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">Guardar Cambios</button>
-        </div>
-    </form>
 </div>
 @endsection

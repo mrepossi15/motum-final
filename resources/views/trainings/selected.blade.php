@@ -202,8 +202,8 @@
         </div>
 
         <!-- 📍 Fila 2: Prinicpal -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-4 px-4 md:pb-6">
-            <div class="md:col-span-2">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-2 pb-4 px-4 md:pb-6">
+        <div class="sm:col-span-2">
                 <!-- 🏋️ Título del entrenamiento -->
                 <h1 class="text-2xl sm:text-3xl my-2 font-bold text-gray-900 flex items-center">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-sm flex items-center justify-center p-2 mr-2">
@@ -262,7 +262,7 @@
                 </div>
             </div>
             <!-- 📱 Btn de selección de sesiones en Mobile -->
-            <div class="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
+            <div class="sm:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
                 <button id="openModal" 
                     class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-600 transition">
                     Comprar
@@ -311,7 +311,7 @@
             </div>
 
             <!-- 🛒 Botón de compra en Desktop (oculto en móvil) -->
-            <div class="hidden md:block bg-white shadow-lg rounded-lg p-4 md:sticky md:top-4 md:self-start h-auto w-full border-t md:border-none">
+            <div class="hidden sm:block bg-white shadow-lg rounded-lg p-4 md:sticky md:top-4 md:self-start h-auto w-full border-t md:border-none">
                 <form action="{{ route('cart.add') }}" method="POST">
                     @csrf
                     <input type="hidden" name="training_id" value="{{ $training->id }}">

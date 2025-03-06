@@ -225,8 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="p-4 border border-gray-200 hover:scale-105 cursor-pointer rounded-lg shadow-sm bg-white mb-4 cursor-pointer hover:shadow-md transition">
                         <h5 class="text-xl font-semibold mb-2">${training.title}</h5>
                         <p class="text-gray-700"><strong>Día:</strong> ${training.day}</p>
-                        
-                        <p class="text-gray-700"><strong>Hora:</strong> ${formatTime(training.start_time)} - ${formatTime(training.end_time)}</p>
+                      <p class="text-gray-700"><strong>Hora:</strong> ${training.start_time.slice(0, 5)} - ${training.end_time.slice(0, 5)}</p>
                         <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
                             Ver Detalle
                         </button>
