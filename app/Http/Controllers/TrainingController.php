@@ -1060,6 +1060,131 @@ class TrainingController extends Controller
     
         return view('reservations.show', compact('trainings', 'reservations'));
     }
+    public function step1()
+    {
+        $parks = Auth::user()->parks;
+        $activities = Activity::all();
+        return view('trainings.step1', compact('parks', 'activities'));
+    }
+
+    public function storeStep1(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'park_id' => 'required|exists:parks,id',
+            'activity_id' => 'required|exists:activities,id',
+        ]);
+
+        session(['training_step1' => $request->all()]);
+
+        return redirect()->route('trainings.step2');
+    }
+
+    public function step2()
+    {
+        return view('trainings.step2');
+    }
+
+    public function storeStep2(Request $request)
+    {
+        $request->validate([
+            'available_spots' => 'required|integer|min:1',
+            'level' => 'required|in:Principiante,Intermedio,Avanzado',
+            'description' => 'nullable|string',
+        ]);
+
+        session(['training_step2' => $request->all()]);
+
+        return redirect()->route('trainings.step3');
+    }
+
+    public function step3()
+    {
+        return view('trainings.step3');
+    }
+
+    public function storeStep3(Request $request)
+    {
+        $request->validate([
+            
+            'schedule.days' => 'required|array',
+            'schedule.start_time' => 'required|array',
+            'schedule.end_time' => 'required|array',
+            'prices.weekly_sessions' => 'required|array',
+            'prices.price' => 'required|array',
+        ]);
+
+        session(['training_step3' => $request->all()]);
+
+        return redirect()->route('trainings.step4');
+    }
+
+    public function step4()
+    {
+        return view('trainings.step4');
+    }
+
+    public function storeStep4(Request $request)
+    {
+        $request->validate([
+            'photos.*' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'photos_description.*' => 'nullable|string|max:255',
+        ]);
+
+        $data = array_merge(
+            session('training_step1', []),
+            session('training_step2', []),
+            session('training_step3', []),
+            $request->all()
+        );
+
+        // Crear entrenamiento en la base de datos
+        $training = Training::create([
+            'trainer_id' => Auth::id(),
+            'park_id' => $data['park_id'],
+            'activity_id' => $data['activity_id'],
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            
+            'available_spots' => $data['available_spots'],
+        ]);
+
+        // Guardar horarios
+        foreach ($data['schedule']['days'] as $index => $days) {
+            foreach ($days as $day) {
+                TrainingSchedule::create([
+                    'training_id' => $training->id,
+                    'day' => $day,
+                    'start_time' => $data['schedule']['start_time'][$index],
+                    'end_time' => $data['schedule']['end_time'][$index],
+                ]);
+            }
+        }
+
+        // Guardar precios
+        foreach ($data['prices']['weekly_sessions'] as $index => $sessions) {
+            TrainingPrice::create([
+                'training_id' => $training->id,
+                'weekly_sessions' => $sessions,
+                'price' => $data['prices']['price'][$index],
+            ]);
+        }
+
+        // Guardar fotos
+        foreach ($request->file('photos') as $index => $photo) {
+            $path = $photo->store('training_photos', 'public');
+            TrainingPhoto::create([
+                'training_id' => $training->id,
+                'photo_path' => $path,
+                'training_photos_description' => $data['photos_description'][$index] ?? 'Foto de entrenamiento',
+            ]);
+        }
+
+        // Limpiar sesión
+        session()->forget(['training_step1', 'training_step2', 'training_step3']);
+
+        return redirect()->route('trainer.calendar')->with('success', 'Entrenamiento creado exitosamente.');
+    }
     
    
 }

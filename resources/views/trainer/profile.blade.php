@@ -62,7 +62,7 @@
                     </li>
                     <li class="flex items-center justify-between py-4 cursor-pointer" onclick="window.location='{{ route('trainer.experience') }}';">
                         <div class="flex items-center space-x-4">
-                            <x-lucide-file-user class="text-orange-500 w-6 h-6" />
+                            <x-lucide-briefcase class="text-orange-500 w-6 h-6" />
                             <div>
                                 <p class="font-semibold">Tu experiencia</p>
                                 <p class="text-sm text-gray-500">Reseñas de tus alumnos sobre vos.</p>

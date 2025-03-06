@@ -4,8 +4,31 @@
 
 @section('content')
 <div class="flex justify-center min-h-screen bg-gray-100">
-    <div class="w-full max-w-7xl mx-auto p-4 lg:px-10">
+    <div class="w-full max-w-7xl mx-auto p-4 lg:px-10 relative ">
         <h2 class="text-2xl font-semibold mb-4"> Perfil de {{ $trainer->name }}</h2>
+            <!-- Botón de edición flotante en la esquina superior derecha -->
+            <div class="absolute top-4 right-6">
+                @php
+                    $firstTraining = $trainings->first();
+                @endphp
+
+                @if($firstTraining)
+                      <a href="{{ route('trainings.selected', $firstTraining->id) }}"
+                        class="sm:hidden flex items-center space-x-2  text-white px-2 py-2 rounded-lg transition hover:bg-gray-800">
+                        <x-lucide-arrow-left class="w-5 h-5 text-orange-500" />
+                        <span class="sr-only">Volver</span>
+                    </a>
+
+                    <!-- 🖥️ Versión para Tablet y Computadora (link con subrayado en hover) -->
+                      <a href="{{ route('trainings.selected', $firstTraining->id) }}"
+                        class="hidden sm:flex text-orange-500 px-2 py-2 items-center space-x-2 hover:underline transition">
+                        <x-lucide-arrow-left class="w-4 h-4" />
+                        <span>Vovler</span>
+                    </a>
+                    @else
+                    <p class="text-red-500 text-sm">No hay entrenamientos disponibles.</p>
+                @endif
+            </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-24 md:pb-6">
             
@@ -58,7 +81,7 @@
                         <x-lucide-briefcase class="w-5 h-5 text-orange-500 mr-1" /> Experiencia
                     </h3>
 
-                    <div class="bg-white p-4 shadow-md rounded-md">
+                    <div class="bg-white p-4 ">
                         @if ($experiences->isEmpty())
                             <p class="text-gray-500 text-center">No tienes experiencias registradas.</p>
                         @else
@@ -83,7 +106,7 @@
                     </div>
 
                     <!-- 🔳 Botón para abrir el modal -->
-                <div class="flex justify-end mt-2">
+                    <div class="mt-4 flex justify-end">
                     <a href="#experienceModal" class="text-orange-500 font-semibold underline hover:underline">
                         Ver más experiencias
                     </a>
@@ -129,40 +152,25 @@
                         <x-lucide-dumbbell class="w-5 h-5 text-orange-500 mr-2" /> Entrenamientos
                     </h3>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6 gap-6">
-                        @foreach($trainings->take(3) as $training) {{-- Muestra solo 3 entrenamientos --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        @foreach($trainings->take(2) as $training)
                             @if($training)
                                 <a href="{{ route('trainings.selected', $training->id) }}" class="block">
-                                    <div class="bg-white shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105 cursor-pointer">
+                                    <div class="bg-gray-50 shadow-md rounded-lg p-4 flex items-center gap-4 hover:shadow-lg transition">
                                         
-                                        <!-- 📸 Imagen del entrenamiento -->
+                                        <!-- 📸 Imagen -->
                                         @if ($training->photos->isNotEmpty())
                                             <img src="{{ asset('storage/' . $training->photos->first()->photo_path) }}" 
-                                                class="w-full h-48 object-cover" 
-                                                alt="Foto de entrenamiento">
+                                                class="w-20 h-20 object-cover rounded-sm" alt="Entrenamiento">
                                         @endif
 
-                                        <!-- 📝 Detalles del entrenamiento -->
-                                        <div class="p-4">
-                                            <h5 class="text-xl font-semibold text-gray-800">{{ $training->title }}</h5>
-
+                                        <!-- 📝 Detalles -->
+                                        <div>
+                                            <h5 class="text-lg font-semibold text-gray-800">{{ $training->title }}</h5>
                                             <p class="text-gray-600 text-sm">
                                                 <strong>Ubicación:</strong> {{ $training->park->name ?? 'No disponible' }} <br>
-                                                <strong>Actividad:</strong> {{ $training->activity->name ?? 'No disponible' }} <br>
-                                                <strong>Nivel:</strong> {{ ucfirst($training->level) ?? 'No especificado' }}
+                                                <strong>Actividad:</strong> {{ $training->activity->name ?? 'No disponible' }}
                                             </p>
-
-                                            <!-- 📅 Días con clases -->
-                                            <div class="mt-3">
-                                                <strong class="text-gray-700">Días con Clases:</strong>
-                                                <div class="flex flex-wrap gap-1 mt-1">
-                                                    @foreach ($training->schedules as $schedule)
-                                                        <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">
-                                                            {{ ucfirst($schedule->day) }}
-                                                        </span>
-                                                    @endforeach
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </a>
@@ -170,12 +178,13 @@
                         @endforeach
                     </div>
 
+
                     <!-- 📌 Botón "Ver más entrenamientos" si hay más de 3 -->
                     @if($trainings->count() > 3)
                         <div class="mt-4 flex justify-end">
                             <button onclick="openModal()" 
-                                class="text-orange-500 font-semibold hover:underline transition">
-                                Ver más entrenamientos →
+                                class="text-orange-500 font-semibold underline hover:underline">
+                                Ver más entrenamientos
                             </button>
                         </div>
                     @endif
@@ -242,7 +251,7 @@
                     </h3>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4  gap-y-2">
                     @foreach ($trainer->reviews->take(2) as $index => $review)
-                        <div class="bg-gray-50 py-4 px-6 rounded-md shadow-md flex items-start space-x-6">           
+                        <div class="bg-gray-50 py-4 px-6 rounded-md shadow-sm flex items-start space-x-6">           
                             <div>
                                 <!-- ⭐ Calificación -->
                                 <div class="grid grid-cols-12 gap-4 items-center">
@@ -283,20 +292,22 @@
                         </div>
                     @endforeach
                 </div>
-                <button id="open-reviews-modal" class="text-orange-500 font-semibold underline hover:underline">
-                            Ver más opiniones
-                </button>
-                <!-- Botón para abrir el modal -->
-                @if ($training->reviews->count() > 2)
-                    <!-- Botón para abrir el modal -->
-                    <div class="flex justify-end mt-2">
-                        <button id="open-reviews-modal" class="text-orange-500 font-semibold underline hover:underline">
+                    <div class="mt-4 flex justify-end">
+                        <button id="open-reviews-modal" 
+                        class="text-orange-500 font-semibold underline hover:underline">
                             Ver más opiniones
                         </button>
                     </div>
-                @endif
-                </div>
-                <hr class="my-4">
+                <!-- 📌 Botón "Ver más resenas" si hay más de 3 -->
+                 <!-- @if($trainer->reviews->count() > 2) 
+                    <div class="mt-4 flex justify-end">
+                        <button id="open-reviews-modal" 
+                            class="text-orange-500 font-semibold underline hover:underline">
+                            Ver más opiniones
+                        </button>
+                    </div>
+                @endif  -->
+        
                 <!-- Modal de reseñas -->
                 <div id="reviews-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50">
                     <div id="reviews-content" class="bg-white p-6 rounded-lg w-full max-w-md md:max-w-4xl shadow-lg relative transform transition-transform duration-300 ease-in-out h-[90vh] overflow-hidden">
@@ -353,55 +364,56 @@
                     </div>
                 </div>
                 <!-- Formulario para agregar reseña sobre el entrenador -->
+                <hr class="my-4">
                 @auth
-                <div class="mb-20">
-                    @if($hasPurchasedFromTrainer) 
-                    <form x-data="{ loading: false, rating: 0 }" 
-                        @submit="loading = true" 
-                        action="{{ route('reviews.store') }}" 
-                        method="POST" 
-                        class="bg-gray-50 p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="mb-20">
+                        @if($hasPurchasedFromTrainer) 
+                        <form x-data="{ loading: false, rating: 0 }" 
+                            @submit="loading = true" 
+                            action="{{ route('reviews.store') }}" 
+                            method="POST" 
+                            class="bg-gray-50 p-6 rounded-lg shadow-md border border-gray-200">
 
-                        @csrf
-                        <input type="hidden" name="trainer_id" value="{{ $trainer->id }}">
+                            @csrf
+                            <input type="hidden" name="trainer_id" value="{{ $trainer->id }}">
 
-                        <!-- ⭐ Calificación con Estrellas -->
-                        <label class="block font-semibold text-gray-800 mb-2">Calificación:</label>
-                        <div class="flex space-x-1 mb-4">
-                            @foreach (range(1, 5) as $i)
-                                <button type="button" @click="rating = rating === {{ $i }} ? 0 : {{ $i }}" class="focus:outline-none">
-                                    <x-lucide-star 
-                                        class="w-5 h-5 transition-transform duration-200 transform scale-100 hover:scale-110"
-                                        x-bind:class="rating >= {{ $i }} ? 'text-orange-500 fill-orange-500' : 'text-gray-300 fill-none'"
-                                    />
+                            <!-- ⭐ Calificación con Estrellas -->
+                            <label class="block font-semibold text-gray-800 mb-2">Calificación:</label>
+                            <div class="flex space-x-1 mb-4">
+                                @foreach (range(1, 5) as $i)
+                                    <button type="button" @click="rating = rating === {{ $i }} ? 0 : {{ $i }}" class="focus:outline-none">
+                                        <x-lucide-star 
+                                            class="w-5 h-5 transition-transform duration-200 transform scale-100 hover:scale-110"
+                                            x-bind:class="rating >= {{ $i }} ? 'text-orange-500 fill-orange-500' : 'text-gray-300 fill-none'"
+                                        />
+                                    </button>
+                                @endforeach
+                            </div>
+
+                            <input type="hidden" name="rating" x-model="rating">
+
+                            <!-- 📝 Comentario -->
+                            <label for="comment" class="block font-semibold text-gray-800">Comentario:</label>
+                            <textarea name="comment" id="comment" 
+                                class="border border-gray-300 p-3 rounded-md w-full mt-1 focus:ring-2 focus:ring-orange-500 transition resize-none" 
+                                rows="3" required></textarea>
+
+                            <!-- 🔄 Spinner y Botón -->
+                            <div class="flex justify-end mt-4">
+                                <button type="submit" 
+                                    class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full sm:w-auto md:w-1/3 lg:w-1/4 hover:bg-orange-600 transition flex items-center justify-center">
+                                    <span x-show="!loading">Enviar Reseña</span>
+                                    <svg x-show="loading" class="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
                                 </button>
-                            @endforeach
-                        </div>
-
-                        <input type="hidden" name="rating" x-model="rating">
-
-                        <!-- 📝 Comentario -->
-                        <label for="comment" class="block font-semibold text-gray-800">Comentario:</label>
-                        <textarea name="comment" id="comment" 
-                            class="border border-gray-300 p-3 rounded-md w-full mt-1 focus:ring-2 focus:ring-orange-500 transition resize-none" 
-                            rows="3" required></textarea>
-
-                        <!-- 🔄 Spinner y Botón -->
-                        <div class="flex justify-end mt-4">
-                            <button type="submit" 
-                                class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full sm:w-auto md:w-1/3 lg:w-1/4 hover:bg-orange-600 transition flex items-center justify-center">
-                                <span x-show="!loading">Enviar Reseña</span>
-                                <svg x-show="loading" class="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                @else
-                    <p class="text-gray-500">Debes haber comprado un entrenamiento con este entrenador para dejar una reseña.</p>
-                @endif
+                            </div>
+                        </form>
+                    </div>
+                    @else
+                        <p class="text-gray-500">Debes haber comprado un entrenamiento con este entrenador para dejar una reseña.</p>
+                    @endif
                 @endauth
 
             </div>

@@ -2,8 +2,9 @@
 
 <button
     type="{{ $type }}"
-    class="px-4 py-2 rounded-lg text-white bg-{{ $color }}-500 hover:bg-{{ $color }}-600 focus:outline-none focus:ring-2 focus:ring-{{ $color }}-300"
+   class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-600 transition"
     {{ $attributes }}
 >
     {{ $slot }}
 </button>
+
