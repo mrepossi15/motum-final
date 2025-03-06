@@ -152,21 +152,41 @@ class StudentController extends Controller
     }
 
     public function showTrainerProfile($trainerId)
-{
-    $trainer = User::where('id', $trainerId)->where('role', 'entrenador')->firstOrFail();
+    {
+        $trainer = User::where('id', $trainerId)->where('role', 'entrenador')->firstOrFail();
 
-    $parks = $trainer->parks()->get();
-    $experiences = $trainer->experiences()->get();
-    $trainings = $trainer->trainings()->with(['park', 'activity'])->get();
-    $reviews = $trainer->reviews()->with('user')->get(); 
+        $parks = $trainer->parks()->get();
+        $experiences = $trainer->experiences()->get();
+        $trainings = $trainer->trainings()->with(['park', 'activity'])->get();
+        $reviews = $trainer->reviews()->with('user')->get(); 
+        $hasPurchasedFromTrainer = auth()->check() 
+        ? auth()->user()->hasPurchasedFromTrainer($trainer->id) 
+        : false;
 
-    return view('students.trainerProfile', compact('trainer', 'parks', 'trainings', 'experiences', 'reviews'));
-}
-public function detail()
+        return view('students.trainerProfile', compact('trainer', 'parks', 'trainings', 'experiences', 'reviews', 'hasPurchasedFromTrainer'));
+    }
+    public function detail()
     {
         $user = Auth::user();
         return view('students.info', compact('user'));
     }
+    public function trainerTraining()
+    {
+        // Obtener el entrenador autenticado
+        $trainer = Auth::user();
 
+        // Asegurar que el usuario es un entrenador
+        if (!$trainer->isTrainer()) {
+            return redirect()->route('home')->with('error', 'Acceso denegado.');
+        }
+
+        // Obtener los entrenamientos creados por el entrenador
+        $trainings = Training::where('trainer_id', $trainer->id)
+            ->with(['park', 'activity', 'photos', 'schedules'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(9); // Paginación de 9 por página
+
+        return view('students.trainerTrainings', compact('trainer', 'trainings'));
+    }
 
 }

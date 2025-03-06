@@ -526,7 +526,7 @@ function carousel(totalSlides) {
 @section('content')
 <div class="flex justify-center min-h-screen bg-gray-100">
     <div class="w-full max-w-7xl mx-auto p-4 lg:px-10">
-        <h2 class="text-2xl font-semibold mb-4"> Detalle de {{ $student->name }}</h2>
+        <h2 class="text-2xl font-semibold mb-4"> Detalle de {{ $trainer->name }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-24 md:pb-6"> 
             <div class="bg-white shadow-lg rounded-lg p-4 md:sticky md:top-4 md:self-start w-full md:relative border-t md:border-none">
                 <div class="border-b align-center pb-4">
@@ -540,10 +540,10 @@ function carousel(totalSlides) {
                             @endif
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold">{{ $student->name }}</h2>
-                            <p class="text-gray-500">{{ ucfirst($student->role) }}</p>
+                            <h2 class="text-xl font-semibold">{{ $trainer->name }}</h2>
+                            <p class="text-gray-500">{{ ucfirst($trainer->role) }}</p>
                             <p class="text-gray-700">
-                                {{ $user->birth ? \Carbon\Carbon::parse($student->birth)->age . ' años' : 'Fecha de nacimiento no especificada' }}
+                                {{ $user->birth ? \Carbon\Carbon::parse($trainer->birth)->age . ' años' : 'Fecha de nacimiento no especificada' }}
                             </p>
                         </div>
                     </div>
@@ -560,14 +560,14 @@ function carousel(totalSlides) {
 
             <div class="md:col-span-2 bg-white shadow-lg rounded-lg p-4 relative">
                 <div class="flex justify-between items-center mb-2">
-                    <h2 class="text-xl font-semibold">Sobre {{$student->name}}</h2>
+                    <h2 class="text-xl font-semibold">Sobre {{$trainer->name}}</h2>
                 
                 </div>
-                <p class="text-gray-600 border-b pb-10">{{ $student->biography ?? 'Sin información' }}</p>
+                <p class="text-gray-600 border-b pb-10">{{ $trainer->biography ?? 'Sin información' }}</p>
                 <div class="mt-4">
                     <h3 class="text-lg font-semibold text-gray-900">Último Pago</h3>
                     <p class="text-gray-600 mt-2">
-                        {{ optional($student->payments()->latest()->first())->created_at ? optional($student->payments()->latest()->first())->created_at->format('d/m/Y') : 'No registrado' }}
+                        {{ optional($trainer->payments()->latest()->first())->created_at ? optional($trainer->payments()->latest()->first())->created_at->format('d/m/Y') : 'No registrado' }}
                     </p>
                 </div>
             </div>
@@ -577,3 +577,349 @@ function carousel(totalSlides) {
 
 @endsection
 
+
+
+@extends('layouts.main')
+
+@section('title', "Perfil de {$trainer->name}")
+
+@section('content')
+<div class="flex justify-center min-h-screen bg-gray-100">
+    <div class="w-full max-w-7xl mx-auto p-4 lg:px-10">
+        <h2 class="text-2xl font-semibold mb-4"> Perfil de {{ $trainer->name }}</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-24 md:pb-6"> 
+            <!-- 🖼️ Info del Alumno -->
+            <div class="bg-white shadow-lg rounded-lg p-4 md:sticky md:top-4 md:self-start w-full md:relative border-t md:border-none">
+                <div class="border-b pb-4">
+                    <div class="flex items-center gap-6">
+                        <!-- Imagen de Perfil -->
+                        <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-orange-300 shadow-md">
+                            @if($trainer->profile_pic)
+                                <img src="{{ asset('storage/' . $trainer->profile_pic) }}" alt="Foto de perfil" class="w-full h-full object-cover">
+                            @else
+                                <img src="{{ asset('images/default-profile.png') }}" alt="Foto de perfil por defecto" class="w-full h-full object-cover">
+                            @endif
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-semibold">{{ $trainer->name }}</h2>
+                            <p class="text-gray-500">{{ ucfirst($trainer->role) }}</p>
+                            <p class="text-gray-700">
+                                {{ $trainer->birth ? \Carbon\Carbon::parse($trainer->birth)->age . ' años' : 'Fecha de nacimiento no especificada' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    @foreach($trainer->activities as $activity)
+                        <span class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">
+                            {{ $activity->name }}
+                        </span>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- 📋 Información y entrenamientos comprados -->
+            <div class="md:col-span-2 bg-white shadow-lg rounded-lg p-4 px-6 relative ">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <x-lucide-user class="w-5 h-5 text-orange-500 mr-1" />
+                        Biografía
+                    </h3>
+                <p class="text-gray-600 border-b pb-4">{{ $trainer->biography ?? 'Sin información' }}</p>
+
+                <div class="mt-4 border-b pb-4 ">
+               
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <x-lucide-dollar-sign class="w-5 h-5 text-orange-500 mr-1" />Experiencia</h3>
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        @if ($experiences->isEmpty())
+                            <p class="text-gray-500 text-center">No tienes experiencias registradas.</p>
+                        @else
+                            <ul class="divide-y divide-gray-200">
+                                @foreach ($experiences as $experience)
+                                    <li class="border-b py-4 flex flex-col sm:flex-row sm:items-center justify-between">
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-900">{{ $experience->role }}</h3>
+                                            <p class="text-gray-600"><strong>Empresa/Gimnasio:</strong> {{ $experience->company ?? 'Freelance' }}</p>
+                                            <p class="text-gray-600"><strong>Periodo:</strong> {{ $experience->year_start }} - 
+                                                @if($experience->currently_working)
+                                                    <span class="text-green-500 font-semibold">Actualmente</span>
+                                                @else
+                                                    {{ $experience->year_end }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <div class="flex space-x-2 mt-2 sm:mt-0">
+                                            <button onclick="loadExperience({{ $experience->id }})" class="text-orange-500 hover:underline"> Editar</button>
+                                            <form action="{{ route('trainer.experience.destroy', $experience->id) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-500 hover:underline">Eliminar</button>
+                                            </form>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- 📌 Entrenamientos comprados -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <x-lucide-dumbbell class="w-5 h-5 text-orange-500 mr-2" />
+                        Entrenamientos
+                    </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-3 gap-6 mb-4">
+                            @foreach($trainings as $training)
+                                @if($training) {{-- Verifica si el entrenamiento aún existe --}}
+                                    <a href="{{ route('trainings.detail', $training->id) }}" class="block">
+                                        <div class="bg-white shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105 cursor-pointer">
+                                            
+                                            <!-- 📸 Imagen del entrenamiento -->
+                                            @if ($training->photos->isNotEmpty())
+                                                <img src="{{ asset('storage/' . $training->photos->first()->photo_path) }}" 
+                                                    class="w-full h-48 object-cover" 
+                                                    alt="Foto de entrenamiento">
+                                            @endif
+
+                                            <!-- 📝 Detalles del entrenamiento -->
+                                            <div class="p-4">
+                                                <h5 class="text-xl font-semibold text-gray-800">{{ $training->title }}</h5>
+
+                                                <p class="text-gray-600 text-sm">
+                                                    <strong>Ubicación:</strong> {{ $training->park->name ?? 'No disponible' }} <br>
+                                                    <strong>Actividad:</strong> {{ $training->activity->name ?? 'No disponible' }} <br>
+                                                    <strong>Nivel:</strong> {{ ucfirst($training->level) ?? 'No especificado' }}
+                                                </p>
+
+                                                <!-- 📅 Días con clases -->
+                                                <div class="mt-3">
+                                                    <strong class="text-gray-700">Días con Clases:</strong>
+                                                    <div class="flex flex-wrap gap-1 mt-1">
+                                                        @if ($training->schedules->isNotEmpty())
+                                                            @foreach ($training->schedules as $schedule)
+                                                                <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">
+                                                                    {{ ucfirst($schedule->day) }}
+                                                                </span>
+                                                            @endforeach
+                                                        @else
+                                                            <p class="text-gray-500 text-xs">No hay horarios disponibles.</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                @else
+                                    
+                                @endif
+                            @endforeach
+                        </div>
+                  
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <x-lucide-trees class="w-5 h-5 text-orange-500 mr-2" />
+                        Parques donde entrena
+                    </h3>
+                
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-3 gap-6 mb-4">
+                        @foreach ($parks as $park)
+                        <div class="bg-gray-50 rounded-md shadow-md hover:shadow-md transition flex flex-col">
+                            <!-- Imagen del parque ocupa todo el ancho de la card -->
+                            <div class="w-full h-40 rounded-t-lg overflow-hidden">
+                                @if(!empty($park->photo_urls) && is_array(json_decode($park->photo_urls, true)))
+                                    @php
+                                        $photoUrls = json_decode($park->photo_urls, true);
+                                        $imageUrl = !empty($photoUrls) ? $photoUrls[0] : null;
+                                    @endphp
+                                    @if($imageUrl)
+                                        <img src="{{ $imageUrl }}" alt="Imagen de {{ $park->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        <img src="{{ asset('images/default-park.jpg') }}" alt="Imagen por defecto" class="w-full h-full object-cover">
+                                    @endif
+                                @else
+                                    <img src="{{ asset('images/default-park.jpg') }}" alt="Imagen por defecto" class="w-full h-full object-cover">
+                                @endif
+                            </div>
+                            
+                            <div class="p-4 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ $park->name }}</h3>
+                                    <p class="flex items-center space-x-1 text-xs text-gray-600 text-gray-600 mt-1" 
+                                    x-data="{ formattedAddress: formatAddress('{{ $park->location ?? '' }}') }">
+                                        <x-lucide-map-pin class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
+                                        <span x-text="formattedAddress || 'Ubicación desconocida'"></span>
+                                    </p>
+                                    <!-- Rating del parque -->
+                                <div class="flex my-2 items-center space-x-1">
+                                    @php 
+                                        $rating = $park->rating ?? 0; // ✅ Evita errores si rating es null
+                                        $fullStars = floor($rating);
+                                        $hasHalfStar = ($rating - $fullStars) >= 0.5;
+                                        $averageRating = method_exists($park, 'averageRating') ? round($park->averageRating(), 1) : round($rating, 1);
+                                    @endphp
+
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        @if ($i <= $fullStars)
+                                            <x-lucide-star class="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 fill-current" />
+                                        @elseif ($hasHalfStar && $i == $fullStars + 1)
+                                            <x-lucide-star-half class="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+                                        @else
+                                            <x-lucide-star class="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" />
+                                        @endif
+                                    @endfor
+
+                                    <span class="text-gray-700 text-sm font-semibold">
+                                        {{ number_format($averageRating, 1) }}
+                                    </span>
+                                </div>
+                                    <p class="text-gray-600 mt-1 font-semibold">Horario:</p>
+                                    
+                                    @if ($park->opening_hours)
+                                        @php
+                                            $openingHours = json_decode($park->opening_hours, true);
+                                        @endphp
+                                        @if (is_array($openingHours))
+                                            <ul class="list-none text-gray-700 text-sm mt-1">
+                                                @foreach ($openingHours as $day => $hours)
+                                                    <li class="flex justify-between py-1 border-b border-gray-200">
+                                                        <span class="font-medium">{{ ucfirst($day) }}</span>
+                                                        <span>{{ $hours }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <p class="text-gray-700">{{ $park->opening_hours }}</p>
+                                        @endif
+                                    @else
+                                        <p class="text-gray-500">No especificado</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                        </div>
+                    @endif
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <x-lucide-trees class="w-5 h-5 text-orange-500 mr-2" />
+                        Parques donde entrena
+                    </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-3 gap-6 mb-4">
+                        @foreach ($parks as $park)
+                        <div class="bg-gray-50 rounded-md shadow-md hover:shadow-md transition flex flex-col">
+                            <!-- Imagen del parque ocupa todo el ancho de la card -->
+                            <div class="w-full h-40 rounded-t-lg overflow-hidden">
+                                @if(!empty($park->photo_urls) && is_array(json_decode($park->photo_urls, true)))
+                                    @php
+                                        $photoUrls = json_decode($park->photo_urls, true);
+                                        $imageUrl = !empty($photoUrls) ? $photoUrls[0] : null;
+                                    @endphp
+                                    @if($imageUrl)
+                                        <img src="{{ $imageUrl }}" alt="Imagen de {{ $park->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        <img src="{{ asset('images/default-park.jpg') }}" alt="Imagen por defecto" class="w-full h-full object-cover">
+                                    @endif
+                                @else
+                                    <img src="{{ asset('images/default-park.jpg') }}" alt="Imagen por defecto" class="w-full h-full object-cover">
+                                @endif
+                            </div>
+                            
+                            <div class="p-4 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ $park->name }}</h3>
+                                    <p class="flex items-center space-x-1 text-xs text-gray-600 text-gray-600 mt-1" 
+                                    x-data="{ formattedAddress: formatAddress('{{ $park->location ?? '' }}') }">
+                                        <x-lucide-map-pin class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
+                                        <span x-text="formattedAddress || 'Ubicación desconocida'"></span>
+                                    </p>
+                                    <!-- Rating del parque -->
+                                <div class="flex my-2 items-center space-x-1">
+                                    @php 
+                                        $rating = $park->rating ?? 0; // ✅ Evita errores si rating es null
+                                        $fullStars = floor($rating);
+                                        $hasHalfStar = ($rating - $fullStars) >= 0.5;
+                                        $averageRating = method_exists($park, 'averageRating') ? round($park->averageRating(), 1) : round($rating, 1);
+                                    @endphp
+
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        @if ($i <= $fullStars)
+                                            <x-lucide-star class="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 fill-current" />
+                                        @elseif ($hasHalfStar && $i == $fullStars + 1)
+                                            <x-lucide-star-half class="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+                                        @else
+                                            <x-lucide-star class="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" />
+                                        @endif
+                                    @endfor
+
+                                    <span class="text-gray-700 text-sm font-semibold">
+                                        {{ number_format($averageRating, 1) }}
+                                    </span>
+                                </div>
+                                    <p class="text-gray-600 mt-1 font-semibold">Horario:</p>
+                                    
+                                    @if ($park->opening_hours)
+                                        @php
+                                            $openingHours = json_decode($park->opening_hours, true);
+                                        @endphp
+                                        @if (is_array($openingHours))
+                                            <ul class="list-none text-gray-700 text-sm mt-1">
+                                                @foreach ($openingHours as $day => $hours)
+                                                    <li class="flex justify-between py-1 border-b border-gray-200">
+                                                        <span class="font-medium">{{ ucfirst($day) }}</span>
+                                                        <span>{{ $hours }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <p class="text-gray-700">{{ $park->opening_hours }}</p>
+                                        @endif
+                                    @else
+                                        <p class="text-gray-500">No especificado</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                        </div>
+                    @endif
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <x-lucide-star class="w-5 h-5 text-orange-500 mr-2" />
+                        Reseñas
+                    </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-3 gap-6 mb-4">
+                        <ul class="divide-y divide-gray-200">
+                @foreach ($reviews as $review)
+                    <li class="py-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white text-lg">
+                                {{ substr($review->user->name, 0, 1) }}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ $review->user->name }}</h3>
+                                <p class="text-gray-600 text-sm">{{ $review->created_at->format('d M Y') }}</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-gray-700">{{ $review->comment }}</p>
+                            <p class="text-yellow-500 text-lg">
+                                {{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}
+                            </p>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+                        </div>
+                    @endif
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

@@ -103,6 +103,12 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Training::class, 'payments', 'user_id', 'training_id');
     }
+    public function hasPurchasedFromTrainer($trainerId)
+    {
+        return $this->payments()->whereHas('training', function ($query) use ($trainerId) {
+            $query->where('trainer_id', $trainerId);
+        })->exists();
+    }
     public function favorites()
     {
         return $this->hasMany(Favorite::class);

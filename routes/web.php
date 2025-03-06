@@ -74,6 +74,11 @@ Route::get('/trainers/{id}', [StudentController::class, 'showTrainerProfile'])->
 Route::get('/students/info', [StudentController::class, 'detail'])->name('students.info')->middleware('auth');
 
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('student/trainer/trainings', [StudentController::class, 'trainerTraining'])
+        ->name('students.trainerTrainings');
+});
+
     /*
 |--------------------------------------------------------------------------
 | Rutas para TrainerController 
