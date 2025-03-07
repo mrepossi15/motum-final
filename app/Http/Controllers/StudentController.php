@@ -26,7 +26,8 @@ class StudentController extends Controller
  
     public function registerStudent()
     {
-        return view('auth.register-student');
+        $activities = Activity::all(); // Obtener todas las actividades disponibles
+        return view('auth.register-student', compact('activities'));
     }
 
     public function storeStudent(Request $request)
@@ -42,6 +43,8 @@ class StudentController extends Controller
             'birth' => 'date', // Fecha de nacimiento
             'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
             'medical_fit_description' => 'nullable|string|max:255',
+            'activities' => 'nullable|array', // Validar actividades
+            'activities.*' => 'exists:activities,id', // Verificar que las actividades existen
             
             
         ]);
@@ -72,7 +75,10 @@ class StudentController extends Controller
             'medical_fit_description' => $input['medical_fit_description'] ?? null,
         ]);
         Mail::to($user->email)->send(new WelcomeMail($user));
-    
+        // Vincular actividades seleccionadas
+        if ($request->has('activities')) {
+            $user->activities()->sync($request->activities);
+        }
         // Iniciar sesión automáticamente
         Auth::login($user);
     

@@ -3,7 +3,7 @@
 <div class="relative ">
     <!-- Label flotante (oculto si `hideLabel` es true) -->
     @if (!$hideLabel)
-        <label class="absolute -top-2 left-3 bg-white px-1 text-black text-sm">
+        <label class="absolute -top-2 left-3 bg-gray-50 px-1 text-black text-sm">
             {{ $label }}
         </label>
     @endif
@@ -17,7 +17,7 @@
                     name="{{ $name }}[]"
                     value="{{ $option }}"
                     {{ in_array($option, (array) old($name, $selected)) ? 'checked' : '' }}
-                    class="h-5 w-5 text-orange-500 focus:ring-orange-500"
+                    class="h-5 w-5 bg-gray-50 text-orange-500 focus:ring-orange-500"
                 >
                 <span class="text-black">{{ $option }}</span>
             </label>

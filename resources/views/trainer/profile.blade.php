@@ -30,7 +30,9 @@
                     
                 </div>
                 <div class="flex flex-wrap gap-2 mt-3">
+                    <p class="text-gray-500">{{ $trainer->certification }}</p>
                         @foreach($trainer->activities as $activity)
+                        <p class="text-gray-500">Especialidades</p>
                             <span class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">
                                 {{ $activity->name }}
                             </span>

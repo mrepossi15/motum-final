@@ -3,7 +3,7 @@
         <!-- Label flotante -->
         <label for="photos" 
                class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">
-            Fotos del Entrenamiento *
+               {{ $label }}
         </label>
 
         <!-- Input con diseño limpio y bordes dinámicos -->
@@ -13,7 +13,7 @@
             name="photos[]"
             accept="image/*"
             multiple
-            class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
+            class="w-full bg-gray-50 text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
             @error('photos') border-red-500 @enderror"
         >
 

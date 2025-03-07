@@ -121,6 +121,7 @@
                         </div>
                     @endforeach
             </div>
+            
         </div>
 
             <!-- Sección: Precios -->
@@ -221,7 +222,7 @@
 
                 
                 <button type="submit"
-            class="bg-green-500 text-white px-4 py-2 rounded-md"
+         class="bg-orange-500 text-white text-md px-6 py-3 rounded-md  hover:bg-orange-600 transition"
             x-show="step === 4"
             x-bind:disabled="submitting"
             @click="submitting = true">

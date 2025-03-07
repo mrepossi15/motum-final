@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Training;
 use App\Models\Activity;
 use App\Models\Park;
+use App\Http\Controllers\Image;
 use App\Models\TrainingPhoto;
 use App\Models\TrainingSchedule;
 use App\Models\TrainingException;
@@ -513,36 +514,49 @@ class TrainingController extends Controller
                 ]);
             }
         }
+        if ($request->has('deleted_photos')) {
+            foreach ($request->deleted_photos as $photoId) {
+                $photo = TrainingPhoto::find($photoId);
+                if ($photo) {
+                    Storage::disk('public')->delete($photo->photo_path); // Eliminar la imagen del almacenamiento
+                    $photo->delete(); // Eliminar el registro de la base de datos
+                }
+            }
+        }
         // Manejar la subida de nuevas imágenes
         if ($request->hasFile('photos')) {
-            // Eliminar las fotos existentes asociadas al entrenamiento
-            foreach ($training->photos as $existingPhoto) {
-                if (\Storage::disk('public')->exists($existingPhoto->photo_path)) {
-                    \Storage::disk('public')->delete($existingPhoto->photo_path); // Eliminar la foto del disco
+            // Eliminar solo las fotos eliminadas por el usuario en la edición
+            if ($request->has('deleted_photos')) {
+                foreach ($request->input('deleted_photos') as $deletedPhotoId) {
+                    $existingPhoto = TrainingPhoto::find($deletedPhotoId);
+                    if ($existingPhoto) {
+                        if (\Storage::disk('public')->exists($existingPhoto->photo_path)) {
+                            \Storage::disk('public')->delete($existingPhoto->photo_path); // Eliminar la foto del disco
+                        }
+                        $existingPhoto->delete(); // Eliminar el registro de la base de datos
+                    }
                 }
-                $existingPhoto->delete(); // Eliminar el registro de la base de datos
             }
         
-            // Manejar la nueva foto
-            foreach ($request->file('photos') as $photo) {
-                $imagePath = 'training_photos/' . uniqid() . '.' . $photo->getClientOriginalExtension();
+            // Manejar las nuevas fotos
+            foreach ($request->file('photos') as $index => $photo) {
+                if ($photo->isValid()) {
+                    Log::info("📸 Procesando imagen: {$photo->getClientOriginalName()}");
         
-                // Redimensionar la imagen
-                $resizedImage = Image::make($photo)->resize(800, 600, function ($constraint) {
-                    $constraint->aspectRatio();
-                    $constraint->upsize();
-                });
+                    $imagePath = $this->resizeAndSaveImage($photo, 'training_photos', 800, 600);
+                    Log::info("✅ Imagen guardada en: $imagePath");
         
-                // Guardar solo la imagen redimensionada
-                $resizedImage->save(storage_path('app/public/' . $imagePath));
-        
-                // Registrar en la base de datos
-                TrainingPhoto::create([
-                    'training_id' => $training->id,
-                    'photo_path' => $imagePath,
-                    'training_photos_description' => $request->photos_description, // Usar la descripción del campo hidden
-                ]);
+                    TrainingPhoto::create([
+                        'training_id' => $training->id,
+                        'photo_path'  => str_replace('storage/', '', $imagePath),
+                        'training_photos_description' => $request->input('photos_description')[$index] ?? 'Foto de entrenamiento',
+                    ]);
+                } else {
+                    Log::error("🚫 Imagen no válida: {$photo->getClientOriginalName()}");
+                }
             }
+        } else {
+            Log::warning("⚠️ No se detectaron imágenes en la solicitud.");
         }
         return redirect()->route('trainings.detail', $training->id)
                         ->with('success', 'Entrenamiento actualizado con éxito.');

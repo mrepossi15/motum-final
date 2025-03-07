@@ -112,7 +112,7 @@ Route::get('/trainer/profile/edit', [TrainerController::class, 'editTrainerProfi
     ->name('trainer.edit')
     ->middleware(['auth', 'role:entrenador']);
 //Vista Editar perfil
-Route::get('/trainer/profile/update', [TrainerController::class, 'updateTrainerProfile'])
+Route::put('/trainer/profile/update', [TrainerController::class, 'updateTrainer'])
     ->name('trainer.update')
     ->middleware(['auth', 'role:entrenador']);
 

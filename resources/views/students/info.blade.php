@@ -46,28 +46,20 @@
             <li class="border-b py-4 flex flex-col sm:flex-row sm:items-center justify-between">
                 <div>
                     <p class="text-gray-900 font-semibold">Fecha de nacimiento</p>
-                    <p class="text-gray-500 text-sm">{{ $user->birth ? \Carbon\Carbon::parse($user->birth)->age . ' años' : 'Fecha de nacimiento no especificada' }}</p>
-                </div>
-            </li>
-            <li class="border-b py-4 flex flex-col sm:flex-row sm:items-center justify-between">
-                <div>
-                    <p class="text-gray-900 font-semibold">Fecha de registro</p>
-                    <p class="text-gray-500 text-sm">{{ $user->created_at->format('d/m/Y') }}</p>
-                </div>
-            </li>
-            <li class="border-b py-4 flex flex-col sm:flex-row sm:items-center justify-between">
-                <div>
-                    <p class="text-gray-900 font-semibold">Estado de verificación</p>
-                    <p class="text-gray-500 text-sm">
-                        {{ $user->email_verified_at ? '✅ Correo verificado' : '❌ Correo no verificado' }}
-                    </p>
+                    <p class="text-gray-500 text-sm">{{ $user->birth ? \Carbon\Carbon::parse($user->birth)->format('d-m-Y') : 'Fecha de nacimiento no especificada' }}</p>
                 </div>
             </li>
             <li class="py-4 flex flex-col sm:flex-row sm:items-center justify-between">
                 <div>
                     <p class="text-gray-900 font-semibold">Apto médico</p>
-                    <p class="text-gray-500 text-sm">
-                        {{ $user->medical_fit ? '✅ Cargado' : '❌ No cargado' }}
+                    <p class="text-gray-500 text-sm flex py-2 items-center gap-1">
+                        @if ($user->medical_fit)
+                            <x-lucide-check-circle class="w-5 h-5 text-green-500" />
+                            <span>Cargado</span>
+                        @else
+                            <x-lucide-x-circle class="w-5 h-5 text-red-500" />
+                            <span>No cargado</span>
+                        @endif
                     </p>
                 </div>
             </li>
