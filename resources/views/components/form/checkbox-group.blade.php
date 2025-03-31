@@ -23,7 +23,7 @@
             </label>
         @endforeach
     </div>
-
+    <p x-show="errors['{{ $name }}']" class="text-red-500 text-sm" x-text="errors['{{ $name }}']"></p>
     <!-- Mensaje de error con ícono de advertencia -->
     @error($name)
         <div class="flex items-center mt-1 text-red-500 text-xs">

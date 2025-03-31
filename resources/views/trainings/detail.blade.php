@@ -557,12 +557,13 @@
                 Cancelar
             </button>
             <form action="{{ route('trainings.destroyAll', $training->id) }}" method="POST" class="ml-3">
-                @csrf
-                <button type="submit" 
-                        class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
-                    Eliminar
-                </button>
-            </form>
+    @csrf
+    @method('DELETE') <!-- 🔥 Esto asegura que Laravel reciba la petición como DELETE -->
+    <button type="submit" 
+            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+        Eliminar
+    </button>
+</form>
         </div>
     </div>  
 </div>                                    

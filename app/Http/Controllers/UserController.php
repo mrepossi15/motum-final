@@ -67,6 +67,16 @@ public function showActivities()
 
     return view('auth.activitiesSelect', compact('activities', 'user'));
 }
+public function checkUserExists(Request $request)
+{
+    $nameExists = \App\Models\User::where('name', $request->name)->exists();
+    $emailExists = \App\Models\User::where('email', $request->email)->exists();
+
+    return response()->json([
+        'name' => $nameExists,
+        'email' => $emailExists,
+    ]);
+}
     
 }
 

@@ -18,7 +18,7 @@
         @error($name) border-red-500 @enderror"
         {{ $attributes }}
     >
-
+    <p x-show="errors.{{ $name }}" class="text-red-500 text-sm" x-text="errors.{{ $name }}"></p>
     <!-- Botón para mostrar/ocultar contraseña -->
     @if ($type === 'password')
     <button type="button"

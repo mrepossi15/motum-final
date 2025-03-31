@@ -33,57 +33,59 @@ class StudentController extends Controller
     public function storeStudent(Request $request)
     {
         // Validar los datos de entrada
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
-            'phone' => 'nullable|string|max:255|unique:users', // Validar Collector ID
+            'phone' => 'nullable|string|max:255|unique:users',
+            'biography' => 'nullable|string|max:500',
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
             'profile_pic_description' => 'nullable|string|max:255',
-            'birth' => 'date', // Fecha de nacimiento
+            'birth' => 'nullable|date',
             'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
             'medical_fit_description' => 'nullable|string|max:255',
-            'activities' => 'nullable|array', // Validar actividades
-            'activities.*' => 'exists:activities,id', // Verificar que las actividades existen
-            
-            
+            'activities' => 'nullable|array',
+            'activities.*' => 'exists:activities,id',
         ]);
     
-        $input = $request->all();
+        // Procesar archivos subidos
+        $userData = [
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'phone' => $validatedData['phone'] ?? null,
+            'biography' => $validatedData['biography'] ?? null,
+            'password' => Hash::make($validatedData['password']),
+            'role' => 'alumno',
+            'birth' => $validatedData['birth'] ?? null,
+        ];
     
-        // Manejar la subida de la imagen de perfil
         if ($request->hasFile('profile_pic')) {
             $userData['profile_pic'] = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
-            $userData['profile_pic_description'] = 'Foto de portada del alumno ' . $request->name;
+            $userData['profile_pic_description'] = 'Foto de portada del alumno ' . $validatedData['name'];
         }
+    
         if ($request->hasFile('medical_fit')) {
             $userData['medical_fit'] = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 300, 300);
-            $userData['medical_fit_description'] = 'Apto medico del alumno ' . $request->name;
+            $userData['medical_fit_description'] = 'Apto médico del alumno ' . $validatedData['name'];
         }
     
         // Crear el usuario
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone ?? null,
-            'password' => Hash::make($request->password),
-            'role' => 'alumno', // Rol automático para alumnos
-            'profile_pic' => $input['profile_pic'] ?? null,
-            'profile_pic_description' => $input['profile_pic_description'] ?? null,
-            'birth' => $request->birth ?? null,
-            'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
-            'medical_fit_description' => $input['medical_fit_description'] ?? null,
-        ]);
+        $user = User::create($userData);
+    
+        // Enviar email de bienvenida
         Mail::to($user->email)->send(new WelcomeMail($user));
+    
         // Vincular actividades seleccionadas
-        if ($request->has('activities')) {
-            $user->activities()->sync($request->activities);
+        if (!empty($validatedData['activities'])) {
+            $user->activities()->sync($validatedData['activities']);
         }
+    
         // Iniciar sesión automáticamente
         Auth::login($user);
     
         return redirect('/mapa')->with('success', 'Alumno registrado exitosamente.');
     }
+
     public function studentProfile($id)
     {
         $user = User::findOrFail($id); // Buscar el usuario por ID
@@ -98,38 +100,42 @@ class StudentController extends Controller
     }
 
     public function updateStudent(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
-            'biography' => 'nullable|string|max:1000',
-            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
-            'phone' => 'nullable|string|max:255|unique:users', // Validar Collector ID
-            'birth' => 'date',
-            'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
-        ]);
-    
-        $user = Auth::user();
-        $user->fill($request->only(['name', 'email', 'birth', 'biography', 'phone']));
-    
-        // 👉 Procesar la imagen de perfil usando el trait
-        if ($request->hasFile('profile_pic')) {
-            $this->deleteImageIfExists($user->profile_pic);
-            $user->profile_pic = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
-            $user->profile_pic_description = 'Foto de perfil de ' . $user->name;
-        }
-    
-        // 👉 Procesar la imagen del apto médico usando el trait
-        if ($request->hasFile('medical_fit')) {
-            $this->deleteImageIfExists($user->medical_fit);
-            $user->medical_fit = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 600, 400);
-            $user->medical_fit_description = 'Apto médico de ' . $user->name . ' actualizado';
-        }
-    
-        $user->save();
-    
-        return redirect()->route('students.profile', ['id' => $user->id])->with('success', 'Perfil actualizado correctamente.');
+{
+    $user = Auth::user();
+
+    // Validar los datos de entrada
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+        'biography' => 'nullable|string|max:1000',
+        'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
+        'phone' => 'nullable|string|max:255|unique:users,phone,' . $user->id, // Permitir el mismo teléfono del usuario autenticado
+        'birth' => 'nullable|date',
+        'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
+    ]);
+
+    // Rellenar los datos del usuario con la información validada
+    $user->fill($validatedData);
+
+    // 👉 Procesar la imagen de perfil si se sube
+    if ($request->hasFile('profile_pic')) {
+        $this->deleteImageIfExists($user->profile_pic); // Borrar la imagen anterior si existe
+        $user->profile_pic = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
+        $user->profile_pic_description = 'Foto de perfil de ' . $user->name;
     }
+
+    // 👉 Procesar la imagen del apto médico si se sube
+    if ($request->hasFile('medical_fit')) {
+        $this->deleteImageIfExists($user->medical_fit); // Borrar la imagen anterior si existe
+        $user->medical_fit = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 600, 400);
+        $user->medical_fit_description = 'Apto médico de ' . $user->name . ' actualizado';
+    }
+
+    // Guardar los cambios en la base de datos
+    $user->save();
+
+    return redirect()->route('students.profile', ['id' => $user->id])->with('success', 'Perfil actualizado correctamente.');
+}
 
     public function myTrainings() {
         $userId = Auth::id();

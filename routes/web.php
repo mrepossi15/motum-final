@@ -30,7 +30,7 @@ Route::post('/cerrar-sesion', [UserController::class, "logout"])
     ->name('logout.process');
 Route::post('/user/activities', [UserController::class, 'storeActivities'])->name('user.activities');
 Route::get('/students/activities', [UserController::class, 'showActivities'])->name('auth.activitiesSelect');
-
+Route::post('/check-user-exists', [UserController::class, 'checkUserExists'])->name('check.user.exists');
 /*
 |--------------------------------------------------------------------------
 | Rutas para restaurar contrasena

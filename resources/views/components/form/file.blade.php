@@ -16,7 +16,7 @@
             class="w-full bg-gray-50 text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
             @error('photos') border-red-500 @enderror"
         >
-
+        <p x-show="errors.{{ $name }}" class="text-red-500 text-sm" x-text="errors.{{ $name }}"></p>
         <!-- Mensaje de error con ícono de advertencia -->
         @error('photos')
             <div class="flex items-center mt-1 text-red-500 text-xs">
