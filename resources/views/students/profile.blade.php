@@ -12,10 +12,10 @@
                     <div class="flex items-center gap-6">
                         <!-- Imagen de Perfil -->
                         <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-orange-300 shadow-md">
-                            @if($user->profile_pic)
+                            @if($user->profile_pic && file_exists(public_path('storage/' . $user->profile_pic)))
                                 <img src="{{ asset('storage/' . $user->profile_pic) }}" alt="Foto de perfil" class="w-full h-full object-cover">
                             @else
-                                <img src="{{ asset('images/default-profile.png') }}" alt="Foto de perfil por defecto" class="w-full h-full object-cover">
+                                <img src="{{ asset('img/default-profile.png') }}" alt="Foto de perfil por defecto" class="w-full h-full object-cover">
                             @endif
                         </div>
                         <div>

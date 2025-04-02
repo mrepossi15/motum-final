@@ -4,10 +4,36 @@
 
 @section('content')
 
+<!-- Mensaje de éxito -->
+@if(session('success'))
+    <div 
+        x-data="{ show: false }" 
+        x-init="
+            setTimeout(() => { show = true; }, 500); // Espera medio segundo para mostrarse
+            setTimeout(() => { show = false; }, 30000); // Se oculta después de 60 segundos
+        "
+        x-show="show" 
+        class="fixed top-10 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white text-center px-6 py-3 rounded-lg shadow-xl font-rubik text-lg z-[9999]"
+        x-transition:enter="transition ease-out duration-500"
+        x-transition:leave="transition ease-in duration-500"
+    >
+        {{ session('success') }}
+    </div>
+@endif
+<!-- Mensaje de error -->
 @if (session('error'))
-    <div class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-md z-50 flex items-center space-x-2">
-        <span>⚠️ {{ session('error') }}</span>
-        <button type="button" onclick="this.parentElement.style.display='none';" class="text-red-500 hover:text-red-700">✖</button>
+    <div 
+        x-data="{ show: false }" 
+        x-init="
+            setTimeout(() => { show = true; }, 500); // Espera medio segundo para mostrarse
+            setTimeout(() => { show = false; }, 30000); // Se oculta después de 60 segundos
+        "
+        x-show="show" 
+        class="fixed top-10 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-center px-6 py-3 rounded-lg shadow-xl font-rubik text-lg z-[9999]"
+        x-transition:enter="transition ease-out duration-500"
+        x-transition:leave="transition ease-in duration-500"
+    >
+    {{ session('error') }}
     </div>
 @endif
 

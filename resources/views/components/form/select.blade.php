@@ -1,36 +1,44 @@
 @props(['name', 'label', 'options' => [], 'selected' => null])
 
-<div class="relative mb-6">
+<div class="relative mb-2">
     <!-- Label flotante -->
     <label for="{{ $name }}" 
            class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">
         {{ $label }}
     </label>
+        <select
+            id="{{ $name }}"
+            name="{{ $name }}"
+            class="w-full text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 pr-12 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 appearance-none
+            @error($name) border-red-500 @enderror"
+            {{ $attributes }}
+            style="padding-right: 2.5rem;" <!-- Más espacio para la flecha -->
+        >
+            <option value="" disabled {{ !$selected ? 'selected' : '' }}>Seleccionar</option>
+            @foreach ($options as $value => $label)
+                <option value="{{ $value }}" {{ $selected == $value ? 'selected' : '' }}>
+                    {{ $label }}
+                </option>
+            @endforeach
+        </select>
 
-    <!-- Select con estilos dinámicos -->
-    <select
-        id="{{ $name }}"
-        name="{{ $name }}"
-        class="w-full bg-gray-50 text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
-        @error($name) border-red-500 @enderror"
-        {{ $attributes }}
-    >
-        <option value="" disabled {{ !$selected ? 'selected' : '' }}>Seleccionar...</option>
-        @foreach ($options as $value => $label)
-            <option value="{{ $value }}" {{ $selected == $value ? 'selected' : '' }}>
-                {{ $label }}
-            </option>
-        @endforeach
-    </select>
+        <!-- Flecha con Lucide Icon -->
+        <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500"></i>
+        </div>
+
 
     <!-- Mensaje de error con ícono de advertencia -->
     @error($name)
         <div class="flex items-center mt-1 text-red-500 text-xs">
-            <!-- Ícono de advertencia -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m-2-2a9 9 0 110-18 9 9 0 010 18z" />
-            </svg>
+            <!-- Ícono de advertencia usando Lucide Icons -->
+            <i data-lucide="alert-circle" class="w-5 h-5 mr-1"></i>
             <p>⚠️ {{ $message }}</p>
         </div>
     @enderror
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        lucide.createIcons();
+    });
+</script>

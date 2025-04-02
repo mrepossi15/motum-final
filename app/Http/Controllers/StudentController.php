@@ -41,7 +41,7 @@ class StudentController extends Controller
             'biography' => 'nullable|string|max:500',
             'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
             'profile_pic_description' => 'nullable|string|max:255',
-            'birth' => 'nullable|date',
+            'birth' => 'required|date_format:Y-m-d',
             'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
             'medical_fit_description' => 'nullable|string|max:255',
             'activities' => 'nullable|array',
@@ -57,6 +57,8 @@ class StudentController extends Controller
             'password' => Hash::make($validatedData['password']),
             'role' => 'alumno',
             'birth' => $validatedData['birth'] ?? null,
+            'profile_pic' => 'img/default-profile.png', // 👈 Imagen por defecto si no se sube ninguna
+            'profile_pic_description' => 'Imagen por defecto',
         ];
     
         if ($request->hasFile('profile_pic')) {
@@ -100,42 +102,42 @@ class StudentController extends Controller
     }
 
     public function updateStudent(Request $request)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    // Validar los datos de entrada
-    $validatedData = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-        'biography' => 'nullable|string|max:1000',
-        'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
-        'phone' => 'nullable|string|max:255|unique:users,phone,' . $user->id, // Permitir el mismo teléfono del usuario autenticado
-        'birth' => 'nullable|date',
-        'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
-    ]);
+        // Validar los datos de entrada
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'biography' => 'nullable|string|max:1000',
+            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg',
+            'phone' => 'nullable|string|max:255|unique:users,phone,' . $user->id, // Permitir el mismo teléfono del usuario autenticado
+            'birth' => 'nullable|date',
+            'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg',
+        ]);
 
-    // Rellenar los datos del usuario con la información validada
-    $user->fill($validatedData);
+        // Rellenar los datos del usuario con la información validada
+        $user->fill($validatedData);
 
-    // 👉 Procesar la imagen de perfil si se sube
-    if ($request->hasFile('profile_pic')) {
-        $this->deleteImageIfExists($user->profile_pic); // Borrar la imagen anterior si existe
-        $user->profile_pic = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
-        $user->profile_pic_description = 'Foto de perfil de ' . $user->name;
+        // 👉 Procesar la imagen de perfil si se sube
+        if ($request->hasFile('profile_pic')) {
+            $this->deleteImageIfExists($user->profile_pic); // Borrar la imagen anterior si existe
+            $user->profile_pic = $this->resizeAndSaveImage($request->file('profile_pic'), 'profile_pics', 300, 300);
+            $user->profile_pic_description = 'Foto de perfil de ' . $user->name;
+        }
+
+        // 👉 Procesar la imagen del apto médico si se sube
+        if ($request->hasFile('medical_fit')) {
+            $this->deleteImageIfExists($user->medical_fit); // Borrar la imagen anterior si existe
+            $user->medical_fit = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 600, 400);
+            $user->medical_fit_description = 'Apto médico de ' . $user->name . ' actualizado';
+        }
+
+        // Guardar los cambios en la base de datos
+        $user->save();
+
+        return redirect()->route('students.profile', ['id' => $user->id])->with('success', 'Perfil actualizado correctamente.');
     }
-
-    // 👉 Procesar la imagen del apto médico si se sube
-    if ($request->hasFile('medical_fit')) {
-        $this->deleteImageIfExists($user->medical_fit); // Borrar la imagen anterior si existe
-        $user->medical_fit = $this->resizeAndSaveImage($request->file('medical_fit'), 'medical_fits', 600, 400);
-        $user->medical_fit_description = 'Apto médico de ' . $user->name . ' actualizado';
-    }
-
-    // Guardar los cambios en la base de datos
-    $user->save();
-
-    return redirect()->route('students.profile', ['id' => $user->id])->with('success', 'Perfil actualizado correctamente.');
-}
 
     public function myTrainings() {
         $userId = Auth::id();

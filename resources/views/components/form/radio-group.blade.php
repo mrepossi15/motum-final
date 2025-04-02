@@ -9,7 +9,7 @@
     <!-- Contenedor de radios -->
     <div class="flex flex-wrap gap-2  ">
         @foreach ($options as $value => $label)
-            <label class="flex items-center border bg-gray-50 border-gray-500 hover:border-orange-500 rounded-sm px-4 py-3 focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500
+            <label class="flex items-center border border-gray-500 hover:border-orange-500 rounded-sm px-4 py-3 focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500
                 @error($name) border-red-500 @enderror">
                 <input
                     type="radio"

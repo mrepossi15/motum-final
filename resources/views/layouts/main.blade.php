@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    <script src="https://unpkg.com/lucide@latest"></script>
   
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>

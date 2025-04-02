@@ -26,7 +26,7 @@
             <!-- Primera Fila: Foto de Perfil + Nombre, Email y Teléfono -->
             <div class="grid grid-cols-1 md:grid-cols-4 sm:gap-6 items-start">
                 <!-- Foto de Perfil -->
-                <div class="col-span-1 flex flex-col items-center md:items-start" x-data="photoPreview('{{ $user->profile_pic ? asset('storage/' . $user->profile_pic) : null }}')">
+                <div class="col-span-1 flex flex-col items-center md:items-start" x-data="photoPreview('{{ $user->profile_pic ? (file_exists(public_path('storage/' . $user->profile_pic)) ? asset('storage/' . $user->profile_pic) : asset($user->profile_pic)) : asset('img/default-profile.png') }}')">
                     <div class="relative w-40 h-40 rounded-full overflow-hidden shadow-lg border cursor-pointer" @click="$refs.fileInput.click()">
                         <img :src="photo" class="w-full h-full object-cover">
                         <button type="button" @click="removeImage($event)" class="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-white rounded-full shadow-md">
