@@ -29,7 +29,7 @@
     <!-- Cuadro para Subir Imagen (Cuando no hay preview) -->
     <label 
         for="{{ $name }}" 
-        class="block w-full h-60 border hover:border-orange-500 border-gray-500 rounded-sm cursor-pointer transition 
+        class="block w-full h-60 border hover:border-orange-500 border-gray-500 rounded-md cursor-pointer transition 
                focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
                flex items-center justify-center overflow-hidden
                @error($name) border-red-500 @enderror"
@@ -55,7 +55,7 @@
     </label>
 
     <!-- Vista Previa de la Imagen -->
-    <div x-show="preview" class="relative w-full h-60 border hover:border-orange-500 border-gray-500 rounded-sm overflow-hidden cursor-pointer transition mb-4">
+    <div x-show="preview" class="relative w-full h-60 border hover:border-orange-500 border-gray-500 rounded-md overflow-hidden cursor-pointer transition mb-4">
         <label for="{{ $name }}" class="block w-full h-full">
             <img :src="preview" alt="Vista Previa" class="w-full h-full object-cover">
         </label>

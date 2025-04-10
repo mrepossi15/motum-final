@@ -13,7 +13,7 @@
             name="photos[]"
             accept="image/*"
             multiple
-            class="w-full bg-gray-50 text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
+            class="w-full bg-gray-50 text-black border hover:border-orange-500 border-gray-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
             @error('photos') border-red-500 @enderror"
         >
         <p x-show="errors.{{ $name }}" class="text-red-500 text-sm" x-text="errors.{{ $name }}"></p>

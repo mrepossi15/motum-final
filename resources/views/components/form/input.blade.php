@@ -1,22 +1,29 @@
 @props(['name', 'label', 'type' => 'text', 'placeholder' => '', 'value' => ''])
 
 <div class="relative">
-    <!-- Label flotante -->
-    <label for="{{ $name }}" 
-           class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">
-        {{ $label }}
-    </label>
+    
+    @if($label)
+        <label for="{{ $name }}" 
+        class="absolute top-0 left-3 -mt-2 px-1 bg-white  text-gray-600 text-sm  transition-all duration-200 {{ $attributes->get('label-hidden') ? 'hidden' : '' }}">
+            {{ $label }}
+        </label>
+    @endif
 
     <!-- Input con diseño limpio y bordes dinámicos -->
+    @php
+        $isFile = $type === 'file';
+        $baseClasses = 'w-full text-black border hover:border-orange-500 border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500';
+        $paddingClass = $isFile ? 'px-4 py-3' : 'px-4 py-2';
+        $errorClass = $errors->has($name) ? 'border-red-500' : '';
+    @endphp
+
     <input
         type="{{ $type }}"
         id="{{ $name }}"
         name="{{ $name }}"
         value="{{ old($name, $value) }}"
         placeholder="{{ $placeholder }}"
-        class="w-full text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
-        @error($name) border-red-500 @enderror"
-        {{ $attributes }}
+        {{ $attributes->merge(['class' => "$baseClasses $paddingClass $errorClass"]) }}
     >
     <p x-show="errors.{{ $name }}" class="text-red-500 text-sm" x-text="errors.{{ $name }}"></p>
     <!-- Botón para mostrar/ocultar contraseña -->

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Activity;
 use App\Traits\HandlesImages;
 use App\Models\User;
 use App\Models\Training;
@@ -31,17 +32,18 @@ class TrainerController extends Controller
     //////REGISTRO ENTRENADOR
     public function registerTrainer()
     {
-        return view('auth.register-trainer');
+        $activities = Activity::all();
+        return view('auth.register-trainer', compact('activities'));
     }
 
     public function storeTrainer(Request $request)
     {
      
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'mercado_pago_email' => 'required|email|unique:users',
-            'phone' => 'required|string|max:255|unique:users', // Validar Collector ID
+            'mercado_pago_email' => 'nullable|email|unique:users',
+            'phone' => 'nullable|digits_between:8,15|unique:users',
             'password' => 'required|min:6|confirmed',
             'certification' => 'required|string|max:255',
             'biography' => 'nullable|string|max:500',
@@ -66,13 +68,25 @@ class TrainerController extends Controller
             'medical_fit_description' => 'nullable|string|max:355',
             'photo_reference' => 'nullable|array',
             'rating' => 'nullable|numeric|min:0|max:5',
+            'activities' => 'nullable|array',
+            'activities.*' => 'exists:activities,id',
            
         ]);
-        // dd('Validación realizada correctamente');
-        $userData = $request->only([
-            'name', 'email',  'mercado_pago_email','password', 'certification', 'biography', 'especialty', 'birth','phone'
-        ]);
-        $userData['role'] = 'entrenador';
+   
+        $userData = [
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'mercado_pago_email' => $validatedData['mercado_pago_email']?? null,
+            'phone' => $validatedData['phone'] ?? null,
+            'biography' => $validatedData['biography'] ?? null,
+            'certification' => $validatedData['certification'] ?? null,
+            'password' => Hash::make($validatedData['password']),
+            'role' => 'entrenador',
+            'birth' => $validatedData['birth'] ?? null,
+            'profile_pic' => 'img/default-profile.png', // 👈 Imagen por defecto si no se sube ninguna
+            'profile_pic_description' => 'Imagen por defecto',
+        ];
+        
         $userData['password'] = Hash::make($request->password);
     
         if ($request->hasFile('profile_pic')) {
@@ -141,9 +155,12 @@ class TrainerController extends Controller
                 ]);
             }
         }
-        
-        
+    
             $user = User::create($userData);
+             // Vincular actividades seleccionadas
+         if (!empty($validatedData['activities'])) {
+            $user->activities()->sync($validatedData['activities']);
+        }
             
             Mail::to($user->email)->send(new WelcomeMail($user));
 

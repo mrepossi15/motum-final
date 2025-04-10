@@ -14,14 +14,14 @@
   
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>
-<body class="bg-gray-100">
+<body class="{{ $background ?? 'md:bg-gradient-to-b from-gray-100 to-gray-50 bg-white' }}" >
     @if (!isset($hideNavbar) || !$hideNavbar)
         <header>
             <x-nav></x-nav>
         </header>
     @endif
 
-    <main class="{{ $background ?? 'bg-gray-100' }} min-h-screen">
+    <main class="{{ $background ?? 'md:bg-gradient-to-b from-gray-100 to-gray-50 bg-white' }} min-h-screen">
         @if (session()->has('feedback.message'))
             <div class="alert alert-{{ session()->get('feedback.type', 'success') }}">
                 {!! session()->get('feedback.message') !!}

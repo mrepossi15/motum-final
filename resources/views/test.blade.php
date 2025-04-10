@@ -21,5 +21,5 @@ Success o fail todos iguales. Aparece de abajo.
 
 Imagenes/Iconos
 Markers de motum
-Foto por defecto para user
+DONE - Foto por defecto para user
 

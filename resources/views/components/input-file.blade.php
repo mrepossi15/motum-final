@@ -3,7 +3,7 @@
 <div x-data="{ isHovering: false, preview: null }" class="relative w-full mb-4">
     <label 
         for="{{ $name }}" 
-        class="block w-full h-60 border-2 border-dashed rounded-md cursor-pointer transition
+        class="block w-full h-60 border-2 border-dashed rounded-lg cursor-pointer transition
                flex flex-col items-center justify-center
                bg-orange-50 hover:bg-orange-100 
                border-orange-500 hover:border-orange-600
@@ -36,7 +36,7 @@
 
     <!-- Vista Previa de la Imagen -->
     <div x-show="preview" class="relative mt-4 flex items-center justify-center">
-        <img :src="preview" alt="Preview" class="w-full h-60 object-cover rounded-md border border-orange-500">
+        <img :src="preview" alt="Preview" class="w-full h-60 object-cover rounded-lg border border-orange-500">
         <!-- Botón para eliminar la imagen cargada -->
         <button type="button" 
                 @click="preview = null; document.getElementById('{{ $name }}').value = ''"

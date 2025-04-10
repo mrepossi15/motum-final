@@ -22,7 +22,11 @@ use App\Http\Controllers\FavoriteController;
 */
 
 // Login y logout
-Route::get('/', [UserController::class, 'loginForm'])
+Route::get('/', [UserController::class, 'home'])
+    ->name('home');
+    Route::get('/regsitrar', [UserController::class, 'register'])
+    ->name('register');
+Route::get('/login', [UserController::class, 'loginForm'])
     ->name('login');
 Route::post('/iniciar-sesion', [UserController::class, 'login'])
     ->name('login.process');

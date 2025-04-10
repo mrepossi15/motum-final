@@ -3,12 +3,12 @@
 @section('title', 'Crear Usuario')
 
 @section('content')
-<div x-data="formHandler()" x-ref="formHandler" class="max-w-4xl mx-auto p-4 mt-6">
+<div x-data="formHandler()" x-ref="formHandler" class="max-w-xl mx-auto  p-6 mt-6">
     <!-- Overlay de Carga (AGREGADO) -->
     <x-spinner wire:model="isLoading" message="Creando usuario..." />
-    <div class="bg-white rounded-lg mt-6 shadow-md p-4">
+    <div class="bg-white rounded-xl md:shadow-xl md:mt-6 mt-2 p-6">
         <!-- Indicador de Paso -->
-        <h2 class="text-lg text-orange-500 font-semibold mt-4">
+        <h2 class="text-lg text-orange-500 font-semibold mt-2">
             Paso <span x-text="step"></span> de 2
         </h2>
         <!-- Título de cada paso -->
@@ -20,21 +20,32 @@
         <!-- Formulario -->
         <form action="{{ route('store.student') }}" method="POST" enctype="multipart/form-data" class="space-y-4" @submit="handleSubmit">
             @csrf
-            <!-- Paso 1: Datos básicos -->
-            <div x-show="step === 1" class="space-y-4">
-                <!-- Nombre compelto -->
+             <!-- Paso 1: Datos personales -->
+             <div x-show="step === 1" class="space-y-4">
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Nombre -->
                     <x-form.input name="first_name" label="Nombre *" placeholder="Tu nombre" x-model="first_name" />
-                    <!-- Apellido -->
                     <x-form.input name="last_name" label="Apellido *" placeholder="Tu apellido" x-model="last_name" />
                 </div>
-                <input type="hidden" name="name" x-model="fullName">
-                <!-- Nacimeinto -->
+
+                <input type="hidden" name="name" x-model="fullName" />
+                <div class="relative flex items-center justify-center my-4">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                </div>
+
+                <x-form.input type="email" name="email" label="Correo Electrónico *" placeholder="ejemplo@correo.com" />
+                <x-form.input type="password" name="password" label="Contraseña *" placeholder="Crea una contraseña" />
+                <x-form.input type="password" name="password_confirmation" label="Confirmar Contraseña *" placeholder="Repite tu contraseña" />
+                <div class="relative flex items-center justify-center mt-4 mb-0">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                </div>
                 <div>
                     <p class="mb-2 text-sm text-gray-800">Fecha de nacimiento</p>
                     <div class="grid grid-cols-3 sm:gap-4 gap-2">
-                        <!-- Día -->
                         <x-form.select 
                             name="day" 
                             label="Día *" 
@@ -42,7 +53,6 @@
                             x-model="day"
                             :selected="old('day')" 
                         />
-                        <!-- Mes -->
                         <x-form.select 
                             name="month" 
                             label="Mes *" 
@@ -54,7 +64,6 @@
                             x-model="month"
                             :selected="old('month')" 
                         />
-                        <!-- Año -->
                         <x-form.select 
                             name="year" 
                             label="Año *" 
@@ -63,16 +72,13 @@
                             :selected="old('year')" 
                         />
                     </div>
+
                     <div x-show="errors.day" class="text-red-500 text-sm">
                         <span x-text="errors.day"></span>
                     </div>
                 </div>
-                <input type="hidden" name="birth" x-ref="birth">
-                <!-- Mail -->
-                <x-form.input name="email" type="email" label="Correo Electrónico *" placeholder="ejemplo@correo.com" />
-                <!-- Contraseña -->
-                <x-form.input name="password" type="password" label="Contraseña *" placeholder="Escribe tu contraseña" />
-                <x-form.input name="password_confirmation" type="password" label="Confirmar Contraseña *" placeholder="Repite tu contraseña" />
+
+                <input type="hidden" name="birth" x-ref="birth" />
             </div>
             <!-- Paso 2: Información adicional -->
             <div x-show="step === 2" class="space-y-4">
@@ -109,6 +115,7 @@
                 <template x-if="step < 2">
                     <button type="button" @click="nextStep"
                         class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
+                        
                         Siguiente
                     </button>
                 </template>

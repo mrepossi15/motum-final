@@ -9,6 +9,14 @@ use App\Models\Activity;
 class UserController extends Controller
 {
      //////VISTA LOGIN  
+     public function home()
+     {
+         return view('home');
+     }
+     public function register()
+     {
+         return view('auth.register');
+     }
     public function loginForm()
     {
         return view('auth.login');
@@ -49,7 +57,7 @@ class UserController extends Controller
     public function logout()
     {
         Auth::logout();
-        return redirect()->route('login')->with('success', 'Sesión cerrada exitosamente.');
+        return redirect()->route('home')->with('success', 'Sesión cerrada exitosamente.');
     } 
     public function storeActivities(Request $request)
 {
@@ -71,10 +79,12 @@ public function checkUserExists(Request $request)
 {
     $nameExists = \App\Models\User::where('name', $request->name)->exists();
     $emailExists = \App\Models\User::where('email', $request->email)->exists();
-
+    $phoneExists = \App\Models\User::where('phone', $request->phone)->exists();
+    
     return response()->json([
         'name' => $nameExists,
         'email' => $emailExists,
+        'phone' => $phoneExists,
     ]);
 }
     

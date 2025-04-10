@@ -3,7 +3,7 @@
 <div class="relative ">
     <!-- Label flotante -->
     <label for="{{ $name }}" 
-           class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">
+           class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-600 text-sm">
         {{ $label }}
     </label>
 
@@ -13,7 +13,7 @@
         name="{{ $name }}"
         rows="{{ $rows }}"
         placeholder="{{ $placeholder }}"
-        class="w-full text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
+        class="w-full text-black border hover:border-orange-500 border-gray-500 rounded-md px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
         @error($name) border-red-500 @enderror"
         {{ $attributes }}
     >{{ old($name, $value) }}</textarea>

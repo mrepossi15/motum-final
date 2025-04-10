@@ -3,13 +3,13 @@
 <div class="relative mb-2">
     <!-- Label flotante -->
     <label for="{{ $name }}" 
-           class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">
+           class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-600 text-sm">
         {{ $label }}
     </label>
         <select
             id="{{ $name }}"
             name="{{ $name }}"
-            class="w-full text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 pr-12 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 appearance-none
+            class="w-full text-black border hover:border-orange-500 border-gray-500 rounded-md px-4 py-2 pr-12 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 appearance-none
             @error($name) border-red-500 @enderror"
             {{ $attributes }}
             style="padding-right: 2.5rem;" <!-- Más espacio para la flecha -->
