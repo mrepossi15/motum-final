@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Models\Training;
 use App\Models\Activity;
+use Illuminate\Validation\ValidationException;
 use App\Models\Park;
 use App\Http\Controllers\Image;
 use App\Models\TrainingPhoto;
@@ -36,14 +37,15 @@ class TrainingController extends Controller
 
         return view('trainings.create', compact('parks', 'selectedParkId', 'activities'));
     }
-    public function store(Request $request)
-    {
-        
-        if (!Auth::user()->medical_fit) {
-            return redirect()->back()->with('error', 'Debes subir un apto médico antes de crear un entrenamiento.');
-        }
     
-        // Validación
+public function store(Request $request)
+{
+    if (!Auth::user()->medical_fit) {
+        return redirect()->back()->with('error', 'Debes subir un apto médico antes de crear un entrenamiento.');
+    }
+ 
+
+    try {
         $request->validate([
             'title'              => 'required|string|max:255',
             'description'        => 'nullable|string',
@@ -60,6 +62,12 @@ class TrainingController extends Controller
             'prices.price.*'       => 'required|numeric|min:0',
             'available_spots'    => 'required|integer|min:1',
         ]);
+    } catch (ValidationException $e) {
+        dd('❌ Falló la validación:', $e->errors());
+    }
+
+
+    
         // Validar si el parque existe y pertenece al usuario
         $park = Park::find($request->park_id);
         if (!$park || !$park->users->contains(Auth::user())) {

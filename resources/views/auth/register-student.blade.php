@@ -15,7 +15,6 @@
         <h1 class="text-2xl font-bold mt-2 text-black-500">
             <span x-show="step === 1">Registro de Alumno</span>
             <span x-show="step === 2">Información adicional</span>
-            <span x-show="step === 3">Tus preferencias</span>
         </h1>
         <!-- Formulario -->
         <form action="{{ route('store.student') }}" method="POST" enctype="multipart/form-data" class="space-y-4" @submit="handleSubmit">
@@ -87,47 +86,51 @@
                     <p class="text-md text-black mb-2">Selecciona tus actividades de interes</p>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($activities as $activity)
-                        <label
-                            x-data="{ checked: false }"
-                            @click="checked = !checked"
-                            :class="checked ? 'bg-orange-400 text-white' : 'bg-gray-50 text-black border-gray-500'"
-                            class="relative cursor-pointer border hover:border-orange-500 rounded-sm p-4 flex items-center justify-between transition focus-within:ring-1 focus-within:ring-orange-500">
-                            <div class="flex items-center space-x-3">
-                                <input
-                                    type="checkbox"
-                                    name="activities[]"
-                                    value="{{ $activity->id }}"
-                                    @change="checked = $el.checked"
-                                    class="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:border-orange-500 cursor-pointer transition">
-                                <span :class="checked ? 'text-white' : 'text-black'" class="">{{ $activity->name }}</span>
-                            </div>
-                        </label>
+                            <label
+                                    x-data="{ checked: false }"
+                                    @click="checked = !checked"
+                                    :class="checked ? 'bg-orange-400 text-white' : 'bg-gray-50 text-black border-gray-500'"
+                                    class="cursor-pointer border hover:border-orange-500 rounded-md px-3 py-3 flex items-center justify-between transition focus-within:ring-1 focus-within:ring-orange-500 w-full sm:w-auto"
+                                >
+                                <div class="flex items-center space-x-3">
+                                    <input
+                                        type="checkbox"
+                                        name="activities[]"
+                                        value="{{ $activity->id }}"
+                                        @change="checked = $el.checked"
+                                        class="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:border-orange-500 cursor-pointer transition"
+                                    />
+                                    <span :class="checked ? 'text-white' : 'text-black'">{{ $activity->name }}</span>
+                                </div>
+                            </label>
                         @endforeach
                     </div>
                 </div>
             </div>
             <!-- Botones de Navegación -->
-            <div class="flex justify-end mt-4 space-x-4">
-                <button type="button" @click="previousStep" class="bg-gray-500 text-white px-4 py-2 rounded-md" x-show="step > 1">
-                    Anterior
-                </button>
-
-                <template x-if="step < 2">
-                    <button type="button" @click="nextStep"
-                        class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
-                        
-                        Siguiente
+            <div class="flex justify-between mt-4">
+                <div>
+                    <button type="button" @click="previousStep" x-show="step > 1" class="bg-gray-500 text-white p-3 rounded-md">
+                        <x-lucide-arrow-left class="w-5 h-5 text-white" />
                     </button>
-                </template>
-
-                <template x-if="step === 2">
-                    <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
+                </div>
+                <div class="flex space-x-4">
+                    <template x-if="step < 2">
+                        <button type="button" @click="nextStep" class="bg-orange-500 text-white p-3 rounded-md hover:bg-orange-600 transition">
+                            <x-lucide-arrow-right class="w-5 h-5 text-white" />
+                        </button>
+                    </template>
+                    <template x-if="step === 2">
+                        <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
                         Crear usuario
-                    </button>
-                </template>
+                        </button>
+                    </template>
+                </div>
+
             </div>
         </form>
     </div>
+    
     <!-- Modal de Error -->
     <div 
         x-show="showErrorModal"
@@ -146,6 +149,11 @@
                 Cerrar
             </button>
         </div>
+    </div>
+    <div class="text-center mt-6 underline">
+            <a href="{{ route('home') }}"  class="text-gray-500 text-sm ">
+                Volver al inicio
+            </a>
     </div>
 </div>
 <script>
@@ -176,7 +184,7 @@
                     if (event.key === 'Enter') {
                         event.preventDefault(); // Evitar que el formulario se envíe automáticamente
 
-                        if (this.step < 3) {
+                        if (this.step < 2) {
                             await this.nextStep(); // Intentar avanzar al siguiente paso
                         } else {
                             this.submitForm(); // Enviar el formulario si es el último paso
@@ -303,4 +311,5 @@
         }));
     });
 </script>
+
 @endsection

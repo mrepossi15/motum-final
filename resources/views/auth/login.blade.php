@@ -14,7 +14,7 @@
         <form action="/iniciar-sesion" method="POST" class="space-y-6">
             @csrf
             <!-- Correo Electrónico -->
-            <x-form.input name="email" type="email" label="Nombre" placeholder="ejemplo@correo.com"/>
+            <x-form.input name="email" type="email" label="Mail" placeholder="ejemplo@correo.com"/>
             <!-- Contraseña -->
             <x-form.input name="password" type="password" label="Contraseña" placeholder="Escribe tu contraseña" />
             <!-- Spinner de carga -->
@@ -36,4 +36,5 @@
             </a>
     </div>
 </div>
+
 @endsection

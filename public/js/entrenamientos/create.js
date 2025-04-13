@@ -10,43 +10,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const scheduleBlock = document.createElement('div');
         scheduleBlock.classList.add('pb-4');
-
         scheduleBlock.innerHTML = `
-          <div class="border-t pt-4">
-            <!-- Días de la semana -->
-            <div>
-                <label class="sr-only">Días</label>
-                <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                    ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(day => `
-                        <label class="flex items-center gap-2 rounded-md hover:bg-gray-100 cursor-pointer transition">
-                            <input type="checkbox" name="schedule[days][${index}][0][]" value="${day}" class="h-5 w-5 text-orange-500 focus:ring-orange-500">
-                            <span class="text-black">${day}</span>
-                        </label>
-                    `).join('')}
-                </div>
+        <div class="pb-4 border-t pt-4">
+            <!-- Días de la semana (imitando x-form.checkbox-group) -->
+            <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(day => `
+                    <label class="flex items-center gap-2 rounded-md hover:bg-gray-100 cursor-pointer transition">
+                        <input type="checkbox" name="schedule[days][${index}][0][]" value="${day}" class="h-5 w-5 text-orange-500 focus:ring-orange-500">
+                        <span class="text-black text-sm">${day}</span>
+                    </label>
+                `).join('')}
             </div>
-
+    
             <!-- Horario en una sola fila -->
-             <div class="grid grid-cols-2 gap-4 mt-6 mb-b border-t">
-                 <div class="relative">
+            <div class="grid grid-cols-2 gap-4 mt-6 border-t pt-4">
+                <div class="relative">
                     <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Inicio*</label>
-                    <input type="time" name="schedule[start_time][${index}]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                    <input type="time" name="schedule[start_time][${index}]" required 
+                        class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
                 </div>
-
-                 <div class="relative">
+    
+                <div class="relative">
                     <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Fin*</label>
-                    <input type="time" name="schedule[end_time][${index}]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                    <input type="time" name="schedule[end_time][${index}]" required 
+                        class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
                 </div>
             </div>
-
-            <!-- Botón para eliminar horario -->
+    
+            <!-- Botón para eliminar -->
             <div class="text-end mt-2">
                 <button type="button" class="text-red-500 hover:bg-gray-50 px-3 py-1 rounded remove-schedule">
                     Eliminar
                 </button>
             </div>
         </div>
-        `;
+    `;
 
         scheduleBlock.querySelector('.remove-schedule').addEventListener('click', () => {
             scheduleBlock.remove();

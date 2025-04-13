@@ -89,76 +89,83 @@
             <!-- Paso 3: Horarios y precios -->
             <div x-show="step === 3" class="space-y-6">
                        <!-- Sección: Días y Horarios -->
-        <div class="border-b border-gray-300  p-4">
-            <div class="flex justify-between items-center mb-4">
-                <h5 class="text-lg font-semibold text-gray-700">Días y Horarios</h5>
-                <button type="button" id="add-schedule" 
-                        class=" text-orange-500  py-2 rounded-md hover:underline transition">
-                        + Agregar 
-                </button>
-            </div>
+              <!-- Sección: Días y Horarios -->
+                <div class="border-b border-gray-300 p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-semibold text-gray-700">Días y Horarios</h5>
+                        <button type="button" id="add-schedule" 
+                                class="text-orange-500 py-2 rounded-md hover:underline transition">
+                                + Agregar 
+                        </button>
+                    </div>
 
-            <div id="schedule-container" class="space-y-3">
-                    @php $schedules = old('schedule.days', [[]]); @endphp
-                    @foreach ($schedules as $index => $scheduleDays)
-                        <div class=" pb-4">
-                            <!-- Días de la semana -->
-                            <x-form.checkbox-group 
-                            name="schedule[days][{{ $index }}][]" 
-                            label="Días"
-                            :options="['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']"
-                            :selected="old('schedule.days.' . $index, [])"
-                            hideLabel="true"
-                            />
+                    <!-- TODO lo estático y dinámico van dentro del mismo contenedor -->
+                    <div id="schedule-container" class="space-y-3">
+                        @php $schedules = old('schedule.days', [[]]); @endphp
+                        @foreach ($schedules as $index => $scheduleDays)
+                            <div class="pb-4">
+                                <!-- Días de la semana -->
+                                <x-form.checkbox-group 
+                                    name="schedule[days][{{ $index }}][]" 
+                                    label="Días"
+                                    :options="['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']"
+                                    :selected="old('schedule.days.' . $index, [])"
+                                    hideLabel="true"
+                                />
 
-                            <!-- Horario en una sola fila -->
-                            <div class="grid grid-cols-2 gap-4 mt-6">
-                                <x-form.input type="time" name="schedule[start_time][{{ $index }}]" label="Inicio *" required />
-                                <x-form.input type="time" name="schedule[end_time][{{ $index }}]" label="Fin *" required />
+                                <div class="grid grid-cols-2 gap-4 mt-6 mb-b border-t">
+                                    <div class="relative">
+                                        <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Inicio*</label>
+                                        <input type="time" name="schedule[start_time][{{ $index }}]" required
+                                            class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500" />
+                                    </div>
+
+                                    <div class="relative">
+                                        <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Fin*</label>
+                                        <input type="time" name="schedule[end_time][{{ $index }}]" required
+                                            class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500" />
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Sección: Precios -->
+                <div class=" px-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-semibold text-gray-700">Precios por Sesiones Semanales</h5>
+                        
+                        <button type="button" id="add-price-button" 
+                            class="text-orange-500  py-2 rounded-md hover:underline transition whitespace-nowrap">
+                            + Agregar
+                        </button>
+                    </div>
+                    <div id="prices" class="space-y-3">
+                        <div class="border-t">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="relative">
+                                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Veces/Semana*</label>
+                                    <input type="number" name="prices[weekly_sessions][]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                                </div>
+
+                                <div class="relative">
+                                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Precio*</label>
+                                    <input type="number" name="prices[price][]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                                </div>
                             </div>
 
-                            
-                        </div>
-                    @endforeach
-            </div>
-            
-        </div>
-
-            <!-- Sección: Precios -->
-        <div class=" px-4">
-            <div class="flex justify-between items-center mb-4">
-                <h5 class="text-lg font-semibold text-gray-700">Precios por Sesiones Semanales</h5>
-                
-                <button type="button" id="add-price-button" 
-                    class="text-orange-500  py-2 rounded-md hover:underline transition whitespace-nowrap">
-                    + Agregar
-                </button>
-            </div>
-
-            <div id="prices" class="space-y-3">
-                @if(old('prices.weekly_sessions'))
-                    @foreach (old('prices.weekly_sessions') as $index => $session)
-                        <div class="border border-gray-200 rounded-md p-3 shadow-sm bg-gray-50">
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <x-form.input type="number" name="prices[weekly_sessions][]" label="Veces/Semana *" required />
-                                <x-form.input type="number" name="prices[price][]" label="Precio *" required />
+                            <!-- Botón para eliminar precio -->
+                            <div class="text-end mt-2">
+                                <button type="button" class="text-red-500 hover:bg-gray-600 px-3 py-1 rounded remove-price">
+                                    Eliminar
+                                </button>
                             </div>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="">
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <x-form.input type="number" name="prices[weekly_sessions][]" label="Veces/Semana *" required />
-                            <x-form.input type="number" name="prices[price][]" label="Precio *" required textarea="$" />
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
-        </div>
                 
-
-            </div>
-
             <!-- Paso 4: Imágenes -->
             <div x-show="step === 4" class="space-y-4" x-data="photoPreview()">
                 <div class="relative">
@@ -237,3 +244,4 @@
 <script src="{{ asset('js/entrenamientos/create.js') }}"></script>
 @endpush
 @endsection
+

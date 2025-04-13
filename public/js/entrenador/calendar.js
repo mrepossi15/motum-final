@@ -178,7 +178,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const filteredData = data.filter(training => training.day === state.selectedDay);
             if (!filteredData.length) {
-                trainingsList.innerHTML = `<p class="text-center text-gray-500">No hay entrenamientos para ${state.selectedDay}.</p>`;
+                trainingsList.innerHTML = `<div class="bg-gray-200 text-center py-20 rounded-lg">
+                                            <div class="flex flex-col items-center justify-center space-y-4">
+                                                <!-- Icono tipo check dentro de un recuadro -->
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="14" x2="14" y2="18"/><line x1="14" y1="14" x2="10" y2="18"/></svg>
+                                                <!-- Mensaje -->
+                                                <p class="text-gray-600 text-sm">No hay entrenamientos para este ${state.selectedDay}</p>
+                                            </div>
+                                        </div>`;
                 return;
             }
 

@@ -4,9 +4,24 @@
 
 @section('content')
 
-<div class=" flex justify-center min-h-screen text-black bg-gray-100" x-data="initTabs()" x-init="init()">
-    <div class="w-full max-w-7xl mx-auto p-4 lg:px-10" x-data="{ selectedTab: 'trainings' }">
-        <h2 class="text-2xl font-semibold mb-4">Mis Entrenamientos</h2>
+<div class="flex justify-center min-h-screen text-black bg-gray-100 mt-10" x-data="initTabs()" x-init="init()">
+    <div class="w-full max-w-7xl mx-auto p-4 relative lg:px-10" x-data="{ selectedTab: 'trainings' }">
+        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Mis Entrenamientos</h1>
+        <div class="absolute top-4 right-4">
+            <!-- Botón Agregar Entrenamiento -->
+            <div class="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
+                    <button id="add-training-button-mobile" 
+                        class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-600 transition flex items-center justify-center">
+                        <x-lucide-plus class="w-5 h-5 mr-2" /> Agregar Entrenamiento
+                    </button>
+                </div>
+
+                <!-- Botón normal para pantallas grandes -->
+                <button id="add-training-button-desktop"
+                    class="hidden md:flex bg-orange-500 text-white px-4 py-2 rounded-sm hover:bg-orange-600 transition flex items-center justify-center">
+                    <x-lucide-plus class="w-5 h-5 mr-2" /> Agregar Entrenamiento
+                </button>
+        </div>
 
         <!-- Contenido principal -->
         <div class="col-span-6 md:col-span-4">
@@ -63,19 +78,7 @@
                     </ul>
                 </div>
 
-                <!-- Botón Agregar Entrenamiento -->
-                <div class="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
-                    <button id="add-training-button-mobile" 
-                        class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-600 transition flex items-center justify-center">
-                        <x-lucide-plus class="w-5 h-5 mr-2" /> Agregar Entrenamiento
-                    </button>
-                </div>
-
-                <!-- Botón normal para pantallas grandes -->
-                <button id="add-training-button-desktop"
-                    class="hidden md:flex bg-orange-500 text-white px-4 py-2 rounded-sm hover:bg-orange-600 transition flex items-center justify-center">
-                    <x-lucide-plus class="w-5 h-5 mr-2" /> Agregar Entrenamiento
-                </button>
+    
                 
             </div>
 

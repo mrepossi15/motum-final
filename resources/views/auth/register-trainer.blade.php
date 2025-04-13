@@ -99,8 +99,7 @@
                         <div class="w-full border-t border-gray-300"></div>
                     </div>
                 </div>
-                <div>
-                
+                <div> 
                     <h2 class="mb-2 text-md text-black">Disciplinas en las que te especializás</h2>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($activities as $activity)
@@ -317,6 +316,11 @@
                 </div>
             </div>
         </form>
+    </div>
+    <div class="text-center mt-6 underline">
+            <a href="{{ route('home') }}"  class="text-gray-500 text-sm ">
+                Volver al inicio
+            </a>
     </div>
     <div x-show="showAgeModal" x-cloak x-transition class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
@@ -586,7 +590,6 @@
         }));
     });
 </script>
-
 <script src="/js/mapas/showMap.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places&callback=initAutocomplete" async defer></script>
 @endsection
