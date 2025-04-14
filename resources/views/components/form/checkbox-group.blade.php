@@ -1,30 +1,27 @@
 @props(['name', 'label' => null, 'options' => [], 'selected' => [], 'hideLabel' => false])
 
-<div class="relative ">
-    <!-- Label flotante (oculto si `hideLabel` es true) -->
+<div class="relative">
     @if (!$hideLabel)
-        <label class="absolute -top-2 left-3 bg-gray-50 px-1 text-black text-sm">
+        <label class="block text-sm font-medium text-gray-700 ">
             {{ $label }}
         </label>
     @endif
 
-    <!-- Contenedor de checkboxes en una grilla -->
     <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
         @foreach ($options as $option)
-            <label class="flex items-center gap-2  rounded-md hover:bg-gray-100 cursor-pointer transition">
+            <label class="flex items-center gap-2 rounded-md hover:bg-gray-100 cursor-pointer transition">
                 <input
                     type="checkbox"
                     name="{{ $name }}[]"
                     value="{{ $option }}"
                     {{ in_array($option, (array) old($name, $selected)) ? 'checked' : '' }}
-                    class="h-5 w-5 bg-gray-50 text-orange-500 focus:ring-orange-500"
+                    class="h-5 w-5 text-orange-500 focus:ring-orange-500"
                 >
-                <span class="text-black">{{ $option }}</span>
+                <span class="text-black text-sm">{{ $option }}</span>
             </label>
         @endforeach
     </div>
-    <p x-show="errors['{{ $name }}']" class="text-red-500 text-sm" x-text="errors['{{ $name }}']"></p>
-    <!-- Mensaje de error con ícono de advertencia -->
+
     @error($name)
         <div class="flex items-center mt-1 text-red-500 text-xs">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

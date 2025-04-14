@@ -13,10 +13,11 @@
         name="{{ $name }}"
         rows="{{ $rows }}"
         placeholder="{{ $placeholder }}"
-        class="w-full text-black border hover:border-orange-500 border-gray-500 rounded-md px-4 py-2 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
+        class="w-full text-black border hover:border-orange-500 border-gray-300 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
         @error($name) border-red-500 @enderror"
         {{ $attributes }}
     >{{ old($name, $value) }}</textarea>
+    <p x-show="errors.{{ $name }}" class="text-red-500 text-sm" x-text="errors.{{ $name }}"></p>
 
     <!-- Mensaje de error con ícono de advertencia -->
     @error($name)

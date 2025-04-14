@@ -3,86 +3,96 @@ document.addEventListener('DOMContentLoaded', function () {
     const addScheduleButton = document.getElementById('add-schedule');
     const pricesContainer = document.getElementById('prices');
     const addPriceButton = document.getElementById('add-price-button');
+    let priceCount = 1;
+    let sessionsCount = 1;
 
     // Agregar Horario
     addScheduleButton.addEventListener('click', () => {
         const index = scheduleContainer.children.length;
+        sessionsCount++;
 
         const scheduleBlock = document.createElement('div');
-        scheduleBlock.classList.add('pb-4');
+        scheduleBlock.classList.add('p-4', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'bg-white', 'space-y-4');
         scheduleBlock.innerHTML = `
-        <div class="pb-4 border-t pt-4">
-            <!-- Días de la semana (imitando x-form.checkbox-group) -->
-            <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(day => `
-                    <label class="flex items-center gap-2 rounded-md hover:bg-gray-100 cursor-pointer transition">
-                        <input type="checkbox" name="schedule[days][${index}][0][]" value="${day}" class="h-5 w-5 text-orange-500 focus:ring-orange-500">
-                        <span class="text-black text-sm">${day}</span>
-                    </label>
-                `).join('')}
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-medium text-gray-700">
+                Horario N° ${index + 1}
+            </h3>
+            <button type="button" class="text-red-500 hover:underline remove-schedule">
+                Eliminar
+            </button>
+        </div>
+
+        <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(day => `
+                <label class="flex items-center gap-2 rounded-md hover:bg-gray-100 cursor-pointer transition">
+                    <input type="checkbox" name="schedule[days][${index}][]" value="${day}" class="h-5 w-5 text-orange-500 focus:ring-orange-500">
+                    <span class="text-black text-sm">${day}</span>
+                </label>
+            `).join('')}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="relative">
+                <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-700 text-sm">Inicio *</label>
+                <input type="time" name="schedule[start_time][${index}]" required
+                    class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
             </div>
-    
-            <!-- Horario en una sola fila -->
-            <div class="grid grid-cols-2 gap-4 mt-6 border-t pt-4">
-                <div class="relative">
-                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Inicio*</label>
-                    <input type="time" name="schedule[start_time][${index}]" required 
-                        class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                </div>
-    
-                <div class="relative">
-                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Fin*</label>
-                    <input type="time" name="schedule[end_time][${index}]" required 
-                        class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                </div>
-            </div>
-    
-            <!-- Botón para eliminar -->
-            <div class="text-end mt-2">
-                <button type="button" class="text-red-500 hover:bg-gray-50 px-3 py-1 rounded remove-schedule">
-                    Eliminar
-                </button>
+
+            <div class="relative">
+                <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-700 text-sm">Fin *</label>
+                <input type="time" name="schedule[end_time][${index}]" required
+                    class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
             </div>
         </div>
     `;
 
-        scheduleBlock.querySelector('.remove-schedule').addEventListener('click', () => {
-            scheduleBlock.remove();
-        });
-
-        scheduleContainer.appendChild(scheduleBlock);
+    scheduleBlock.querySelector('.remove-schedule').addEventListener('click', () => {
+        scheduleBlock.remove();
     });
+
+    scheduleContainer.appendChild(scheduleBlock);
+});
 
     // Agregar Precio
     addPriceButton.addEventListener('click', () => {
-        const index = pricesContainer.children.length;
-        
+        priceCount++;
+
         const priceBlock = document.createElement('div');
-        priceBlock.classList.add('pb-4');
+        priceBlock.classList.add('p-4', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'bg-white', 'mt-4');
 
         priceBlock.innerHTML = `
-        <div class="border-t">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="relative">
-                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Veces/Semana*</label>
-                    <input type="number" name="prices[weekly_sessions][]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                </div>
-
-                 <div class="relative">
-                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Precio*</label>
-                    <input type="number" name="prices[price][]" required class="w-full bg-white text-black border hover:border-orange-500 border-gray-500 rounded-sm px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                </div>
-            </div>
-
-            <!-- Botón para eliminar precio -->
-            <div class="text-end mt-2">
-                <button type="button" class="text-red-500 hover:bg-gray-600 px-3 py-1 rounded remove-price">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-medium text-gray-700">
+                    Precio N° ${priceCount}
+                </h3>
+                <button type="button" class="text-red-500 hover:underline remove-price">
                     Eliminar
                 </button>
             </div>
-        </div>
+
+            <div class="pt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-700 text-sm">
+                            Veces por semana *
+                        </label>
+                        <input type="number" name="prices[weekly_sessions][]" required
+                            class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+
+                    <div class="relative">
+                        <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-700 text-sm">
+                            Precio *
+                        </label>
+                        <input type="number" name="prices[price][]" required
+                            class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+                </div>
+            </div>
         `;
 
+        // Evento para eliminar
         priceBlock.querySelector('.remove-price').addEventListener('click', () => {
             priceBlock.remove();
         });

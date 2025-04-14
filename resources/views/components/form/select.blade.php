@@ -9,7 +9,7 @@
         <select
             id="{{ $name }}"
             name="{{ $name }}"
-            class="w-full text-black border hover:border-orange-500 border-gray-500 rounded-md px-4 py-2 pr-12 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 appearance-none
+            class="w-full text-black border hover:border-orange-500 border-gray-300 rounded-md px-4 py-3 pr-12 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 appearance-none
             @error($name) border-red-500 @enderror"
             {{ $attributes }}
             style="padding-right: 2.5rem;" <!-- Más espacio para la flecha -->
@@ -21,6 +21,7 @@
                 </option>
             @endforeach
         </select>
+       <p x-show="errors.{{ $name }}" class="text-red-500 text-sm" x-text="errors.{{ $name }}"></p>
 
         <!-- Flecha con Lucide Icon -->
         <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
