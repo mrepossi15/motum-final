@@ -5,23 +5,45 @@
 @section('content')
 
 <div class="flex justify-center min-h-screen text-black bg-gray-100 mt-10" x-data="initTabs()" x-init="init()">
-    <div class="w-full max-w-7xl mx-auto p-4 relative lg:px-10" x-data="{ selectedTab: 'trainings' }">
-        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Mis Entrenamientos</h1>
-        <div class="absolute top-4 right-4">
-            <!-- Botón Agregar Entrenamiento -->
-            <div class="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-4 z-50">
-                    <button id="add-training-button-mobile" 
-                        class="bg-orange-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-orange-600 transition flex items-center justify-center">
-                        <x-lucide-plus class="w-5 h-5 mr-2" /> Agregar Entrenamiento
-                    </button>
-                </div>
+@if(session('success'))
+    <div 
+        x-data="{ show: false }" 
+        x-init="
+            setTimeout(() => { show = true; }, 100); // Espera medio segundo para mostrarse
+            setTimeout(() => { show = false; }, 8000); 
+        "
+        x-show="show" 
+        class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-orange-500 text-center px-6 py-3 rounded-lg shadow-xl font-rubik text-lg z-[9999]"
+        x-transition:enter="transition ease-out duration-500"
+        x-transition:leave="transition ease-in duration-500"
+    >
+        {{ session('success') }}
+    </div>
+@endif
+<div class="w-full max-w-7xl mx-auto p-4 lg:px-10" x-data="{ selectedTab: 'trainings' }">
+    <!-- Fila con título + botones -->
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900">Mis Entrenamientos</h1>
 
-                <!-- Botón normal para pantallas grandes -->
-                <button id="add-training-button-desktop"
-                    class="hidden md:flex bg-orange-500 text-white px-4 py-2 rounded-sm hover:bg-orange-600 transition flex items-center justify-center">
-                    <x-lucide-plus class="w-5 h-5 mr-2" /> Agregar Entrenamiento
-                </button>
+        <!-- Botón Agregar Entrenamiento -->
+        <div class="flex items-center space-x-2">
+            <!-- ✅ Solo ícono en móvil -->
+            <a href="{{ route('trainings.create') }}"
+               id="add-training-button-mobile"
+               class="md:hidden bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 transition">
+                <x-lucide-pencil class="w-5 h-5" />
+                <span class="sr-only">Agregar entrenamiento</span>
+            </a>
+
+            <!-- ✅ Ícono + texto en desktop -->
+            <button id="add-training-button-desktop"
+                    class="hidden md:flex bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition items-center">
+                <x-lucide-plus class="w-5 h-5 mr-2" />
+                Agregar Entrenamiento
+            </button>
         </div>
+    </div>
+
 
         <!-- Contenido principal -->
         <div class="col-span-6 md:col-span-4">
@@ -30,25 +52,12 @@
                 <div class="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
 
-            <!-- Mensajes de Éxito/Error -->
-            @if (session('success'))
-                <div class="bg-orange-500 text-white text-center py-2 px-4 rounded-md mb-4 mx-6">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div class="bg-red-600 text-white text-center py-2 px-4 rounded-md mb-4 mx-6">
-                    {{ session('error') }}
-                </div>
-            @endif
-
             <!-- Barra de Acciones -->
             <div class="flex justify-between items-center ">
                 <!-- Dropdown de Parques -->
                 <div class="relative w-full md:w-auto">
                     <!-- Botón del Dropdown -->
-                    <button id="parkDropdown" class="bg-orange-500 text-white px-4 py-2 rounded-sm flex items-center justify-between hover:bg-orange-600 transition  w-auto">
+                    <button id="parkDropdown" class=" bg-orange-500  p-2 rounded-md hover:bg-orange-600 transition  text-white px-4 py-2 flex items-center justify-between  w-auto">
                         <span id="dropdownText">Mis Parques</span>
                         <svg id="dropdownIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />

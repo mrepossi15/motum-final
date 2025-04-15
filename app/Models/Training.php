@@ -36,6 +36,12 @@ class Training extends Model
         return $this->belongsTo(Activity::class);
     }
 
+    public function items()
+    {
+        return $this->belongsToMany(Item::class, 'training_items');
+    }
+
+    
     // Relación con horarios de entrenamiento
     public function schedules()
     {

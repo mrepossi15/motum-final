@@ -65,12 +65,11 @@ document.addEventListener('DOMContentLoaded', function () {
         loadWeek();
     }
 
-    function loadWeek() {
+    async function loadWeek() {
         calendarContainer.innerHTML = '';
         const endOfWeek = new Date(state.currentWeekStart);
-        endOfWeek.setDate(state.currentWeekStart.getDate() + 6); // Calcular fin de la semana
+        endOfWeek.setDate(state.currentWeekStart.getDate() + 6);
     
-       
         monthTitle.textContent = `${getMonthName(state.currentWeekStart.getMonth())} ${state.currentWeekStart.getFullYear()}`;
     
         const dayNames = [
@@ -83,69 +82,75 @@ document.addEventListener('DOMContentLoaded', function () {
             ["Domingo", "Dom", "D"]
         ];
     
-        // Obtener la fecha actual
+        // Obtener entrenamientos de toda la semana para marcar días con clases
+        let weekTrainings = [];
+        try {
+            const url = `/api/trainings/week?week_start_date=${formatDateToArg(state.currentWeekStart)}`;
+            const response = await fetch(url);
+            if (response.ok) {
+                weekTrainings = await response.json();
+            }
+        } catch (err) {
+            console.error("Error obteniendo entrenamientos semanales:", err);
+        }
+    
+        const daysWithClasses = new Set(weekTrainings.map(t => t.day));
+    
         const today = new Date();
-        const todayFormatted = formatDateToArg(today); // Formato de la fecha para comparación
+        const todayFormatted = formatDateToArg(today);
     
         for (let i = 0; i < 7; i++) {
             const currentDate = new Date(state.currentWeekStart);
-            currentDate.setDate(currentDate.getDate() + i); // Ajustar cada día basado en el inicio de la semana
+            currentDate.setDate(currentDate.getDate() + i);
     
-            const [fullName, mediumName, shortName] = dayNames[i]; // Extraer nombres en distintos tamaños
-    
-            // Formatear la fecha en distintos formatos según el tamaño de pantalla
-            const day = currentDate.getDate().toString().padStart(2, '0'); // dd
-            const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // mm
-            const yearFull = currentDate.getFullYear(); // aaaa
-            const yearShort = yearFull.toString().slice(-2); // aa
-    
-            const dateFull = `${day}/${month}/${yearFull}`; // dd/mm/aaaa
-            const dateMedium = `${day}/${month}/${yearShort}`; // dd/mm/aa
-            const dateShort = `${day}`; // dd
-    
-            const dayColumn = document.createElement('div');
-            dayColumn.className = 'p-3 text-center border border-gray-800 rounded-lg day-column shadow-sm cursor-pointer transition'; 
-    
-            // Formatear la fecha actual para comparación con `selectedDay`
+            const [fullName, mediumName, shortName] = dayNames[i];
             const currentDateFormatted = formatDateToArg(currentDate);
     
-            if (currentDateFormatted === todayFormatted) {
-                // Si es el día actual, aplicamos el fondo y quitamos el borde
-                dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold', 'shadow-sm', 'border-0');
-                state.selectedDay = fullName; // Asegurar que el estado refleje la selección
-            } else {
-                dayColumn.classList.add('border-gray-800'); // Mantener el borde en los demás días
+            const dayColumn = document.createElement('div');
+            dayColumn.className = 'p-3 text-center border border-gray-800 rounded-lg day-column shadow-sm cursor-pointer transition';
+    
+            // 🌟 Si hay clases ese día, marcarlo con fondo naranja claro
+            const isToday = currentDateFormatted === todayFormatted;
+            const isSelected = fullName === state.selectedDay;
+    
+            if (isSelected) {
+                dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold', 'border-0');
+            } else if (isToday) {
+                dayColumn.classList.add('bg-gray-200');
+            } else if (daysWithClasses.has(fullName)) {
+                dayColumn.classList.add('bg-orange-100');
             }
     
             dayColumn.innerHTML = `
-                <!-- 🖥 Versión de escritorio -->
                 <div class="hidden lg:inline font-bold">${fullName}</div>
-    
-                <!-- 📱 Versión de tablet -->
                 <div class="hidden md:inline lg:hidden font-bold">${mediumName}</div>
-    
-                <!-- 📱 Versión de móvil -->
                 <div class="inline md:hidden font-bold">${shortName}</div>
-    
-                <!-- Fechas formateadas según pantalla -->
                 <div class="text-sm">
-                    <span class="hidden lg:inline">${dateFull}</span> <!-- 🖥 dd/mm/aaaa -->
-                    <span class="hidden md:inline lg:hidden">${dateMedium}</span> <!-- 📱 dd/mm/aa -->
-                    <span class="inline md:hidden">${dateShort}</span> <!-- 📱 dd -->
+                    <span class="hidden lg:inline">${formatDateToArg(currentDate).split("-").reverse().join("/")}</span>
+                    <span class="hidden md:inline lg:hidden">${formatDateToArg(currentDate).slice(8, 10)}/${formatDateToArg(currentDate).slice(5, 7)}/${formatDateToArg(currentDate).slice(2, 4)}</span>
+                    <span class="inline md:hidden">${currentDate.getDate()}</span>
                 </div>
             `;
     
             dayColumn.addEventListener('click', () => {
-                // Remover estilos de los otros días
-                document.querySelectorAll('.day-column').forEach(day => {
-                    day.classList.remove('bg-orange-500', 'text-white', 'font-bold', 'border-0');
-                    day.classList.add('border-gray-800'); // Vuelve a poner el borde a los demás
+                document.querySelectorAll('.day-column').forEach((dayEl, index) => {
+                    const dayName = dayNames[index][0]; // fullName del día
+            
+                    dayEl.classList.remove('bg-orange-500', 'text-white', 'font-bold', 'border-0');
+                    dayEl.classList.add('border-gray-800');
+            
+                    // ✅ Restaurar bg-orange-100 si ese día tiene clases
+                    if (daysWithClasses.has(dayName)) {
+                        dayEl.classList.add('bg-orange-100');
+                    } else {
+                        dayEl.classList.remove('bg-orange-100');
+                    }
                 });
-    
-                // Aplicar estilos al día seleccionado
+            
+                // ✅ Aplicar estilos al día seleccionado
                 dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold', 'border-0');
-                dayColumn.classList.remove('border-gray-800'); // Quita el borde del seleccionado
-    
+                dayColumn.classList.remove('bg-orange-100');
+            
                 state.selectedDay = fullName;
                 loadTrainings();
             });
@@ -229,15 +234,72 @@ document.addEventListener('DOMContentLoaded', function () {
     
             return `
                 <a href="${trainingUrl}" class="block">
-                    <div class="p-4 border border-gray-200 hover:scale-105 cursor-pointer rounded-lg shadow-sm bg-white mb-4 cursor-pointer hover:shadow-md transition">
-                        <h5 class="text-xl font-semibold mb-2">${training.title}</h5>
-                        <p class="text-gray-700"><strong>Día:</strong> ${training.day}</p>
-                      <p class="text-gray-700"><strong>Hora:</strong> ${training.start_time.slice(0, 5)} - ${training.end_time.slice(0, 5)}</p>
-                        <button class="mt-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
-                            Ver Detalle
-                        </button>
-                    </div>
-                </a>
+    <div class="flex items-justify gap-4 p-4 border border-gray-200 cursor-pointer hover:scale-104 rounded-xl shadow-sm bg-white mb-4 hover:shadow-lg hover:bg-orange-50 transition">
+        
+        <!-- 🖼️ Imagen -->
+        <div class="w-[45%] md:w-[20%] flex-shrink-0">
+            <img src="${training.photo_url}" 
+                alt="Foto de entrenamiento" 
+                class="w-full aspect-square object-cover rounded-md" />
+        </div>
+
+        <!-- 📄 Contenido -->
+        <div class="w-[60%] md:w-[80%] flex flex-col justify-between h-full">
+            
+            <!-- 🧩 Contenido superior -->
+            <div class="space-y-2">
+                <!-- 🏷️ Título -->
+                <h5 class="md:text-2xl text-xl font-semibold">${training.title}</h5>
+
+                <!-- 🕒 Día y Hora -->
+                <div class="flex flex-col md:flex-row md:items-center text-gray-700 text-md gap-2">
+                <!-- 🕒 Icono + Horario -->
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                    <span>${training.start_time.slice(0, 5)} - ${training.end_time.slice(0, 5)}</span>
+                </div>
+
+                <!-- ⚠️ Excepción (debajo en mobile, al lado en desktop) -->
+                ${training.is_exception ? `
+                    <span class="bg-orange-300 text-white px-2 py-1 text-xs rounded-lg text-center inline-block">
+                        Horario Modificado
+                    </span>
+                ` : ''}
+            </div>
+
+                <!-- 📍 Ubicación -->
+                <div class="flex items-center text-gray-700 text-md gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/>
+                        <circle cx="12" cy="9" r="2.5"/>
+                    </svg>
+                    <span>${training.park_name ?? 'No especificado'}</span>
+                </div>
+
+                <!-- 👥 Cupos -->
+                <div class="flex items-center text-gray-700 text-lg gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>${training.reservations_count} / ${training.available_spots ?? 'No especificados'}</span>
+                </div>
+            </div>
+
+            <!-- 🔍 Footer: Botón -->
+            <div class="pt-2">
+                <button class="hidden md:inline-block px-4 py-2 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 transition">
+                    Ver Detalle
+                </button>
+            </div>
+        </div>
+    </div>
+</a>
             `;
         }).join('');
     

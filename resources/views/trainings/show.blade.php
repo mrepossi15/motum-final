@@ -201,15 +201,15 @@
                             <ul id="dropdownMenu" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md hidden z-20">
                             <li>
                             @if ($isEditAccessible)
-    <a href="{{ route('trainings.edit', ['id' => $training->id, 'date' => $selectedDate, 'time' => $selectedTime]) }}" 
-       class="block px-4 py-2 text-sm text-black hover:bg-gray-100">
-        Editar
-    </a>
-@else
-    <button class="bg-gray-300 text-gray-600 text-sm px-4 py-2 rounded-md w-full cursor-not-allowed" disabled>
-        {{ $editMessage }}
-    </button>
-@endif
+                                <a href="{{ route('trainings.edit', ['id' => $training->id, 'date' => $selectedDate, 'time' => $selectedTime]) }}" 
+                                class="block px-4 py-2 text-sm text-black hover:bg-gray-100">
+                                    Editar
+                                </a>
+                            @else
+                                <button class="bg-gray-300 text-gray-600 text-sm px-4 py-2 rounded-md w-full cursor-not-allowed" disabled>
+                                    {{ $editMessage }}
+                                </button>
+                            @endif
                                
                             </li>
 
@@ -217,7 +217,7 @@
                                     <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 
                                                 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" 
                                             onclick="toggleModal()">
-                                        Eliminar
+                                        Suspender
                                     </button>
                                 </li>
                             </ul>
@@ -579,33 +579,34 @@
     </div>
 </div>
    
-<div id="deleteModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+<div id="deleteModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 hidden z-50">
     <div class="bg-[#1E1E1E] rounded-lg shadow-lg w-96 p-6 relative">
         <!-- ❌ Botón para cerrar -->
         <button onclick="toggleModal()" class="absolute top-4 right-4 text-white hover:text-gray-300">
             <x-lucide-x class="w-6 h-6" />
         </button> 
          <!-- 🏷️ Encabezado -->
-        <h5 class="text-lg font-semibold text-orange-500" id="deleteModalLabel">Confirmar Eliminación</h5>
+        <h5 class="text-lg mt-6 font-semibold text-orange-500" id="deleteModalLabel">Confirmar Suspensión</h5>
                                                 <!-- 📜 Contenido -->
-        <p class="mt-4 text-white">¿Estás seguro de que deseas suspender este entrenamiento? Esta acción no se puede deshacer</p>
+        <p class="mt-2 text-white">¿Estás seguro de que deseas suspender este entrenamiento? Esta acción no se puede deshacer</p>
 
                                                 <!-- ✅ Botones de acción -->
-        <div class="mt-6 flex justify-end space-x-3">
-            <button onclick="toggleModal()" 
-                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
-                Cancelar
+        
+                                                <form action="{{ route('trainings.suspend') }}" method="POST" class="mt-6 w-full">
+            @csrf
+            <input type="hidden" name="training_id" value="{{ $training->id }}">
+            <input type="hidden" name="date" value="{{ $selectedDate }}">
+            
+            <button type="submit" 
+                    class="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition font-semibold">
+                Suspender Clase
             </button>
-            <form action="{{ route('trainings.suspend') }}" method="POST" class="ml-3">
-                @csrf
-                <input type="hidden" name="training_id" value="{{ $training->id }}">
-                <input type="hidden" name="date" value="{{ $selectedDate }}">
-                <button type="submit" 
-                        class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
-                    Suspender Clase
-                </button>
-            </form>
-        </div>
+        </form>
+            <button onclick="toggleModal()" 
+                    class="mt-4 text-gray-400 hover:text-white hover:underline w-full text-center transition">
+                No, volver atras
+            </button>
+        
     </div>  
 </div>                                    
 

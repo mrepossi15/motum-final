@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             ActivitySeeder::class, // Agrega aquí tu seeder
+            ItemSeeder::class,
         ]);
+        
     }
 }

@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const addPriceButton = document.getElementById('add-price-button');
     let priceCount = 1;
     let sessionsCount = 1;
+    
 
     // Agregar Horario
     addScheduleButton.addEventListener('click', () => {
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span class="text-black text-sm">${day}</span>
                 </label>
             `).join('')}
-             <p data-error="schedule_days" class="text-red-500 text-sm mt-1 hidden"></p>
+             <p data-error="schedule_days" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
         </div>
         
 
@@ -47,9 +48,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <input type="time" name="schedule[end_time][${index}]" required
                     class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
             </div>
-             <p data-error="schedule_time" class="text-red-500 text-sm mt-1 hidden"></p>
+             <p data-error="schedule_time" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
         </div>
-          <p data-error="schedule_general" class="text-red-500 text-sm mt-2 hidden"></p>
+          <p data-error="schedule_general" class="text-red-500 text-sm mt-2 hidden" aria-live="assertive"></p>
     `;
 
     scheduleBlock.querySelector('.remove-schedule').addEventListener('click', () => {
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </label>
                         <input type="number" name="prices[weekly_sessions][]" required
                             class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                            <p data-error="weekly_sessions" class="text-red-500 text-sm mt-1 hidden"></p>
+                            <p data-error="weekly_sessions" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
                             </div>
 
                     <div class="relative">
@@ -93,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </label>
                         <input type="number" name="prices[price][]" required
                             class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                        <p data-error="price" class="text-red-500 text-sm mt-1 hidden"></p>
+                        <p data-error="price" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
                     </div>
                 </div>
             </div>
@@ -112,13 +113,49 @@ function photoPreview() {
         photos: [],
         fileList: [],
         previewImages(event) {
+            // Limpiar errores anteriores
+            const errorEl = document.querySelector('[data-error="photos"]');
+            if (errorEl) {
+                errorEl.innerText = '';
+                errorEl.classList.add('hidden');
+            }
+
             this.photos = [];
-            this.fileList = Array.from(event.target.files);
-            this.fileList.forEach((file, index) => {
+            this.fileList = [];
+
+            const files = Array.from(event.target.files);
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                if (!allowedTypes.includes(file.type)) {
+                    if (errorEl) {
+                        errorEl.innerText = `El archivo "${file.name}" no es válido. Usá JPG o PNG.`;
+                        errorEl.classList.remove('hidden');
+                    }
+                    return;
+                }
+
+                if (file.size > maxSizeInBytes) {
+                    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                    if (errorEl) {
+                        errorEl.innerText = `El archivo "${file.name}" pesa ${sizeInMB}MB y supera el máximo permitido (2MB).`;
+                        errorEl.classList.remove('hidden');
+                    }
+                    return;
+                }
+
                 let reader = new FileReader();
-                reader.onload = e => this.photos.push({ url: e.target.result, file: file });
+                reader.onload = (e) => {
+                    this.photos.push({ url: e.target.result, file });
+                };
                 reader.readAsDataURL(file);
-            });
+                this.fileList.push(file);
+            }
+
+            this.updateFileInput();
         },
         removeImage(index) {
             this.photos.splice(index, 1);

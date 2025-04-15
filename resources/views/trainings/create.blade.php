@@ -16,7 +16,8 @@
             <span x-show="step === 1">Nombre y Parque</span>
             <span x-show="step === 2">Actividad</span>
             <span x-show="step === 3">Descripción, Nivel y Cupos</span>
-            <span x-show="step === 6">Imágenes</span>
+            <span x-show="step === 6">Elementos del entrenamiento</span>
+            <span x-show="step === 7">Imágenes</span>
         </h1>
 
         <!-- Encabezados con botón a la derecha -->
@@ -33,6 +34,21 @@
                 + Agregar
             </button>
         </div>
+    
+        <!-- Fondo oscuro del modal -->
+        <x-modal 
+            open="showMedicalModal" 
+            title="Apto médico requerido" 
+            description="Antes de publicar un entrenamiento, debés tener cargado y validado tu apto médico."
+        >
+            <a href="{{ route('students.info') }}" class="bg-orange-500 hover:bg-orange-400 text-white text-md px-6 py-3 rounded-md w-full text-center block transition">
+                Ir a cargar apto
+            </a>
+            <button @click="showMedicalModal = false" class="mt-4 text-gray-400 hover:text-white hover:underline w-full text-center transition">
+                No, volver atrás
+            </button>
+        </x-modal>
+
 
         <!-- Formulario -->
         <form action="{{ route('trainings.store') }}" method="POST" enctype="multipart/form-data" class="mt-4"  @submit="handleSubmit">
@@ -80,8 +96,7 @@
                         </label>
                     @endforeach
                 </div>
-                <p data-error="activity_id" class="text-red-500 text-sm mt-1 hidden"></p>
-
+                <p data-error="activity_id" role="alert" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
             </div>
              <!-- Paso 3: Datos básicos -->
             <div x-show="step === 3" class="space-y-6">
@@ -105,7 +120,7 @@
                             </label>
                         @endforeach
                     </div>
-                    <p data-error="level" class="text-red-500 text-sm mt-1 hidden"></p>
+                    <p data-error="level" class="text-red-500 text-sm mt-1 hidden"aria-live="assertive"></p>
                 </div>
                 <div class="relative flex items-center justify-center my-4">
                     <div class="absolute inset-0 flex items-center">
@@ -137,7 +152,7 @@
                                     :selected="old('schedule.days.' . $index, [])"
                                     hideLabel="true"
                                 />
-                                <p data-error="schedule_days" class="text-red-500 text-sm mt-1 hidden"></p>
+                                <p data-error="schedule_days" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
 
 
                                 <!-- Hora de inicio y fin -->
@@ -153,9 +168,9 @@
                                         <input type="time" name="schedule[end_time][{{ $index }}]" required
                                             class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500" />
                                     </div>
-                                    <p data-error="schedule_time" class="text-red-500 text-sm mt-1 hidden"></p>
+                                    <p data-error="schedule_time" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
                                 </div>
-                                <p data-error="schedule_general" class="text-red-500 text-sm mt-2 hidden"></p>
+                                <p data-error="schedule_general" class="text-red-500 text-sm mt-2 hidden" aria-live="assertive"></p>
                                
                             </div>
                         </div>
@@ -184,7 +199,7 @@
                                     </label>
                                     <input type="number" name="prices[weekly_sessions][]" required
                                         class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                                        <p data-error="weekly_sessions" class="text-red-500 text-sm mt-1 hidden"></p>
+                                        <p data-error="weekly_sessions" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
                                     </div>
 
                                 <div class="relative">
@@ -193,18 +208,49 @@
                                     </label>
                                     <input type="number" name="prices[price][]" required
                                         class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                                        <p data-error="price" class="text-red-500 text-sm mt-1 hidden"></p>
+                                        <p data-error="price" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
                                     </div>
-                                    <p data-error="prices_general" class="text-red-500 text-sm mt-2 hidden"></p>
+                                    <p data-error="prices_general" class="text-red-500 text-sm mt-2 hidden" aria-live="assertive"></p>
                             </div>
                             
                         </div>
                     </div>
                 </div>
             </div>
-                
-            <!-- Paso 6: Imágenes -->
-            <div x-show="step === 6"  x-data="photoPreview()">
+             <!-- Paso 6: Elementos -->
+            <div x-show="step === 6"  x-data="{ selectedItem: '{{ old('items') }}' }">
+                <label class="block text-sm font-medium text-gray-700 mb-2">¿Qué ítems llevás al entrenamiento?</label>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4" x-data="{ selectedItems: @json(old('items', [])) }">
+                @foreach ($items as $item)
+                    <label 
+                        class="cursor-pointer border rounded-xl p-4 text-center font-medium transition
+                            hover:border-orange-400 hover:bg-orange-50"
+                        :class="{ 
+                            'border-orange-500 bg-orange-100 text-orange-700': selectedItems.includes('{{ $item->id }}'),
+                            'border-gray-300 text-gray-700': !selectedItems.includes('{{ $item->id }}')
+                        }"
+                        @click.prevent="
+                            if (selectedItems.includes('{{ $item->id }}')) {
+                                selectedItems = selectedItems.filter(i => i !== '{{ $item->id }}')
+                            } else {
+                                selectedItems.push('{{ $item->id }}')
+                            }
+                        "
+                    >
+                        {{ $item->name }}
+                        <input 
+                            type="checkbox" 
+                            name="items[]" 
+                            value="{{ $item->id }}" 
+                            class="hidden"
+                            :checked="selectedItems.includes('{{ $item->id }}')" 
+                        >
+                    </label>
+                @endforeach
+            </div>
+            </div>
+            <!-- Paso 7: Imágenes -->
+            <div x-show="step === 7"  x-data="photoPreview()">
                 <div class="text-left">
                     <p class="text-md text-gray-700 mb-2">Vas a necesitar al menos una imagen. Podés agregar más o hacer cambios más adelante.</p>
                 </div>
@@ -234,7 +280,7 @@
                         </div>
                     </template>
                 </div>
-                <p data-error="photos" class="text-red-500 text-sm mt-2 hidden"></p>
+                <p data-error="photos" class="text-red-500 text-sm hidden" aria-live="assertive"></p>
             </div>
             <!-- Botones de Navegación -->
             <div class="flex justify-between mt-4">
@@ -248,13 +294,13 @@
                 <!-- Botones de avanzar / omitir / registrar alineados a la derecha -->
                 <div class="flex space-x-4">
                     
-                    <template x-if="step < 6">
+                    <template x-if="step < 7">
                         <button type="button" @click="nextStep" class="bg-orange-500 text-white p-3 rounded-md hover:bg-orange-600 transition">
                             <x-lucide-arrow-right class="w-5 h-5 text-white" />
                         </button>
                     </template>
 
-                    <template x-if="step === 6">
+                    <template x-if="step === 7">
                     <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
                         Guardar Entrenamiento
                     </button>
@@ -265,20 +311,17 @@
            
         </form>
     </div>
+    <style>
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
 </div>
-@php
-    $parksArray = $parks->mapWithKeys(fn($p) => [
-        $p->id => [
-            'name' => $p->park_name,
-            'lat' => $p->latitude,
-            'lng' => $p->longitude,
-        ]
-    ])->toArray();
-@endphp
 
 <script>
-    window.PARKS = @json($parksArray);
+    window.PARKS = {!! $parksJson !!};
 </script>
+
 @push('scripts')
 <script src="{{ asset('js/entrenamientos/create.js') }}"></script>
 @endpush
@@ -294,6 +337,7 @@
             errors: {},
             existingUserError: false,
             isLoading: false,
+            showMedicalModal: false,
             // === INIT ===
             init() {
                 document.addEventListener('keydown', async (event) => {
@@ -330,7 +374,7 @@
                 if (this.step === 3) return await this.validateStepThree();
                 if (this.step === 4) return await this.validateStepFour();
                 if (this.step === 5) return await this.validateStepFive();
-                if (this.step === 6) return await this.validateStepSix();
+                if (this.step === 7) return await this.validateStepSeven();
 
                 return true;
             },
@@ -367,39 +411,39 @@
                 return Object.keys(this.errors).length === 0;
             },
             async validateStepThree() {
-    this.errors = {};
+                this.errors = {};
 
-    const description = document.querySelector('[name="description"]').value.trim();
-    const level = document.querySelector('input[name="level"]:checked');
-    const spots = document.querySelector('[name="available_spots"]').value.trim();
+                const description = document.querySelector('[name="description"]').value.trim();
+                const level = document.querySelector('input[name="level"]:checked');
+                const spots = document.querySelector('[name="available_spots"]').value.trim();
 
-    // Validar campos y registrar errores
-    if (!description) this.errors.description = 'La descripción es obligatoria';
-    if (!level) this.errors.level = 'Seleccioná un nivel de entrenamiento';
-    if (!spots || isNaN(spots) || parseInt(spots) < 1) {
-        this.errors.available_spots = 'Ingresá un número válido de cupos';
-    }
+                // Validar campos y registrar errores
+                if (!description) this.errors.description = 'La descripción es obligatoria';
+                if (!level) this.errors.level = 'Seleccioná un nivel de entrenamiento';
+                if (!spots || isNaN(spots) || parseInt(spots) < 1) {
+                    this.errors.available_spots = 'Ingresá un número válido de cupos';
+                }
 
-    // 🧼 Ocultar todos los mensajes de error posibles (aunque no se activen en esta pasada)
-    ['description', 'level', 'available_spots'].forEach(key => {
-        const el = document.querySelector(`[data-error="${key}"]`);
-        if (el) {
-            el.innerText = '';
-            el.classList.add('hidden');
-        }
-    });
+                // 🧼 Ocultar todos los mensajes de error posibles (aunque no se activen en esta pasada)
+                ['description', 'level', 'available_spots'].forEach(key => {
+                    const el = document.querySelector(`[data-error="${key}"]`);
+                    if (el) {
+                        el.innerText = '';
+                        el.classList.add('hidden');
+                    }
+                });
 
-    // Mostrar los errores activos
-    for (const key in this.errors) {
-        const el = document.querySelector(`[data-error="${key}"]`);
-        if (el) {
-            el.innerText = this.errors[key];
-            el.classList.remove('hidden');
-        }
-    }
+                // Mostrar los errores activos
+                for (const key in this.errors) {
+                    const el = document.querySelector(`[data-error="${key}"]`);
+                    if (el) {
+                        el.innerText = this.errors[key];
+                        el.classList.remove('hidden');
+                    }
+                }
 
-    return Object.keys(this.errors).length === 0;
-},
+                return Object.keys(this.errors).length === 0;
+            },
             async validateStepFour() {
                 this.errors = {};
                 const scheduleBlocks = document.querySelectorAll('#schedule-container > div');
@@ -517,45 +561,45 @@
 
                 return isValid;
             },
-            async validateStepSix() {
-    this.errors = {};
+            async validateStepSeven() {
+                this.errors = {};
 
-    const fileInput = document.querySelector('#photos');
-    const files = fileInput?.files;
+                const fileInput = document.querySelector('#photos');
+                const files = fileInput?.files;
 
-    if (!files || files.length === 0) {
-        this.errors.photos = 'Debés subir al menos una imagen para continuar.';
-    } else {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-        const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+                if (!files || files.length === 0) {
+                    this.errors.photos = 'Debés subir al menos una imagen para continuar.';
+                } else {
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                    const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
 
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
 
-            if (!allowedTypes.includes(file.type)) {
-                this.errors.photos = `El archivo "${file.name}" no es una imagen válida. Usá JPG o PNG.`;
-                break;
-            }
+                        if (!allowedTypes.includes(file.type)) {
+                            this.errors.photos = `El archivo "${file.name}" no es una imagen válida. Usá JPG o PNG.`;
+                            break;
+                        }
 
-            if (file.size > maxSizeInBytes) {
-                const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-                this.errors.photos = `El archivo "${file.name}" pesa ${sizeInMB}MB y supera el máximo de 2MB permitido.`;
-                break;
-            }
-        }
-    }
+                        if (file.size > maxSizeInBytes) {
+                            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                            this.errors.photos = `El archivo "${file.name}" pesa ${sizeInMB}MB y supera el máximo de 2MB permitido.`;
+                            break;
+                        }
+                    }
+                }
 
-    // Mostrar los errores en los elementos con data-error
-    for (const key in this.errors) {
-        const el = document.querySelector(`[data-error="${key}"]`);
-        if (el) {
-            el.innerText = this.errors[key];
-            el.classList.remove('hidden');
-        }
-    }
+                // Mostrar los errores en los elementos con data-error
+                for (const key in this.errors) {
+                    const el = document.querySelector(`[data-error="${key}"]`);
+                    if (el) {
+                        el.innerText = this.errors[key];
+                        el.classList.remove('hidden');
+                    }
+                }
 
-    return Object.keys(this.errors).length === 0;
-},
+                return Object.keys(this.errors).length === 0;
+            },
 
             // === SUBMIT ===
             submitForm() {
@@ -563,15 +607,49 @@
             },
 
             async handleSubmit(event) {
-                event.preventDefault();
-        
-                // Validar último paso
-                const isValid = await this.validateStepSix();
-                if (!isValid) return;
+    event.preventDefault();
 
-                this.isLoading = true;
-                event.target.submit();
+    const isValid = await this.validateStepSeven();
+    if (!isValid) return;
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    this.isLoading = true;
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            if (response.status === 422) {
+                const data = await response.json();
+                if (data.error && data.error.includes('apto médico')) {
+                    this.showMedicalModal = true;
+                    this.isLoading = false;
+                    return;
+                }
             }
+
+            throw new Error('Error al enviar el formulario');
+        }
+
+        // Si todo salió bien, redirige
+        const redirectTo = response.url ?? '/trainer/calendar';
+        window.location.href = redirectTo;
+
+    } catch (error) {
+        console.error('❌ Error al enviar entrenamiento:', error);
+        this.isLoading = false;
+        alert('Ocurrió un error al guardar el entrenamiento.');
+    }
+}
             
         }));
     });

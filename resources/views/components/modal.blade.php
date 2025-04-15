@@ -1,41 +1,54 @@
 <!-- resources/views/components/modal.blade.php -->
-@props(['id', 'title', 'confirmText' => 'Confirmar', 'cancelText' => 'Cancelar', 'confirmAction' => '#'])
+@props([
+    'open' => false,
+    'title' => '',
+    'description' => '',
+    'titleId' => 'modal-title',
+    'textColor' => 'text-white',
+    'descriptionColor' => 'text-gray-300'
+])
 
-<div id="{{ $id }}" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md">
-        <!-- Título del Modal -->
-        <h5 class="text-xl font-bold text-orange-600">{{ $title }}</h5>
+<template x-if="{{ $open }}">
+    <div x-cloak class="fixed inset-0 z-50 flex items-end justify-center md:items-center">
+        <!-- Fondo oscuro -->
+        <div
+            class="absolute inset-0 bg-black bg-opacity-50"
+            @click="{{ $open }} = false"
+            x-transition:enter="transition-opacity ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        ></div>
 
-        <!-- Contenido del Modal -->
-        <div class="my-4">
-            {{ $slot }}
-        </div>
+        <!-- Contenido del modal -->
+        <div
+            class="bg-[#1E1E1E] p-6 rounded-lg w-full max-w-md shadow-lg relative z-10 transform transition-all duration-300 ease-in-out"
+            x-transition:enter="translate-y-full opacity-0"
+            x-transition:enter-end="translate-y-0 opacity-100"
+            x-transition:leave="translate-y-0 opacity-100"
+            x-transition:leave-end="translate-y-full opacity-0"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="{{ $titleId }}"
+        >
+            <!-- Swipe bar -->
+            <div class="h-1 w-12 bg-gray-500 rounded-full mx-auto mb-3 md:hidden"></div>
 
-        <!-- Botones de Acción -->
-        <div class="flex justify-end gap-2 mt-6">
-            <button type="button" onclick="closeModal('{{ $id }}')" class="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400">
-                {{ $cancelText }}
+            <!-- Botón cerrar -->
+            <button @click="{{ $open }} = false" class="absolute top-3 right-3 text-white hover:text-red-500" aria-label="Cerrar modal">
+                <x-lucide-x class="w-6 h-6" />
             </button>
 
-            @if ($confirmAction !== '#')
-                <form action="{{ $confirmAction }}" method="POST">
-                    @csrf
-                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
-                        {{ $confirmText }}
-                    </button>
-                </form>
-            @endif
+            <!-- Título -->
+            <h2 id="{{ $titleId }}" class="text-lg font-bold mb-4 text-center {{ $textColor }}">{{ $title }}</h2>
+
+            <!-- Descripción -->
+            <p class="mb-4 text-center {{ $descriptionColor }}">{{ $description }}</p>
+
+            <!-- Contenido extra -->
+            {{ $slot }}
         </div>
     </div>
-</div>
-
-<!-- Script para Abrir y Cerrar el Modal -->
-<script>
-function openModal(id) {
-    document.getElementById(id)?.classList.remove('hidden');
-}
-
-function closeModal(id) {
-    document.getElementById(id)?.classList.add('hidden');
-}
-</script>
+</template>

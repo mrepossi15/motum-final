@@ -224,47 +224,22 @@
             
 
             <!-- 🛑 Modal de Confirmación -->
-            <div x-show="showConfirmModal" 
-     class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-     x-transition.opacity>
-
-    <!-- Contenedor del modal -->
-    <div class="bg-[#1E1E1E] p-6 rounded-lg w-full max-w-md shadow-lg relative transform transition-all duration-300 ease-in-out"
-         x-transition:enter="translate-y-full opacity-0"
-         x-transition:enter-end="translate-y-0 opacity-100"
-         x-transition:leave="translate-y-0 opacity-100"
-         x-transition:leave-end="translate-y-full opacity-0">
-        
-        <!-- 🔥 Barra de swipe en móviles -->
-        <div class="h-1 w-12 bg-gray-500 rounded-full mx-auto mb-3 md:hidden"></div>
-
-        <!-- ❌ Botón de cerrar -->
-        <button @click="showConfirmModal = false" class="absolute top-3 right-3 text-white hover:text-red-500">
-            <x-lucide-x class="w-6 h-6" />
-        </button>
-
-        <!-- 🛑 Título de confirmación -->
-        <h2 class="text-lg text-white mb-4 text-center">Confirmar eliminación</h2>
-
-        <!-- 🔥 Mensaje de advertencia -->
-        <p class="text-gray-300 mb-4 text-center">¿Estás seguro de que deseas cancelar esta reserva?</p>
-
-        <!-- 📌 Botón para confirmar eliminación -->
-        <form x-bind:action="'/entrenamiento/' + selectedReservation.id + '/delete'" method="POST">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="bg-red-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-red-400 transition">
-                Sí, cancelar reserva
-            </button>
-        </form>
-
-        <!-- ❌ Botón para cerrar sin eliminar -->
-        <button @click="showConfirmModal = false"
-                class="mt-4 text-gray-400 hover:text-white hover:underline w-full text-center transition">
-            No, volver atrás
-        </button>
-    </div>
-</div>
+            <x-modal 
+                open="showConfirmModal" 
+                title="Confirmar eliminación" 
+                description="¿Estás seguro de que deseas cancelar esta reserva?"
+            >
+                <form :action="'/entrenamiento/' + selectedReservation.id + '/delete'" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="bg-red-500 text-white text-md px-6 py-3 rounded-md w-full hover:bg-red-400 transition">
+                        Sí, cancelar reserva
+                    </button>
+                </form>
+                <button @click="showConfirmModal = false" class="mt-4 text-gray-400 hover:text-white hover:underline w-full text-center transition">
+                    No, volver atrás
+                </button>
+            </x-modal>
         </div>
 
         <!-- 📌 Datos de la reserva -->

@@ -264,12 +264,17 @@ class TrainerController extends Controller
                         'end_time'    => $exception->end_time,
                         'status'      => $exception->status, // 'modified' or 'cancelled'
                         'is_exception'=> true,
-                    ];
-                }
+                        'photo_url'   => $schedule->training->photos->isNotEmpty()
+                        ? asset('storage/' . $schedule->training->photos->first()->photo_path)
+                        : asset('img/placeholder.jpg'),
+                        'park_name' => optional($schedule->training->park)->name,
+                        'available_spots' => $schedule->training->available_spots,
+                        'reservations_count' => $schedule->training->reservations()
+                            ->where('date', $trainingDate)
+                            ->count(),
+                ];
+            }
     
-                // If no exception, return the original schedule
-                Log::info("Horario original para la clase en la fecha $trainingDate: "
-                    . "Inicio: " . $schedule->start_time . ", Fin: " . $schedule->end_time);
                 return [
                     'id'          => $schedule->id,
                     'training_id' => $schedule->training_id,
@@ -280,6 +285,15 @@ class TrainerController extends Controller
                     'end_time'    => $schedule->end_time,
                     'status'      => 'active', // Normal schedule
                     'is_exception'=> false,
+                    'photo_url'   => $schedule->training->photos->isNotEmpty()
+                    ? asset('storage/' . $schedule->training->photos->first()->photo_path)
+                    : asset('img/placeholder.jpg'),
+                    'park_name' => optional($schedule->training->park)->name,
+                        'available_spots' => $schedule->training->available_spots,
+                        'reservations_count' => $schedule->training->reservations()
+                            ->where('date', $trainingDate)
+                            ->count(),
+                    
                 ];
             })
             ->filter() // Filter out null values (suspended classes)
@@ -316,105 +330,105 @@ class TrainerController extends Controller
     }
    
     public function updateTrainer(Request $request)
-{
-    try {
-        Log::info('🚀 Iniciando actualización del perfil del entrenador', ['user_id' => auth()->id()]);
+    {
+        try {
+            Log::info('🚀 Iniciando actualización del perfil del entrenador', ['user_id' => auth()->id()]);
 
-        // Verificar qué datos llegan en la solicitud
-        Log::info('📩 Datos recibidos en la solicitud:', $request->all());
+            // Verificar qué datos llegan en la solicitud
+            Log::info('📩 Datos recibidos en la solicitud:', $request->all());
 
-        // Validación de datos
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
-            'mercado_pago_email' => 'nullable|email|unique:users,mercado_pago_email,' . auth()->id(),
-            'phone' => 'nullable|string|max:255|unique:users,phone,' . auth()->id(),
-            'certification' => 'nullable|string|max:255',
-            'biography' => 'nullable|string|max:500',
-            'especialty' => 'nullable|string|max:255',
-            'birth' => 'nullable|date',
-            'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'certification_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+            // Validación de datos
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
+                'mercado_pago_email' => 'nullable|email|unique:users,mercado_pago_email,' . auth()->id(),
+                'phone' => 'nullable|string|max:255|unique:users,phone,' . auth()->id(),
+                'certification' => 'nullable|string|max:255',
+                'biography' => 'nullable|string|max:500',
+                'especialty' => 'nullable|string|max:255',
+                'birth' => 'nullable|date',
+                'profile_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'medical_fit' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'certification_pic' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            ]);
 
-        Log::info('✅ Validación completada con éxito.');
+            Log::info('✅ Validación completada con éxito.');
 
-        $user = auth()->user();
+            $user = auth()->user();
 
-        // Datos a actualizar
-        $data = [
-            'name' => $request->name ?? $user->name,
-            'email' => $request->email ?? $user->email,
-            'mercado_pago_email' => $request->mercado_pago_email ?? $user->mercado_pago_email,
-            'phone' => $request->phone ?? $user->phone,
-            'certification' => $request->certification ?? $user->certification,
-            'biography' => $request->biography ?? $user->biography,
-            'especialty' => $request->especialty ?? $user->especialty,
-            'birth' => $request->birth ?? $user->birth,
-        ];
-        // Manejo de imágenes
-        $imageFields = [
-            'profile_pic' => 'profile_pics',
-            'medical_fit' => 'medical_fits',
-            'certification_pic' => 'certification_pics',
-        ];
+            // Datos a actualizar
+            $data = [
+                'name' => $request->name ?? $user->name,
+                'email' => $request->email ?? $user->email,
+                'mercado_pago_email' => $request->mercado_pago_email ?? $user->mercado_pago_email,
+                'phone' => $request->phone ?? $user->phone,
+                'certification' => $request->certification ?? $user->certification,
+                'biography' => $request->biography ?? $user->biography,
+                'especialty' => $request->especialty ?? $user->especialty,
+                'birth' => $request->birth ?? $user->birth,
+            ];
+            // Manejo de imágenes
+            $imageFields = [
+                'profile_pic' => 'profile_pics',
+                'medical_fit' => 'medical_fits',
+                'certification_pic' => 'certification_pics',
+            ];
 
-        foreach ($imageFields as $field => $folder) {
-            if ($request->hasFile($field)) {
-                Log::info("📸 Subiendo nueva imagen para {$field} del usuario ID: {$user->id}");
+            foreach ($imageFields as $field => $folder) {
+                if ($request->hasFile($field)) {
+                    Log::info("📸 Subiendo nueva imagen para {$field} del usuario ID: {$user->id}");
 
-                // Eliminar imagen anterior si existe
-                if ($user->$field && Storage::disk('public')->exists($user->$field)) {
-                    Log::info("🗑 Eliminando imagen antigua de {$field}: {$user->$field}");
-                    Storage::disk('public')->delete($user->$field);
+                    // Eliminar imagen anterior si existe
+                    if ($user->$field && Storage::disk('public')->exists($user->$field)) {
+                        Log::info("🗑 Eliminando imagen antigua de {$field}: {$user->$field}");
+                        Storage::disk('public')->delete($user->$field);
+                    }
+
+                    // Guardar nueva imagen redimensionada
+                    $data[$field] = $this->resizeAndSaveImage($request->file($field), $folder, 600, 400);
+                    Log::info("✅ {$field} actualizada en: {$data[$field]}");
                 }
-
-                // Guardar nueva imagen redimensionada
-                $data[$field] = $this->resizeAndSaveImage($request->file($field), $folder, 600, 400);
-                Log::info("✅ {$field} actualizada en: {$data[$field]}");
             }
-        }
 
-        // Actualizar el usuario en una sola consulta
-        $user->update($data);
-        Log::info('✅ Datos del entrenador actualizados.');
+            // Actualizar el usuario en una sola consulta
+            $user->update($data);
+            Log::info('✅ Datos del entrenador actualizados.');
 
-        // Actualizar experiencias laborales si existen
-        if ($request->has('experiences') && is_array($request->experiences)) {
-            Log::info("💼 Eliminando experiencias antiguas del usuario ID: {$user->id}");
-            $user->experiences()->delete();
+            // Actualizar experiencias laborales si existen
+            if ($request->has('experiences') && is_array($request->experiences)) {
+                Log::info("💼 Eliminando experiencias antiguas del usuario ID: {$user->id}");
+                $user->experiences()->delete();
 
-            foreach ($request->experiences as $experience) {
-                if (!isset($experience['role']) || !isset($experience['year_start']) || !isset($experience['year_end'])) {
-                    continue; // Evita errores si faltan datos obligatorios
+                foreach ($request->experiences as $experience) {
+                    if (!isset($experience['role']) || !isset($experience['year_start']) || !isset($experience['year_end'])) {
+                        continue; // Evita errores si faltan datos obligatorios
+                    }
+
+                    Log::info("➕ Agregando experiencia laboral: " . json_encode($experience));
+
+                    $user->experiences()->create([
+                        'role' => $experience['role'],
+                        'company' => $experience['company'] ?? null,
+                        'year_start' => $experience['year_start'],
+                        'year_end' => $experience['year_end'],
+                        'details' => $experience['details'] ?? null,
+                    ]);
                 }
-
-                Log::info("➕ Agregando experiencia laboral: " . json_encode($experience));
-
-                $user->experiences()->create([
-                    'role' => $experience['role'],
-                    'company' => $experience['company'] ?? null,
-                    'year_start' => $experience['year_start'],
-                    'year_end' => $experience['year_end'],
-                    'details' => $experience['details'] ?? null,
-                ]);
             }
+
+            Log::info("✅ Perfil del entrenador actualizado correctamente, redirigiendo...");
+            return redirect()->route('trainer.profile')->with('success', 'Perfil actualizado exitosamente.');
+            
+        } catch (\Exception $e) {
+            Log::error('🚨 Error durante la actualización del perfil', [
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+
+            return redirect()->back()->with('error', 'Error al actualizar el perfil.');
         }
-
-        Log::info("✅ Perfil del entrenador actualizado correctamente, redirigiendo...");
-        return redirect()->route('trainer.profile')->with('success', 'Perfil actualizado exitosamente.');
-        
-    } catch (\Exception $e) {
-        Log::error('🚨 Error durante la actualización del perfil', [
-            'message' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'file' => $e->getFile()
-        ]);
-
-        return redirect()->back()->with('error', 'Error al actualizar el perfil.');
     }
-}
 
     public function showTrainerTrainings()
     {

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Models\Training;
 use App\Models\Activity;
+use App\Models\Item;
 use Illuminate\Validation\ValidationException;
 use App\Models\Park;
 use App\Http\Controllers\Image;
@@ -31,40 +32,58 @@ class TrainingController extends Controller
   
     public function create(Request $request)
     {
-        $selectedParkId = $request->query('park_id'); // Obtén el parque seleccionado, si se pasa en la URL
-        $parks = Auth::user()->parks; // Obtener todos los parques del entrenador
-        $activities = Activity::all(); // Todas las actividades disponibles
-
-        return view('trainings.create', compact('parks', 'selectedParkId', 'activities'));
+        $selectedParkId = $request->query('park_id'); // Parque seleccionado (si viene por query)
+        $parks = Auth::user()->parks; // Parques del entrenador
+        $activities = Activity::all(); // Actividades
+        $items = Item::all();
+    
+        // Convertimos los datos de los parques en un array apto para JSON
+        $parksArray = $parks->mapWithKeys(fn($p) => [
+            $p->id => [
+                'name' => $p->park_name,
+                'lat' => $p->latitude,
+                'lng' => $p->longitude,
+            ]
+        ])->toArray();
+    
+        $parksJson = json_encode($parksArray);
+        
+    
+        return view('trainings.create', compact('parks', 'selectedParkId', 'activities', 'parksJson','items'));
     }
     
-public function store(Request $request)
-{
-    if (!Auth::user()->medical_fit) {
-        return redirect()->back()->with('error', 'Debes subir un apto médico antes de crear un entrenamiento.');
-    }
- 
-
-    try {
-        $request->validate([
-            'title'              => 'required|string|max:255',
-            'description'        => 'nullable|string',
-            'park_id'            => 'required|exists:parks,id',
-            'activity_id'        => 'required|exists:activities,id',
-            'level'              => 'required|in:Principiante,Intermedio,Avanzado',
-            'photos.*'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'photos_description.*' => 'nullable|string|max:255',
-            'schedule.days'      => 'required|array',
-            'schedule.days.*'    => 'required|array|min:1',
-            'schedule.start_time.*' => 'required|date_format:H:i',
-            'schedule.end_time.*' => 'required|date_format:H:i',
-            'prices.weekly_sessions.*' => 'required|integer|min:1',
-            'prices.price.*'       => 'required|numeric|min:0',
-            'available_spots'    => 'required|integer|min:1',
-        ]);
-    } catch (ValidationException $e) {
-        dd('❌ Falló la validación:', $e->errors());
-    }
+    public function store(Request $request)
+        {
+        if (!Auth::user()->medical_fit) {
+            if ($request->ajax()) {
+                return response()->json(['error' => 'Debes subir un apto médico antes de crear un entrenamiento.'], 422);
+            }
+        
+            return redirect()->back()->with('error', 'Debes subir un apto médico antes de crear un entrenamiento.');
+        }
+        try {
+            $request->validate([
+                'title'              => 'required|string|max:255',
+                'description'        => 'nullable|string',
+                'park_id'            => 'required|exists:parks,id',
+                'activity_id'        => 'required|exists:activities,id',
+                'level'              => 'required|in:Principiante,Intermedio,Avanzado',
+                'photos.*'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'photos_description.*' => 'nullable|string|max:255',
+                'schedule.days'      => 'required|array',
+                'schedule.days.*'    => 'required|array|min:1',
+                'schedule.start_time.*' => 'required|date_format:H:i',
+                'schedule.end_time.*' => 'required|date_format:H:i',
+                'prices.weekly_sessions.*' => 'required|integer|min:1',
+                'prices.price.*'       => 'required|numeric|min:0',
+                'available_spots'    => 'required|integer|min:1',
+                'items' => 'nullable|array',
+                'items.*' => 'exists:items,id',
+                
+            ]);
+        } catch (ValidationException $e) {
+            dd('❌ Falló la validación:', $e->errors());
+        }
 
 
     
@@ -92,6 +111,9 @@ public function store(Request $request)
             'level'           => $request->level,
             'available_spots' => $request->available_spots,
         ]);
+        if ($request->has('items')) {
+            $training->items()->sync($request->items);
+        }
     
         if (!$training) {
             return redirect()->back()->with('error', 'Error al crear el entrenamiento.');
@@ -769,6 +791,14 @@ public function store(Request $request)
                          'end_time'    => $exception->end_time,
                          'status'      => $exception->status, // 'modified' o 'cancelled'
                          'is_exception'=> true,
+                         'photo_url' => $schedule->training->photos->isNotEmpty()
+                            ? asset('storage/' . $schedule->training->photos->first()->photo_path)
+                            : asset('img/placeholder.jpg'),
+                        'park_name' => optional($schedule->training->park)->name,
+                        'available_spots' => $schedule->training->available_spots,
+                        'reservations_count' => $schedule->training->reservations()
+                            ->where('date', $trainingDate)
+                            ->count(),
                      ];
                  }
      
@@ -785,6 +815,14 @@ public function store(Request $request)
                      'end_time'    => $schedule->end_time,
                      'status'      => 'active', // Horario normal
                      'is_exception'=> false,
+                     'photo_url' => $schedule->training->photos->isNotEmpty()
+                            ? asset('storage/' . $schedule->training->photos->first()->photo_path)
+                            : asset('img/placeholder.jpg'),
+                    'park_name' => optional($schedule->training->park)->name,
+                    'available_spots' => $schedule->training->available_spots,
+                    'reservations_count' => $schedule->training->reservations()
+                    ->where('date', $trainingDate)
+                    ->count(),
                  ];
              })
              ->filter() // Filtrar clases que no deben mostrarse (suspendidas)

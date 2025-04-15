@@ -8,15 +8,15 @@
         display: none !important;
     }
 </style>
-<div x-data="formHandler()" x-ref="formHandler" class="max-w-xl mx-auto  p-6 mt-6">
+<div x-data="formHandler()" x-ref="formHandler" class="max-w-2xl mx-auto md:p-6 p-4 mt-6">
     <!-- Overlay -->
     <x-spinner wire:model="isLoading" message="Registrando entrenador..." />
-    <div class="bg-white rounded-xl md:shadow-xl md:mt-6 mt-2 p-6">
+    <div class="bg-white rounded-xl mt-6 md:shadow-xl md:mt-6  md:p-6 p-2 ">
         <h2 class="text-lg text-orange-500 font-semibold mt-2">
             Paso <span x-text="step"></span> de 4
         </h2>
 
-        <h1 class="text-2xl font-bold mt-2 text-black-500">
+        <h1 class="text-2xl font-bold mt-2 text-gray-800">
             <span x-show="step === 1">Datos personales</span>
             <span x-show="step === 2">Información profesional</span>
             <span x-show="step === 3">Ubicación preferida</span>
@@ -92,7 +92,7 @@
              <!-- Paso 2: Información profesional -->
              <div x-show="step === 2" class="space-y-4">
                 <x-form.input name="certification" label="Título habilitante *" placeholder="Ej: Entrenador Personal Certificado" />
-                <x-form.input type="file" name="certification_pic" label="Foto del título"  class="p-4"  />
+                <input type="file" id="certification_pic" name="certification_pic"  label="Foto de la Certificación (Opcional)" />
                 <span class="text-sm text-gray-400">Solo formato jpeg,png,jpg </span>
                 <div class="relative flex items-center justify-center my-4">
                     <div class="absolute inset-0 flex items-center">
@@ -322,17 +322,14 @@
                 Volver al inicio
             </a>
     </div>
-    <div x-show="showAgeModal" x-cloak x-transition class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
-            <h2 class="text-lg font-bold text-red-600 mb-4">¡Atención!</h2>
-            <p class="text-gray-700 mb-6">Debés tener al menos 18 años para registrarte como entrenador.</p>
-            <button 
-                @click="showAgeModal = false"
-                class="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition">
-                Entendido
-            </button>
-        </div>
-    </div>
+    <!-- Modal de Edad mínima -->
+    <x-modal 
+    open="showAgeModal" 
+    title="¡Atención!" 
+    description="Debés tener al menos 18 años para registrarte como entrenador."
+    textColor="text-red-600"
+    descriptionColor="text-gray-300"
+/>
 </div>
 
 <script>
