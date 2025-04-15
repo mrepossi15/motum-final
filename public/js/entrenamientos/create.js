@@ -30,7 +30,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span class="text-black text-sm">${day}</span>
                 </label>
             `).join('')}
+             <p data-error="schedule_days" class="text-red-500 text-sm mt-1 hidden"></p>
         </div>
+        
+
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="relative">
@@ -44,7 +47,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <input type="time" name="schedule[end_time][${index}]" required
                     class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
             </div>
+             <p data-error="schedule_time" class="text-red-500 text-sm mt-1 hidden"></p>
         </div>
+          <p data-error="schedule_general" class="text-red-500 text-sm mt-2 hidden"></p>
     `;
 
     scheduleBlock.querySelector('.remove-schedule').addEventListener('click', () => {
@@ -79,7 +84,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         </label>
                         <input type="number" name="prices[weekly_sessions][]" required
                             class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
-                    </div>
+                            <p data-error="weekly_sessions" class="text-red-500 text-sm mt-1 hidden"></p>
+                            </div>
 
                     <div class="relative">
                         <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-700 text-sm">
@@ -87,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </label>
                         <input type="number" name="prices[price][]" required
                             class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
+                        <p data-error="price" class="text-red-500 text-sm mt-1 hidden"></p>
                     </div>
                 </div>
             </div>
@@ -125,3 +132,34 @@ function photoPreview() {
         }
     };
 }
+
+let map;
+let marker;
+
+window.initMap = function () {
+    const defaultLocation = { lat: -34.6037, lng: -58.3816 }; // Buenos Aires centro
+    map = new google.maps.Map(document.getElementById("map"), {
+        center: defaultLocation,
+        zoom: 14,
+    });
+
+    marker = new google.maps.Marker({
+        position: defaultLocation,
+        map: map,
+    });
+
+    const initialParkId = document.querySelector('[name="park_id"]')?.value;
+    if (initialParkId) {
+        updateMap(initialParkId);
+    }
+};
+
+window.updateMap = function (parkId) {
+    const park = window.PARKS?.[parkId];
+    if (park) {
+        const position = { lat: parseFloat(park.lat), lng: parseFloat(park.lng) };
+
+        map.setCenter(position);
+        marker.setPosition(position);
+    }
+};
