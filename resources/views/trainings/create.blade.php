@@ -4,30 +4,31 @@
 
 @section('content')
 <div x-data="formHandler" x-init="init()" class="max-w-4xl mx-auto p-4 mt-6">
-    <div class="bg-white rounded-lg mt-6 shadow-md px-8 py-4 ">
+    <div class="bg-white rounded-xl mt-6 md:shadow-xl md:mt-6  md:p-6 p-2 ">
     <x-spinner wire:model="isLoading" message="Creando entrenamiento..." />
         <!-- Indicador de Paso -->
-        <h2 class="text-lg text-orange-500 font-semibold mt-4 mb-2 ">
-            Paso <span x-text="step"></span> de 6
+        <h2 class="text-lg text-orange-500 font-semibold mt-2">
+            Paso <span x-text="step"></span> de 7
         </h2>
+        <p class="text-sm text-gray-500 mt-1">Los campos marcados con <span class="text-red-500 font-bold">*</span> son obligatorios.</p>
 
         <!-- Título de cada paso -->
-        <h1 class="text-2xl font-bold mb-2 text-gray-800">
+        <h1 class="text-2xl font-bold mt-2 text-gray-800">
             <span x-show="step === 1">Nombre y Parque</span>
             <span x-show="step === 2">Actividad</span>
             <span x-show="step === 3">Descripción, Nivel y Cupos</span>
+            
             <span x-show="step === 6">Elementos del entrenamiento</span>
             <span x-show="step === 7">Imágenes</span>
         </h1>
-
-        <!-- Encabezados con botón a la derecha -->
+      
         <div class="flex items-center justify-between mb-2" x-show="step === 4">
             <h1 class="text-2xl font-bold text-gray-800">Horarios</h1>
             <button type="button" id="add-schedule" class="text-orange-500 text-sm font-medium hover:underline transition">
-                + Agregar
+                + Agregar horario
             </button>
         </div>
-
+    
         <div class="flex items-center justify-between mb-2" x-show="step === 5">
             <h1 class="text-2xl font-bold text-gray-800">Precios</h1>
             <button type="button" id="add-price-button" class="text-orange-500 text-sm font-medium hover:underline transition">
@@ -40,6 +41,7 @@
             open="showMedicalModal" 
             title="Apto médico requerido" 
             description="Antes de publicar un entrenamiento, debés tener cargado y validado tu apto médico."
+        
         >
             <a href="{{ route('students.info') }}" class="bg-orange-500 hover:bg-orange-400 text-white text-md px-6 py-3 rounded-md w-full text-center block transition">
                 Ir a cargar apto
@@ -51,12 +53,12 @@
 
 
         <!-- Formulario -->
-        <form action="{{ route('trainings.store') }}" method="POST" enctype="multipart/form-data" class="mt-4"  @submit="handleSubmit">
+        <form action="{{ route('trainings.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4"  @submit="handleSubmit">
             @csrf
 
             <!-- Paso 1: Datos básicos -->
             <div x-show="step === 1" class="">
-                <x-form.input name="title" label="Título del entrenamiento *" placeholder="Ej: Running al atardecer" required />
+                <x-form.input name="title" label="Título del entrenamiento" placeholder="Ej: Running al atardecer" required />
                 <div class="relative flex items-center justify-center my-4">
                     <div class="absolute inset-0 flex items-center">
                         <div class="w-full border-t border-gray-300"></div>
@@ -65,21 +67,22 @@
                 <div>
                     <x-form.select 
                         name="park_id" 
-                        label="Seleccioná un parque *" 
+                        label="Seleccioná un parque " 
                         :options="$parks->pluck('name', 'id')" 
                         :selected="old('park_id', $selectedParkId)"
                         x-on:change="updateMap($event.target.value)"
+                        required
                     />
 
                     <!-- Mapa -->
-                    <div class="h-64 w-full rounded-md overflow-hidden border border-gray-300">
+                    <div class="h-64 w-full rounded-md overflow-hidden border border-gray-300  mt-1">
                         <div id="map" class="w-full h-full"></div>
                     </div>
                 </div>
             </div>
              <!-- Paso 2: Datos básicos -->
             <div x-show="step === 2" x-data="{ selectedActivity: '{{ old('activity_id') }}' }">
-                <label class="block text-sm font-medium text-gray-700 mb-2">¿Qué tipo de actividad es?</label>
+                <label class="block text-sm text-gray-700 mb-2">¿Qué tipo de actividad es?<span class="text-red-500 font-bold">*</span></label>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4 ">
                     @foreach($activities as $activity)
                         <label 
@@ -101,18 +104,18 @@
              <!-- Paso 3: Datos básicos -->
             <div x-show="step === 3" class="space-y-6">
                 <!-- Descripción -->
-                <x-form.textarea name="description" label="Descripción" placeholder="¿Qué pueden esperar tus alumnos?" />
+                <x-form.textarea name="description" label="Descripción" placeholder="¿Qué pueden esperar tus alumnos?" required/>
                 <div class="relative flex items-center justify-center ">
                     <div class="absolute inset-0 flex items-center">
                         <div class="w-full border-t border-gray-300"></div>
                     </div>
                 </div>
                 <div x-data="{ selectedLevel: '{{ old('level') }}' }">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nivel del entrenamiento</label>
+                    <label class="block text-sm text-gray-700 mb-1">Nivel del entrenamiento<span class="text-red-500 font-bold">*</span></label>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         @foreach (['Principiante', 'Intermedio', 'Avanzado'] as $level)
                             <label @click="selectedLevel = '{{ $level }}'"
-                                :class="{ 'border-orange-500 bg-orange-50 text-orange-600': selectedLevel === '{{ $level }}' }"
+                                :class="{ 'border-orange-500 bg-orange-50 text-orange-700': selectedLevel === '{{ $level }}' }"
                                 class="cursor-pointer border border-gray-300 rounded-xl px-6 py-4 text-center font-medium transition hover:border-orange-400 hover:bg-orange-100">
                                 {{ $level }}
                                 <input type="radio" name="level" value="{{ $level }}" class="hidden"
@@ -133,16 +136,19 @@
                     <x-form.input name="available_spots" type="number" label="Cupos" placeholder="Ej: 20" required />
                 </div>
             </div>
-            <div x-show="step === 4" class="space-y-6" x-data="{ scheduleCount: {{ count(old('schedule.days', [[]])) }} }">
+            <div x-show="step === 4" class="space-y-6">
                 <div id="schedule-container" class="space-y-4">
                     @php $schedules = old('schedule.days', [[]]); @endphp
+                    
                     @foreach ($schedules as $index => $scheduleDays)
+                    
                         <div class="p-4 border border-gray-300 rounded-md shadow-sm bg-white ">
                             <div class="flex justify-between items-center ">
                                 <h3 class="text-sm font-medium text-gray-700">
                                     Horario N° {{ $index + 1 }}
                                 </h3>
                             </div>
+                            
                             <div class="pt-4">
                                 <!-- Días -->
                                 <x-form.checkbox-group 
@@ -152,19 +158,20 @@
                                     :selected="old('schedule.days.' . $index, [])"
                                     hideLabel="true"
                                 />
+                                
                                 <p data-error="schedule_days" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
 
 
                                 <!-- Hora de inicio y fin -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div class="relative">
-                                        <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Inicio *</label>
+                                        <label class="block text-sm text-gray-700 mb-1">Inicio del entrenamiento<span class="text-red-500">*</span></label>
                                         <input type="time" name="schedule[start_time][{{ $index }}]" required
                                             class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500" />
                                     </div>
 
                                     <div class="relative">
-                                        <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-black text-sm">Fin *</label>
+                                    <label class="block text-sm text-gray-700 mb-1">Fin del entrenamiento<span class="text-red-500">*</span></label>
                                         <input type="time" name="schedule[end_time][{{ $index }}]" required
                                             class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500" />
                                     </div>
@@ -194,18 +201,14 @@
                         <div class="pt-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="relative">
-                                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-700 text-sm">
-                                        Veces por semana *
-                                    </label>
+                                    <label class="block text-sm text-gray-700 mb-1">Veces por semana<span class="text-red-500">*</span></label>
                                     <input type="number" name="prices[weekly_sessions][]" required
                                         class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
                                         <p data-error="weekly_sessions" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
                                     </div>
 
                                 <div class="relative">
-                                    <label class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-700 text-sm">
-                                        Precio *
-                                    </label>
+                                    <label class="block text-sm text-gray-700 mb-1">Precio<span class="text-red-500">*</span></label>
                                     <input type="number" name="prices[price][]" required
                                         class="w-full bg-white text-black border border-gray-300 hover:border-orange-500 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500">
                                         <p data-error="price" class="text-red-500 text-sm mt-1 hidden" aria-live="assertive"></p>
@@ -280,7 +283,7 @@
                         </div>
                     </template>
                 </div>
-                <p data-error="photos" class="text-red-500 text-sm hidden" aria-live="assertive"></p>
+                <p data-error="photos" class="text-red-500 text-sm  hidden" aria-live="assertive"></p>
             </div>
             <!-- Botones de Navegación -->
             <div class="flex justify-between mt-4">
@@ -321,10 +324,10 @@
 <script>
     window.PARKS = {!! $parksJson !!};
 </script>
-
 @push('scripts')
 <script src="{{ asset('js/entrenamientos/create.js') }}"></script>
 @endpush
+
 <script async
     src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&callback=initMap">
 </script>
@@ -461,7 +464,7 @@
                 let valid = true;
 
                 scheduleBlocks.forEach((block, i) => {
-                    const days = block.querySelectorAll(`input[name^="schedule[days][${i}][]"]:checked`);
+                    const days = block.querySelectorAll(`input[name^="schedule[days][${i}]["]:checked`);
                     const start = block.querySelector(`input[name="schedule[start_time][${i}]"]`)?.value;
                     const end = block.querySelector(`input[name="schedule[end_time][${i}]"]`)?.value;
 
@@ -654,4 +657,5 @@
         }));
     });
 </script>
+
 @endsection

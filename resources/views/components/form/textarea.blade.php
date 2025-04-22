@@ -1,11 +1,13 @@
-@props(['name', 'label', 'rows' => 3, 'placeholder' => '', 'value' => ''])
+@props(['name', 'label', 'rows' => 3, 'placeholder' => '', 'value' => '','required' => false])
 
 <div class="relative ">
     <!-- Label flotante -->
-    <label for="{{ $name }}" 
-           class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-600 text-sm">
-        {{ $label }}
-    </label>
+    @if($label)
+        <label for="{{ $name }}" 
+            class="block text-sm text-gray-700 mb-1 {{ $attributes->get('label-hidden') ? 'hidden' : '' }}">
+            {{ $label }} @if($required)<span class="text-red-500">*</span>@endif
+        </label>
+    @endif
 
     <!-- Textarea con bordes dinámicos -->
     <textarea
@@ -13,7 +15,7 @@
         name="{{ $name }}"
         rows="{{ $rows }}"
         placeholder="{{ $placeholder }}"
-        class="w-full text-black border hover:border-orange-500 border-gray-300 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
+        class="w-full text-black border hover:border-orange-500 border-gray-300 rounded-md px-4 py-3 md:py-2 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500
         @error($name) border-red-500 @enderror"
         {{ $attributes }}
     >{{ old($name, $value) }}</textarea>

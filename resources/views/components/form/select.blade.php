@@ -1,45 +1,49 @@
-@props(['name', 'label', 'options' => [], 'selected' => null])
+@props(['name', 'label', 'options' => [], 'selected' => null, 'placeholder' => 'Seleccionar','required' => false])
 
-<div class="relative mb-2">
-    <!-- Label flotante -->
+<div class="w-full">
+    {{-- Label superior --}}
     <label for="{{ $name }}" 
-           class="absolute top-0 left-3 -mt-2 bg-white px-1 text-gray-600 text-sm">
-        {{ $label }}
-    </label>
+       class="{{ $attributes->get('label-hidden') ? 'sr-only' : 'block text-sm text-gray-700 mb-1' }}">
+       {{ $label }} @if($required)<span class="text-red-500">*</span>@endif
+</label>
+
+    <div class="relative">
         <select
             id="{{ $name }}"
             name="{{ $name }}"
-            class="w-full text-black border hover:border-orange-500 border-gray-300 rounded-md px-4 py-3 pr-12 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 appearance-none
+            class="w-full border px-4 py-3 pr-10 hover:border-orange-500 border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 appearance-none
             @error($name) border-red-500 @enderror"
+            style="color: {{ !$selected ? '#9CA3AF' : '#000000' }};" {{-- gray-400 o black --}}
+            onchange="this.style.color = this.value ? '#000000' : '#9CA3AF';"
             {{ $attributes }}
-            style="padding-right: 2.5rem;" <!-- Más espacio para la flecha -->
         >
-            <option value="" disabled {{ !$selected ? 'selected' : '' }}>Seleccionar</option>
-            @foreach ($options as $value => $label)
+            <option value="" disabled {{ !$selected ? 'selected' : '' }}>{{ $placeholder }}</option>
+            @foreach ($options as $value => $optionLabel)
                 <option value="{{ $value }}" {{ $selected == $value ? 'selected' : '' }}>
-                    {{ $label }}
+                    {{ $optionLabel }}
                 </option>
             @endforeach
         </select>
-       <p x-show="errors.{{ $name }}" class="text-red-500 text-sm" x-text="errors.{{ $name }}"></p>
 
-        <!-- Flecha con Lucide Icon -->
+        {{-- Flechita Lucide --}}
         <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
             <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500"></i>
         </div>
+    </div>
 
 
-    <!-- Mensaje de error con ícono de advertencia -->
     @error($name)
-        <div class="flex items-center mt-1 text-red-500 text-xs">
-            <!-- Ícono de advertencia usando Lucide Icons -->
-            <i data-lucide="alert-circle" class="w-5 h-5 mr-1"></i>
-            <p>⚠️ {{ $message }}</p>
+        <div class="flex items-center mt-2 text-red-500 text-sm">
+            <i data-lucide="alert-circle" class="w-4 h-4 mr-1"></i>
+            <p>{{ $message }}</p>
         </div>
     @enderror
 </div>
+
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         lucide.createIcons();
     });
 </script>
+@endpush

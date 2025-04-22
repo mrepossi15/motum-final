@@ -167,6 +167,7 @@ class TrainerController extends Controller
             Auth::login($user);
         
             $user->parks()->attach($park->id);
+            
             if ($request->has('experiences')) {
                 foreach ($request->experiences as $experience) {
                     $user->experiences()->create([

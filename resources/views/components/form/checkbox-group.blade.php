@@ -1,23 +1,37 @@
 @props(['name', 'label' => null, 'options' => [], 'selected' => [], 'hideLabel' => false])
 
-<div class="relative">
+<div class="relative" x-data="{ selectedOptions: @json((array) old($name, $selected)) }">
     @if (!$hideLabel)
-        <label class="block text-sm font-medium text-gray-700 ">
+        <label class="block text-sm font-medium text-gray-700">
             {{ $label }}
         </label>
     @endif
 
     <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
         @foreach ($options as $option)
-            <label class="flex items-center gap-2 rounded-md hover:bg-gray-100 cursor-pointer transition">
+            <label 
+                class="cursor-pointer border rounded-lg p-2 text-center font-medium transition
+                       hover:border-orange-400 hover:bg-orange-50"
+                :class="{ 
+                    'border-orange-500 bg-orange-100 text-orange-700': selectedOptions.includes('{{ $option }}'),
+                    'border-gray-300 text-gray-700': !selectedOptions.includes('{{ $option }}')
+                }"
+                @click.prevent="
+                    if (selectedOptions.includes('{{ $option }}')) {
+                        selectedOptions = selectedOptions.filter(o => o !== '{{ $option }}')
+                    } else {
+                        selectedOptions.push('{{ $option }}')
+                    }
+                "
+            >
+                {{ $option }}
                 <input
                     type="checkbox"
                     name="{{ $name }}[]"
                     value="{{ $option }}"
-                    {{ in_array($option, (array) old($name, $selected)) ? 'checked' : '' }}
-                    class="h-5 w-5 text-orange-500 focus:ring-orange-500"
+                    class="hidden"
+                    :checked="selectedOptions.includes('{{ $option }}')"
                 >
-                <span class="text-black text-sm">{{ $option }}</span>
             </label>
         @endforeach
     </div>

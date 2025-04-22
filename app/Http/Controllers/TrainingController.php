@@ -61,6 +61,7 @@ class TrainingController extends Controller
         
             return redirect()->back()->with('error', 'Debes subir un apto médico antes de crear un entrenamiento.');
         }
+        Log::debug('📦 Datos recibidos', $request->all());
         try {
             $request->validate([
                 'title'              => 'required|string|max:255',
@@ -111,6 +112,7 @@ class TrainingController extends Controller
             'level'           => $request->level,
             'available_spots' => $request->available_spots,
         ]);
+        
         if ($request->has('items')) {
             $training->items()->sync($request->items);
         }

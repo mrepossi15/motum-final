@@ -4,8 +4,8 @@
 -Catalogo-> Que se vea como trainer.show-trainings
 -Toamr lista-> revisar esa vista. QU epase a complete el estado d ela resva. Fijarse uqe cuadno llega la hora del entrenameinto
 ya lo esta poniendo como complete y por ahi por eso no esta andnado
--Regsitro entrendor-> dividirlo en partes. Ver tema actividades preferidas y especialdiades(que este pueda poner muchos)
--Login-> Diseno de fondo
+DONE-Regsitro entrendor-> dividirlo en partes. Ver tema actividades preferidas y especialdiades(que este pueda poner muchos)
+DONE-Login-> Diseno de fondo
 -Reservas-> visat si filtrar por semana.
         -> que te avise ucnado es tu proxima resva. Si estoy en martes que diga reserva para el mierocles.
         -> Foto del trainingen los cards

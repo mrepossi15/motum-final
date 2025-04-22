@@ -3,14 +3,15 @@
 @section('title', 'Crear Usuario')
 
 @section('content')
-<div x-data="formHandler()" x-ref="formHandler" class="max-w-xl mx-auto  p-6 mt-6">
+<div x-data="formHandler(@json(old()))" x-ref="formHandler" class="max-w-2xl mx-auto md:p-6 p-4 mt-6">
     <!-- Overlay de Carga (AGREGADO) -->
     <x-spinner wire:model="isLoading" message="Creando usuario..." />
-    <div class="bg-white rounded-xl md:shadow-xl md:mt-6 mt-2 p-6">
+    <div class="bg-white rounded-xl mt-6 md:shadow-xl md:mt-6  md:p-6 p-2 ">
         <!-- Indicador de Paso -->
         <h2 class="text-lg text-orange-500 font-semibold mt-2">
             Paso <span x-text="step"></span> de 2
         </h2>
+        <p class="text-sm text-gray-500 mt-1">Los campos marcados con <span class="text-red-500 font-bold">*</span> son obligatorios.</p>
         <!-- Título de cada paso -->
         <h1 class="text-2xl font-bold mt-2 text-black-500">
             <span x-show="step === 1">Registro de Alumno</span>
@@ -23,35 +24,39 @@
              <div x-show="step === 1" class="space-y-4">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <x-form.input name="first_name" label="Nombre *" placeholder="Tu nombre" x-model="first_name" />
-                    <x-form.input name="last_name" label="Apellido *" placeholder="Tu apellido" x-model="last_name" />
+                    <x-form.input name="first_name" label="Nombre " placeholder="Tu nombre" x-model="first_name"  required />
+                    <x-form.input name="last_name" label="Apellido" placeholder="Tu apellido" x-model="last_name"  required />
                 </div>
 
                 <input type="hidden" name="name" x-model="fullName" />
-                <div class="relative flex items-center justify-center my-4">
+
+                <div class="relative flex items-center justify-center my-6">
                     <div class="absolute inset-0 flex items-center">
                         <div class="w-full border-t border-gray-300"></div>
                     </div>
                 </div>
 
-                <x-form.input type="email" name="email" label="Correo Electrónico *" placeholder="ejemplo@correo.com" />
-                <x-form.input type="password" name="password" label="Contraseña *" placeholder="Crea una contraseña" />
-                <x-form.input type="password" name="password_confirmation" label="Confirmar Contraseña *" placeholder="Repite tu contraseña" />
+                <x-form.input type="email" name="email" label="Correo Electrónico" placeholder="ejemplo@correo.com" required />
+                <x-form.input type="password" name="password" label="Contraseña" placeholder="Crea una contraseña"  required />
+                <x-form.input type="password" name="password_confirmation" label="Confirmar Contraseña" placeholder="Repite tu contraseña"  required />
                 <div class="relative flex items-center justify-center mt-4 mb-0">
                     <div class="absolute inset-0 flex items-center">
                         <div class="w-full border-t border-gray-300"></div>
                     </div>
                 </div>
                 <div>
-                    <p class="mb-2 text-sm text-gray-800">Fecha de nacimiento</p>
+                    <p class="mb-2 text-sm text-gray-800">Fecha de nacimiento<span class="text-red-500">*</span></p>
                     <div class="grid grid-cols-3 sm:gap-4 gap-2">
                         <x-form.select 
                             name="day" 
                             label="Día *" 
                             :options="array_combine(range(1, 31), range(1, 31))"
+                            :placeholder="'Día'"
                             x-model="day"
                             :selected="old('day')" 
+                            label-hidden="true"
                         />
+
                         <x-form.select 
                             name="month" 
                             label="Mes *" 
@@ -62,6 +67,8 @@
                             ]"
                             x-model="month"
                             :selected="old('month')" 
+                            placeholder="Mes"
+                            label-hidden="true"
                         />
                         <x-form.select 
                             name="year" 
@@ -69,42 +76,51 @@
                             :options="array_combine(range(date('Y'), 1900), range(date('Y'), 1900))"
                             x-model="year"
                             :selected="old('year')" 
+                            placeholder="Año"
+                            label-hidden="true"
                         />
                     </div>
 
-                    <div x-show="errors.day" class="text-red-500 text-sm">
+                    <div x-show="errors.day" class="text-red-500 text-sm mt-2 ">
                         <span x-text="errors.day"></span>
                     </div>
                 </div>
 
                 <input type="hidden" name="birth" x-ref="birth" />
+
             </div>
             <!-- Paso 2: Información adicional -->
             <div x-show="step === 2" class="space-y-4">
-                <x-form.textarea name="biography" label="Breve biografía (Opcional)" placeholder="Escribe algo sobre ti..." />
+                <x-form.textarea name="biography" label="Breve biografía" placeholder="Escribe algo sobre ti..." />
                 <div>
-                    <p class="text-md text-black mb-2">Selecciona tus actividades de interes</p>
+                    <label class="block mb-2 text-sm text-gray-800">
+                        Disciplinas en las que te especializás
+                    </label>
+
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($activities as $activity)
                             <label
-                                    x-data="{ checked: false }"
-                                    @click="checked = !checked"
-                                    :class="checked ? 'bg-orange-400 text-white' : 'bg-gray-50 text-black border-gray-500'"
-                                    class="cursor-pointer border hover:border-orange-500 rounded-md px-3 py-3 flex items-center justify-between transition focus-within:ring-1 focus-within:ring-orange-500 w-full sm:w-auto"
+                                x-data="{ checked: false }"
+                                @click="checked = !checked"
+                                :class="checked ? 
+                                    'border-orange-500 bg-orange-100 text-orange-700' : 
+                                    'border-gray-300 text-gray-700'"
+                                class="cursor-pointer border rounded-xl p-4 text-center font-medium transition hover:border-orange-400 hover:bg-orange-50"
+                            >
+                                {{ $activity->name }}
+                                <input 
+                                    type="checkbox"
+                                    name="activities[]"
+                                    value="{{ $activity->id }}"
+                                    @change="checked = $el.checked"
+                                    class="hidden"
                                 >
-                                <div class="flex items-center space-x-3">
-                                    <input
-                                        type="checkbox"
-                                        name="activities[]"
-                                        value="{{ $activity->id }}"
-                                        @change="checked = $el.checked"
-                                        class="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:border-orange-500 cursor-pointer transition"
-                                    />
-                                    <span :class="checked ? 'text-white' : 'text-black'">{{ $activity->name }}</span>
-                                </div>
                             </label>
                         @endforeach
                     </div>
+                    @error('activities')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
             <!-- Botones de Navegación -->

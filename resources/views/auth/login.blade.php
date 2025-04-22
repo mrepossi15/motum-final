@@ -11,10 +11,10 @@
             <img src="img/motumLogo.png" alt="Motum Logo" class="w-20 mx-auto rounded-md mb-2">
             <h2 class="text-2xl font-bold text-orange-500">Inicia sesión en motum</h2>
         </div>
-        <form action="/iniciar-sesion" method="POST" class="space-y-6">
+        <form action="/iniciar-sesion" method="POST" class="space-y-4">
             @csrf
             <!-- Correo Electrónico -->
-            <x-form.input name="email" type="email" label="Mail" placeholder="ejemplo@correo.com"/>
+            <x-form.input name="email" type="email" label="Correo electrónico" placeholder="ejemplo@correo.com"/>
             <!-- Contraseña -->
             <x-form.input name="password" type="password" label="Contraseña" placeholder="Escribe tu contraseña" />
             <!-- Spinner de carga -->
@@ -24,10 +24,10 @@
             <button type="submit" class="w-full p-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition">Iniciar sesión</button>
         </form>
         <div class="text-center ">
-            <a href="{{ route('password.request') }}" class="text-orange-600 underline">¿Olvidaste tu contraseña?</a>
+            <a href="{{ route('password.request') }}" class="text-orange-500 underline hover:text-orange-600">¿Olvidaste tu contraseña?</a>
         </div>
         <div class="text-center border-t mt-4 pt-6 pb-4">
-            <p class="text-gray-500">¿No tenes una cuenta? <a href="{{ route('register') }}" class="text-orange-500 underline "> Registrate aquí</a></p>
+            <p class="text-gray-500">¿No tenes una cuenta? <a href="{{ route('register') }}" class="text-orange-500 underline hover:text-orange-600 "> Registrate aquí</a></p>
         </div>    
     </div>
     <div class="text-center mt-6 underline">

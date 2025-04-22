@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (isToday) {
                 dayColumn.classList.add('bg-gray-200');
             } else if (daysWithClasses.has(fullName)) {
-                dayColumn.classList.add('bg-orange-100');
+                dayColumn.classList.add('bg-orange-50',);
             }
     
             dayColumn.innerHTML = `
@@ -139,17 +139,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     dayEl.classList.remove('bg-orange-500', 'text-white', 'font-bold', 'border-0');
                     dayEl.classList.add('border-gray-800');
             
-                    // ✅ Restaurar bg-orange-100 si ese día tiene clases
+                    // ✅ Restaurar bg-orange-50 si ese día tiene clases
                     if (daysWithClasses.has(dayName)) {
-                        dayEl.classList.add('bg-orange-100');
+                        dayEl.classList.add('bg-orange-50');
                     } else {
-                        dayEl.classList.remove('bg-orange-100');
+                        dayEl.classList.remove('bg-orange-50');
                     }
                 });
             
                 // ✅ Aplicar estilos al día seleccionado
                 dayColumn.classList.add('bg-orange-500', 'text-white', 'font-bold', 'border-0');
-                dayColumn.classList.remove('bg-orange-100');
+                dayColumn.classList.remove('bg-orange-50');
             
                 state.selectedDay = fullName;
                 loadTrainings();
