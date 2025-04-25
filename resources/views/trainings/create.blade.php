@@ -4,8 +4,8 @@
 
 @section('content')
 <div x-data="formHandler" x-init="init()" class="max-w-4xl mx-auto p-4 mt-6">
-    <div class="bg-white rounded-xl mt-6 md:shadow-xl md:mt-6  md:p-6 p-2 ">
-    <x-spinner wire:model="isLoading" message="Creando entrenamiento..." />
+    <div class="bg-white rounded-xl mt-6 md:shadow-xl md:mt-6  md:pt-6 md:px-6 p-2 ">
+        <x-spinner wire:model="isLoading" message="Creando entrenamiento..." />
         <!-- Indicador de Paso -->
         <h2 class="text-lg text-orange-500 font-semibold mt-2">
             Paso <span x-text="step"></span> de 7
@@ -136,6 +136,7 @@
                     <x-form.input name="available_spots" type="number" label="Cupos" placeholder="Ej: 20" required />
                 </div>
             </div>
+            <!-- Paso 4: Horairos -->
             <div x-show="step === 4" class="space-y-6">
                 <div id="schedule-container" class="space-y-4">
                     @php $schedules = old('schedule.days', [[]]); @endphp
@@ -286,39 +287,47 @@
                 <p data-error="photos" class="text-red-500 text-sm  hidden" aria-live="assertive"></p>
             </div>
             <!-- Botones de Navegación -->
-            <div class="flex justify-between mt-4">
-                <!-- Botón de volver alineado a la izquierda -->
-                <div>
-                    <button type="button" @click="previousStep" x-show="step > 1" class="bg-gray-500 text-white p-3 rounded-md">
-                        <x-lucide-arrow-left class="w-5 h-5 text-white" />
-                    </button>
-                </div>
-
-                <!-- Botones de avanzar / omitir / registrar alineados a la derecha -->
-                <div class="flex space-x-4">
-                    
-                    <template x-if="step < 7">
-                        <button type="button" @click="nextStep" class="bg-orange-500 text-white p-3 rounded-md hover:bg-orange-600 transition">
-                            <x-lucide-arrow-right class="w-5 h-5 text-white" />
+            <div class="fixed sm:static bottom-0 left-0 w-full sm:w-auto bg-white sm:bg-transparent z-50 py-4 md:px-0 px-4  border-t border-gray-200 ">
+                <div class="flex justify-between sm:justify-between items-center">
+                    <!-- Botón de volver alineado a la izquierda -->
+                    <div>
+                        <button type="button" @click="previousStep" x-show="step > 1" class="bg-gray-500 text-white p-3 rounded-md">
+                            <x-lucide-arrow-left class="w-5 h-5 text-white" />
                         </button>
-                    </template>
+                    </div>
 
-                    <template x-if="step === 7">
-                    <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
-                        Guardar Entrenamiento
-                    </button>
-                    </template>
+                    <!-- Botones de avanzar / omitir / registrar alineados a la derecha -->
+                    <div class="flex space-x-4">
+                        
+                        <template x-if="step < 7">
+                            <button type="button" @click="nextStep" class="flex items-center gap-1 bg-orange-500 text-white px-4 py-3 rounded-md hover:bg-orange-600 transition">
+                                <span>Siguiente</span>
+                                <x-lucide-arrow-right class="w-5 h-5" />
+                            </button>
+                        </template>
+
+                        <template x-if="step === 7">
+                        <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
+                            Guardar Entrenamiento
+                        </button>
+                        </template>
+                    </div>
                 </div>
             </div>
             
            
         </form>
     </div>
+    <div class="text-center mt-6 underline">
+            <a href="{{ route('trainer.calendar') }}"  class="text-gray-500 text-sm ">
+                Volver al calendario
+            </a>
+    </div>
     <style>
     [x-cloak] {
         display: none !important;
     }
-</style>
+    </style>
 </div>
 
 <script>
@@ -511,7 +520,7 @@
                 let totalClassDays = 0;
 
                 scheduleBlocks.forEach((block, i) => {
-                    const selectedDays = block.querySelectorAll(`input[name^="schedule[days][${i}][]"]:checked`);
+                    const selectedDays = block.querySelectorAll(`input[name^="schedule[days][${i}]"]:checked`);
                     totalClassDays += selectedDays.length;
                 });
 
@@ -610,52 +619,53 @@
             },
 
             async handleSubmit(event) {
-    event.preventDefault();
+            event.preventDefault();
 
-    const isValid = await this.validateStepSeven();
-    if (!isValid) return;
+            const isValid = await this.validateStepSeven();
+            if (!isValid) return;
 
-    const form = event.target;
-    const formData = new FormData(form);
-
-    this.isLoading = true;
-
-    try {
-        const response = await fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
-            body: formData
-        });
-
-        if (!response.ok) {
-            if (response.status === 422) {
-                const data = await response.json();
-                if (data.error && data.error.includes('apto médico')) {
-                    this.showMedicalModal = true;
-                    this.isLoading = false;
-                    return;
-                }
-            }
-
-            throw new Error('Error al enviar el formulario');
-        }
-
-        // Si todo salió bien, redirige
-        const redirectTo = response.url ?? '/trainer/calendar';
-        window.location.href = redirectTo;
-
-    } catch (error) {
-        console.error('❌ Error al enviar entrenamiento:', error);
-        this.isLoading = false;
-        alert('Ocurrió un error al guardar el entrenamiento.');
-    }
-}
+            const form = event.target;
+            const formData = new FormData(form);
             
-        }));
-    });
+
+            this.isLoading = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        const data = await response.json();
+                        if (data.error && data.error.includes('apto médico')) {
+                            this.showMedicalModal = true;
+                            this.isLoading = false;
+                            return;
+                        }
+                    }
+
+                    throw new Error('Error al enviar el formulario');
+                }
+
+                // Si todo salió bien, redirige
+                const redirectTo = response.url ?? '/trainer/calendar';
+                window.location.href = redirectTo;
+
+                    } catch (error) {
+                        console.error('❌ Error al enviar entrenamiento:', error);
+                        this.isLoading = false;
+                        alert('Ocurrió un error al guardar el entrenamiento.');
+                    }
+                }
+                    
+                }));
+            });
 </script>
 
 @endsection

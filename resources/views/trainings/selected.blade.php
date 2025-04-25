@@ -203,7 +203,7 @@
 
         <!-- 📍 Fila 2: Prinicpal -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-2 pb-4 px-4 md:pb-6">
-        <div class="sm:col-span-2">
+        <div class="sm:col-span-2 space-y-4">
                 <!-- 🏋️ Título del entrenamiento -->
                 <h1 class="text-2xl sm:text-3xl my-2 font-bold text-gray-900 flex items-center">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-sm flex items-center justify-center p-2 mr-2">
@@ -213,7 +213,7 @@
                 </h1>
 
                 <!-- ⭐ Calificación -->
-                @php
+               @php
                     $averageRating = round($training->averageRating(), 1);
                     $fullStars = floor($averageRating);
                     $hasHalfStar = ($averageRating - $fullStars) >= 0.5;
@@ -221,17 +221,16 @@
 
                 <div class="flex my-2 items-center space-x-1">
                     @for ($i = 1; $i <= 5; $i++)
-                        <x-lucide-star class="w-4 h-4 sm:w-5 sm:h-5 {{ $i <= $fullStars ? 'text-orange-500 fill-current' : ($hasHalfStar && $i == $fullStars + 1 ? 'text-orange-500' : 'text-gray-300') }}" />
+                        <x-lucide-star class="w-5 h-5 sm:w-6 sm:h-6 {{ $i <= $fullStars ? 'text-orange-500 fill-current' : ($hasHalfStar && $i == $fullStars + 1 ? 'text-orange-500' : 'text-gray-300') }}" />
                     @endfor
-                    <span class="text-gray-700 text-sm font-semibold">
-                        {{ number_format($averageRating, 1) }}
-                    </span>
+                
                 </div>
 
                 <!-- 📍 Ubicación -->
                 <p class="text-gray-600 text-xs sm:text-sm flex items-center space-x-1 my-2">
-                    <x-lucide-map-pin class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
+                    <x-lucide-map-pin class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                     <span>{{ $training->park->name }} - {{ $training->park->location }}</span>
+                    
                 </p>
 
                 <p class="text-md"><strong>{{ $training->activity->name }} -</strong>  
@@ -240,11 +239,12 @@
                 </p>
 
                 <!-- 🔥 Calificación y reseñas -->
-                <div class="mt-5 mb-3 flex items-center space-x-4">
-                    <div class="p-4 rounded-md bg-gray-50 shadow-sm flex items-center space-x-3">
-                        <div class="bg-orange-500 text-white px-3 py-2 rounded-sm text-lg font-bold">
+                <div class="mt-5 mb-3 flex items-center  space-x-4">
+                    <div class="p-4 rounded-lg bg-gray-50 shadow-sm flex items-center space-x-3">
+                        <div class="bg-orange-500 text-white px-3 py-2 rounded-md text-lg font-bold">
                             {{ number_format($averageRating, 1) }}
                         </div>
+                        
                         <div>
                             @php
                                 $ratingText = match (true) {
@@ -256,7 +256,7 @@
                                 };
                             @endphp
                             <p class="font-semibold text-gray-900">{{ $ratingText }}</p>
-                            <a href="#opiniones" class="text-blue-600 hover:underline">Ver {{ $training->reviews_count }} comentarios</a>
+                            <a href="#opiniones" class="text-blue-600 hover:underline">Ver{{ $training->reviews_count }} comentarios</a>
                         </div>
                     </div>
                 </div>
@@ -386,42 +386,91 @@
             <hr class="my-4">
 
             <!-- 📝 Descripción -->
-            <h3 class="text-lg mt-4 font-semibold">Descripción</h3>
-            <p class="mt-2">{{ $training->description ?? 'No especificada' }}</p>
+            <hr class="my-4">
+            <!-- 📝 Descripción -->
+             <div>
+                <h3 class="text-lg mt-4 font-semibold">Descripción</h3>
+                <p >{{ $training->description ?? 'No especificada' }}</p>
+            </div>
+            <hr class="my-4">
+            <!-- 🧰 Elementos -->
+            <div>
+                <h3 class="text-lg mt-4 font-semibold">El entrenamiento incluye</h3>
+                <div class="flex flex-wrap md:gap-4 gap-2 w-full mt-2">
+                    @foreach($training->items as $item)
+                        <span class="border  border-gray-300 text-gray-800 text-md px-3 py-2 rounded-md whitespace-nowrap">
+                            {{ $item->name }}
+                        </span>
+                    @endforeach
+
+                </div>
+            </div>
             <hr class="my-4">
             <!-- ⏰ Horarios -->
-            <h3 class=" font-semibold text-lg text-gray-900 mb-4">Horarios de Entrenamiento</h3>
-            <div class="space-y-4 ">
-                @forelse ($training->schedules->groupBy('day') as $day => $schedules)
-                    <div class=" border-b border-gray-200  pb-4   ">
-                        <!-- Día de la Semana -->
-                        <h4 class="text-balck0\ text-lg font-semibold flex items-center">
-                            <x-lucide-calendar-days class="w-5 h-5 mr-2 text-orange-500" /> 
-                            {{ ucfirst($day) }}
-                        </h4>
+             <div>
+                <h3 class=" font-semibold text-lg text-gray-900 mb-4">Horarios de Entrenamiento</h3>
 
-                        <!-- Lista de Horarios -->
-                        <div class="flex flex-wrap gap-2 mt-3">
-                            @foreach ($schedules as $schedule)
-                                <span class="flex items-center text-sm text-white bg-orange-500 px-3 py-1 rounded-sm ">
-                                    <x-lucide-clock class="w-4 h-4 mr-1 text-white" /> 
-                                    {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - 
-                                    {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
-                                </span>
-                            @endforeach
-                        </div>
+                <div class="overflow-x-auto ">
+                    @php
+                        $daysOfWeek = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+
+                        $grid = [];
+                        foreach ($training->schedules as $schedule) {
+                            $start = \Carbon\Carbon::parse($schedule->start_time)->format('H:i');
+                            $end = \Carbon\Carbon::parse($schedule->end_time)->format('H:i');
+                            $day = strtolower($schedule->day);
+                            $timeSlot = "$start - $end";
+                            $grid[$timeSlot][$day] = true;
+                        }
+                    @endphp
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border-separate border-spacing-x-2 text-sm">
+                            <!-- Cabecera con días -->
+                            <thead>
+                                <tr>
+                                    @foreach ($daysOfWeek as $day)
+                                        <th class="text-center capitalize bg-white border  border-black rounded-md px-4 py-2 text-orange-600">
+                                            {{ $day }}
+                                        </th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+
+                            <!-- Cuerpo con horarios -->
+                            <tbody >
+                                @forelse ($grid as $timeSlot => $days)
+                                    <tr>
+                                        @foreach ($daysOfWeek as $day)
+                                            <td class="text-center align-middlepy-2">
+                                                @if (!empty($days[$day]))
+                                                <span class="inline-flex justify-center items-center bg-gray-50  text-xs px-3 py-2 mt-2 w-full text-center rounded-sm">
+                                                    <x-lucide-clock class="w-4 h-4 mr-1 max-sm:hidden" />
+                                                    {{ $timeSlot }}
+                                                </span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center text-gray-500 py-4">No hay horarios disponibles.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
-                @empty
-                    <p class="text-gray-500 text-center">No hay horarios disponibles.</p>
-                @endforelse
+                </div>
             </div>
+            
+            
             <hr class="my-4 ">
 
             <!-- 💰 Precios -->
             <h3 class=" font-semibold text-lg  text-gray-900 mb-4">Precios del Entrenamiento</h3>
             <div class="space-y-3  ">
                 @forelse ($training->prices as $price)
-                    <div class="flex items-center  border-gray-200 border-b pb-2 ">
+                    <div class="flex items-center  border-gray-200 bg-white p-4 rounded-lg ">
                         <!-- Icono -->
                         <x-lucide-wallet class="w-6 h-6 text-orange-500 mr-3" />
 

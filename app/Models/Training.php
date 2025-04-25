@@ -16,6 +16,7 @@ class Training extends Model
         'activity_id',
         'available_spots',
         'level',
+        
     ];
 
     // Relación con el entrenador

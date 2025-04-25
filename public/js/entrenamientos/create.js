@@ -138,7 +138,29 @@ function photoPreview() {
 
         previewImages(event) {
             const files = event.target.files;
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+
+            // 🧼 Ocultar error si se intenta volver a subir
+            this.clearError();
+
+            // Podés comentar esta línea si querés permitir múltiples cargas acumulativas
+            this.photos = [];
+
             for (let file of files) {
+                // Validar tipo
+                if (!allowedTypes.includes(file.type)) {
+                    this.showError(`El archivo "${file.name}" no es un tipo válido. Usá JPG o PNG.`);
+                    continue;
+                }
+
+                // Validar tamaño
+                if (file.size > maxSizeInBytes) {
+                    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                    this.showError(`"${file.name}" pesa ${sizeInMB}MB. El máximo permitido es 2MB.`);
+                    continue;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.photos.push({ id: null, url: e.target.result, file });
@@ -148,11 +170,27 @@ function photoPreview() {
         },
 
         removeImage(index) {
-            let photo = this.photos[index];
+            const photo = this.photos[index];
             if (photo.id) {
-                this.deletedPhotos.push(photo.id); // Agregar el ID a la lista de eliminados
+                this.deletedPhotos.push(photo.id);
             }
             this.photos.splice(index, 1);
+        },
+
+        showError(message) {
+            const el = document.querySelector('[data-error="photos"]');
+            if (el) {
+                el.innerText = message;
+                el.classList.remove('hidden');
+            }
+        },
+
+        clearError() {
+            const el = document.querySelector('[data-error="photos"]');
+            if (el) {
+                el.innerText = '';
+                el.classList.add('hidden');
+            }
         }
     };
 }

@@ -192,7 +192,9 @@ class TrainingController extends Controller
             'prices',
             'students',
             'reservations.user',
-            'photos'
+            'photos',
+            'items'
+            
         ])->findOrFail($id);
     
         // 🔍 Buscar excepciones para la fecha seleccionada
@@ -266,7 +268,7 @@ class TrainingController extends Controller
             $now = now();
     
             if ($now->lessThan($classStartTime)) {
-                $accessMessage = "No disponible";
+                $accessMessage = "Lista no disponible";
             } elseif ($now->between($classStartTime, $classEndTime)) {
                 $isClassAccessible = true;
                 $accessMessage = "Lista disponible ahora.";
@@ -277,17 +279,17 @@ class TrainingController extends Controller
         $isEditAccessible = false;
         $editMessage = "Fecha u hora no especificadas";
 
-    if ($selectedDate && $selectedTime) {
-        $classStartTime = Carbon::parse("$selectedDate $selectedTime");
-        $now = now();
+        if ($selectedDate && $selectedTime) {
+            $classStartTime = Carbon::parse("$selectedDate $selectedTime");
+            $now = now();
 
-        if ($now->diffInHours($classStartTime, false) > 4) {
-            $isEditAccessible = true;
-            $editMessage = "Edición disponible.";
-        } else {
-            $editMessage = "La edición se cierra 4 horas antes del entrenamiento.";
+            if ($now->diffInHours($classStartTime, false) > 4) {
+                $isEditAccessible = true;
+                $editMessage = "Edición disponible.";
+            } else {
+                $editMessage = "La edición se cierra 4 horas antes del entrenamiento.";
+            }
         }
-    }
     
         Log::info('🔍 Verificación de acceso:', [
             'selectedDate' => $selectedDate,
@@ -408,6 +410,7 @@ class TrainingController extends Controller
                 Log::error("🚨 Error: No se enviaron horarios desde el formulario.");
                 return redirect()->back()->with('error', 'Debes ingresar los horarios.');
             }
+          
     
             Log::info("✅ Datos recibidos en la solicitud:", [
                 'schedule_id' => $request->input('schedule_id'),
@@ -427,6 +430,18 @@ class TrainingController extends Controller
                         'end_time' => $endTime,
                     ]);
                     continue;
+                }
+                // Validación: inicio < fin
+                if ($startTime >= $endTime) {
+                    Log::warning("❌ Horario inválido: inicio >= fin", [
+                        'schedule_id' => $scheduleId,
+                        'start_time' => $startTime,
+                        'end_time' => $endTime
+                    ]);
+
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['schedule' => 'El horario de inicio debe ser menor que el de finalización.']);
                 }
     
                 TrainingException::updateOrCreate(

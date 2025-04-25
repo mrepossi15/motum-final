@@ -443,8 +443,10 @@ class TrainerController extends Controller
                     ->count('user_id');
                 return $training;
             });
+            $parks = $trainings->pluck('park')->unique('id')->filter();
+            
 
-        return view('trainer.show-trainings', compact('trainings'));
+        return view('trainer.show-trainings', compact('trainings','parks'));
     }
     public function indexExperience()
     {

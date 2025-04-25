@@ -6,7 +6,7 @@
 <div x-data="formHandler(@json(old()))" x-ref="formHandler" class="max-w-2xl mx-auto md:p-6 p-4 mt-6">
     <!-- Overlay de Carga (AGREGADO) -->
     <x-spinner wire:model="isLoading" message="Creando usuario..." />
-    <div class="bg-white rounded-xl mt-6 md:shadow-xl md:mt-6  md:p-6 p-2 ">
+    <div class="bg-white rounded-xl mt-6 md:shadow-xl md:mt-6  md:pt-6 md:px-6 p-2 ">
         <!-- Indicador de Paso -->
         <h2 class="text-lg text-orange-500 font-semibold mt-2">
             Paso <span x-text="step"></span> de 2
@@ -124,28 +124,70 @@
                 </div>
             </div>
             <!-- Botones de Navegación -->
-            <div class="flex justify-between mt-4">
-                <div>
-                    <button type="button" @click="previousStep" x-show="step > 1" class="bg-gray-500 text-white p-3 rounded-md">
-                        <x-lucide-arrow-left class="w-5 h-5 text-white" />
-                    </button>
-                </div>
-                <div class="flex space-x-4">
-                    <template x-if="step < 2">
-                        <button type="button" @click="nextStep" class="bg-orange-500 text-white p-3 rounded-md hover:bg-orange-600 transition">
-                            <x-lucide-arrow-right class="w-5 h-5 text-white" />
+            <div class="fixed sm:static bottom-0 left-0 w-full sm:w-auto bg-white sm:bg-transparent z-50 py-4 md:px-0 px-4  border-t border-gray-200 ">
+                <div class="flex justify-between sm:justify-between items-center">
+                    <div>
+                        <button type="button" @click="previousStep" x-show="step > 1" class="bg-gray-500 text-white p-3 rounded-md">
+                            <x-lucide-arrow-left class="w-5 h-5 text-white" />
                         </button>
-                    </template>
-                    <template x-if="step === 2">
-                        <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
-                        Crear usuario
+                    </div>
+                    <div class="flex space-x-4">
+                        <template x-if="step < 2">
+                        <button 
+                            type="button" @click="nextStep" class="flex items-center gap-1 bg-orange-500 text-white px-4 py-3 rounded-md hover:bg-orange-600 transition">
+                            <span>Siguiente</span>
+                            <x-lucide-arrow-right class="w-5 h-5" />
                         </button>
-                    </template>
+                        </template>
+                        <template x-if="step === 2">
+                            <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
+                            Crear usuario
+                            </button>
+                        </template>
+                    </div>
                 </div>
-
             </div>
         </form>
+        
     </div>
+    <x-modal 
+    open="showAgeModal" 
+    title="Detectamos que sos menor de edad" 
+    description="Para continuar, necesitás el consentimiento de un adulto responsable."
+    textColor="text-red-500"
+    descriptionColor="text-gray-300"
+>
+    <div class="text-left">
+        <label class="flex items-center gap-2 mt-2">
+            <input type="checkbox" x-model="minorConsent" class="text-orange-500 rounded border-gray-300 focus:ring-orange-500">
+            <span class="text-sm text-gray-300">
+                Confirmo que tengo autorización de mi madre, padre o tutor legal para registrarme.
+            </span>
+        </label>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+        <button 
+            @click="showAgeModal = false" 
+            class="px-4 py-2 text-gray-400 hover:text-gray-700"
+        >
+            Cancelar
+        </button>
+
+        <button 
+            @click="() => {
+                if (minorConsent) {
+                    showAgeModal = false;
+                    nextStep();
+                }
+            }"
+            :disabled="!minorConsent"
+            class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+            Continuar
+        </button>
+    </div>
+</x-modal>
     
     <!-- Modal de Error -->
     <div 
@@ -186,6 +228,9 @@
             month: '',
             year: '',
             birth: '',
+            showAgeModal: false,
+            minorConsent: false,
+            
 
             init() {
                 // Vincular la actualización del nombre completo
@@ -273,6 +318,17 @@
                         this.errors.day = 'La fecha de nacimiento es obligatoria. Completa día, mes y año.'; // ✅ El error se asigna al campo `day`
                     } else {
                         this.updateBirth(); // Generar el valor de `birth`
+                    }
+                    const birthDate = new Date(year, month - 1, day);
+                    const today = new Date();
+                    const age = today.getFullYear() - birthDate.getFullYear();
+                    const m = today.getMonth() - birthDate.getMonth();
+
+                    const isUnder18 = (age < 18) || (age === 18 && m < 0) || (age === 18 && m === 0 && today.getDate() < birthDate.getDate());
+
+                    if (isUnder18 && !this.minorConsent) {
+                        this.showAgeModal = true;
+                        return false;
                     }
 
                     this.combineName(); // Generar fullName a partir de firstName y lastName

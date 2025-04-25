@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="flex justify-center min-h-screen text-black bg-gray-100 mt-10" x-data="initTabs()" x-init="init()">
+<div class="flex justify-center min-h-screen text-black  mt-10" x-data="initTabs()" x-init="init()">
 @if(session('success'))
     <div 
         x-data="{ show: false }" 
@@ -22,78 +22,61 @@
 @endif
 <div class="w-full max-w-7xl mx-auto p-4 lg:px-10" x-data="{ selectedTab: 'trainings' }">
     <!-- Fila con título + botones -->
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Mis Entrenamientos</h1>
+    <div class="gap-2 mb-4">
+        <!-- Fila superior -->
+        <div class="md:flex justify-between items-center">
+            <!-- CONTENEDOR para el título y botones -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2 ">
 
-        <!-- Botón Agregar Entrenamiento -->
-        <div class="flex items-center space-x-2">
-            <!-- ✅ Solo ícono en móvil -->
-            <a href="{{ route('trainings.create') }}"
-               id="add-training-button-mobile"
-               class="md:hidden bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 transition">
-                <x-lucide-pencil class="w-5 h-5" />
-                <span class="sr-only">Agregar entrenamiento</span>
-            </a>
+                <!-- Primera fila: h1 + botón de filtro -->
+                <div class="flex items-center justify-between w-full ">
+                    <h1 class="text-2xl font-semibold text-gray-900">Mis Entrenamientos</h1>
+                    <div class="flex space-x-2">
+                        <button id="add-training-button-desktop"
+                            class="flex max-sm:hidden items-center bg-orange-500 text-white px-3 py-2 rounded-md hover:bg-orange-600 transition h-11">
+                            <x-lucide-plus class="w-5 h-5" />
+                        </button>
+                        <!-- Botón: Abrir modal -->
+                        <button id="openParkModal"
+                            class="flex items-center bg-orange-500 text-white px-3 py-2 max-sm:py-3 rounded-md hover:bg-orange-600 transition ">
+                            <x-lucide-sliders-horizontal class="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
 
-            <!-- ✅ Ícono + texto en desktop -->
-            <button id="add-training-button-desktop"
-                    class="hidden md:flex bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition items-center">
-                <x-lucide-plus class="w-5 h-5 mr-2" />
-                Agregar Entrenamiento
-            </button>
+                <!-- Segunda fila solo en mobile: Botón borrar filtro -->
+                <div class="w-full  sm:hidden">
+                    <button id="clearFilterBtn"
+                        class="hidden flex items-center bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition space-x-2 ">
+                        <span id="selectedParkName" class="text-base font-medium"></span>
+                        <x-lucide-x class="w-5 h-5" />
+                    </button>
+                </div>
+                <button id="clearFilterBtnDesktop"
+                    class="hidden flex items-center justify-between bg-gray-200 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-300 transition ">
+                    <span id="selectedParkNameDesktop" class="text-base font-medium truncate"></span>
+                    <x-lucide-x class="w-5 h-5" />
+                </button>
+            </div>
         </div>
     </div>
-
-
+    <!-- Botón fijo en mobile, centrado con fondo blanco y sombra -->
+    <div class="sm:hidden fixed bottom-0 left-0 w-full bg-white shadow-2xl border-t p-5 z-50">
+        <a href="{{ route('trainings.create') }}"
+        id="add-training-button-mobile"
+        class="bg-orange-500 text-white text-base px-6 py-3 rounded-md w-full hover:bg-orange-600 transition flex items-center justify-center space-x-2">
+            <x-lucide-plus class="w-5 h-5" />
+            <span>Agregar entrenamiento</span>
+        </a>
+    </div>
+    
         <!-- Contenido principal -->
         <div class="col-span-6 md:col-span-4">
             <!-- Loader -->
             <div id="loader" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div class="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
-
-            <!-- Barra de Acciones -->
-            <div class="flex justify-between items-center ">
-                <!-- Dropdown de Parques -->
-                <div class="relative w-full md:w-auto">
-                    <!-- Botón del Dropdown -->
-                    <button id="parkDropdown" class=" bg-orange-500  p-2 rounded-md hover:bg-orange-600 transition  text-white px-4 py-2 flex items-center justify-between  w-auto">
-                        <span id="dropdownText">Mis Parques</span>
-                        <svg id="dropdownIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-
-                    <!-- Menú del Dropdown -->
-                    <ul id="parkDropdownMenu" class="absolute bg-white border border-gray-300 mt-2 rounded-sm hidden shadow-lg z-10  min-w-max w-auto">
-                        @foreach($parks as $park)
-                            <li>
-                                <a href="#" data-value="{{ $park->id }}" class="block px-4 py-2 text-black hover:bg-orange-500 hover:text-white whitespace-nowrap">
-                                    {{ $park->name }}
-                                </a>
-                            </li>
-                        @endforeach
-                        <li>
-                            <a href="#" data-value="all" class="block px-4 py-2 text-black hover:bg-orange-500 hover:text-white whitespace-nowrap">
-                                Todos
-                            </a>
-                        </li>
-                        <li><hr class="border-gray-300 my-1"></li>
-                        <li>
-                            <a href="{{ route('parks.create') }}" class="block px-4 py-2 text-orange-500 hover:bg-orange-500 hover:text-white whitespace-nowrap">
-                                Agregar Parque
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-    
-                
-            </div>
-
-            <!-- Encabezado del Calendario -->
-           
-
+        
             <!-- Navegación Semanal -->
             <div class="flex items-center justify-between my-6">
                 <!-- Botón Anterior -->
@@ -103,7 +86,7 @@
 
                 <!-- Contenedor flexible para centrar el mes -->
                 <div class="flex-1 flex justify-center">
-                    <h2 id="month-title" class="text-2xl text-orange-500 font-semibold"></h2>
+                    <h2 id="month-title" class="text-2xl text-black font-semibold"></h2>
                 </div>
 
                 <!-- Botón Siguiente -->
@@ -133,7 +116,42 @@
         <div class="hidden md:block col-span-1"></div>
     </div>
 </div>
+<div id="parkModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-end md:items-center z-50">
+    <div id="parkModalContent" class="bg-[#1E1E1E] p-6 rounded-t-lg md:rounded-lg w-full max-w-md md:max-w-lg shadow-lg relative transform translate-y-full md:translate-y-0 transition-transform duration-300 ease-in-out">
+        
+        <!-- Barra para swipe en mobile -->
+        <div class="h-1 w-12 bg-gray-500 rounded-full mx-auto mb-3 md:hidden"></div>
 
+        <!-- Botón cerrar -->
+        <button id="closeParkModal" class="absolute top-3 right-3 text-white hover:text-red-500">
+            <x-lucide-x class="w-6 h-6" />
+        </button>
+
+        <h2 class="text-lg text-white mb-4">Filtrar por Parque</h2>
+
+        <ul class="space-y-2 ">
+            @foreach($parks as $park)
+            <li class="p-2 font-medium cursor-pointer border rounded-xl hover:border-orange-400 hover:bg-orange-50 bg-gray-100 text-orange-500 hover:text-orange-600">
+                    <button 
+                        class="w-full text-left py-2 flex items-center rounded-md transition park-option"
+                        data-park-id="{{ $park->id }}"
+                        data-park-name="{{ $park->name }}">
+                        <x-lucide-trees class="w-5 h-5 mr-2" />
+                        {{ $park->name }}
+                    </button>
+                </li>
+            @endforeach
+
+            <li><hr class="border-gray-600  my-4"></li>
+            <li>
+                <a href="{{ route('parks.create') }}" 
+                class="w-full block text-center px-4 py-3 rounded-md hover:bg-orange-600 bg-orange-500 text-white border border-orange-500 transition">
+                    + Agregar Parque
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
 
 @push('scripts')
 <script src="{{ asset('js/entrenador/calendar.js') }}"></script>

@@ -5,6 +5,7 @@
 @section('content')
 
 <div class="min-h-screen flex flex-col items-center justify-center max-sm:bg-white">
+    
     <h1 class="sr-only">¡Registrate en Motum!</h1>
     <div class="w-full bg-white md:max-w-md max-w-sm p-6 rounded-2xl md:shadow-xl space-y-6 pb-6">
 

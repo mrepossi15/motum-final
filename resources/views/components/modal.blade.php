@@ -24,7 +24,7 @@
 
         <!-- Contenido del modal -->
         <div
-            class="bg-[#1E1E1E] p-6 rounded-lg w-full max-w-md shadow-lg relative z-10 transform transition-all duration-300 ease-in-out"
+            class="bg-[#1E1E1E] p-8 rounded-lg w-full max-w-md  shadow-lg relative z-10 transform transition-all duration-300 ease-in-out"
             x-transition:enter="translate-y-full opacity-0"
             x-transition:enter-end="translate-y-0 opacity-100"
             x-transition:leave="translate-y-0 opacity-100"

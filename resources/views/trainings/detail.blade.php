@@ -16,212 +16,71 @@
 @endif
 
 <div class="flex justify-center min-h-screen text-black bg-gray-100">
-    <div class="w-full max-w-7xl mx-auto  lg:px-10">
+    <div class="w-full max-w-7xl mx-auto lg:px-10 mt-4">
         <!-- 📸 Carrusel de fotos -->
         <div class="relative mx-auto w-full"> 
             <!-- Carrusel de Fotos del Entrenamiento -->
-            @if ($training->photos->isNotEmpty())
-                @php
-                    $photos = $training->photos->pluck('photo_path')->map(fn($path) => asset('storage/' . $path))->toArray();
-                @endphp
+            @php
+                $photos = $training->photos->pluck('photo_path')->map(fn($path) => asset('storage/' . $path))->toArray();
+            @endphp
+            <!-- 📸 Carrusel de fotos -->
+            <x-image-gallery :photos="$photos" :title="$training->title" :has-actions="true">
+                <x-slot:actions>
+                    <!-- Botón de opciones -->
+                    <button class="bg-white text-black px-3 py-2 rounded-md shadow" onclick="toggleDropdown()">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
 
-                <div x-data="{ 
-                        activeSlide: 0, 
-                        slides: {{ json_encode($photos) }},
-                        showModal: false,
-                        next() { 
-                            this.activeSlide = (this.activeSlide + 1) % this.slides.length 
-                        },
-                        prev() { 
-                            this.activeSlide = this.activeSlide === 0 ? this.slides.length - 1 : this.activeSlide - 1 
-                        }
-                    }" class="relative w-full my-3">
-                    
-                    <!-- 🖥️ Modo Computadora (Grid de 2 columnas) -->
-                    <div class="hidden lg:grid grid-cols-4 gap-2">
-                        <!-- Caso: Solo 1 foto -->
-                        @if(count($photos) === 1)
-                            <div class="col-span-4">
-                                <img src="{{ asset($photos[0]) }}"
-                                    alt="Foto principal de {{ $training->title }}"
-                                    class="w-full h-[350px] object-cover cursor-pointer"
-                                    @click="showModal = true; activeSlide = 0">
-                            </div>
-
-                            <!-- Caso: 2 fotos -->
-                        @elseif(count($photos) === 2)
-                            <div class="col-span-3">
-                                <img src="{{ asset($photos[0]) }}"
-                                    alt="Foto principal"
-                                    class="w-full h-[350px] object-cover cursor-pointer"
-                                    @click="showModal = true; activeSlide = 0">
-                            </div>
-                            <div class="col-span-1">
-                                <img src="{{ asset($photos[1]) }}"
-                                    alt="Foto secundaria"
-                                    class="w-full h-[350px] object-cover cursor-pointer"
-                                    @click="showModal = true; activeSlide = 1">
-                            </div>
-
-                            <!-- Caso: 3 fotos -->
-                        @elseif(count($photos) === 3)
-                            <div class="col-span-3">
-                                <img src="{{ asset($photos[0]) }}"
-                                    alt="Foto principal"
-                                    class="w-full h-[350px] object-cover cursor-pointer"
-                                    @click="showModal = true; activeSlide = 0">
-                            </div>
-                            <div class="col-span-1 grid grid-rows-2 gap-2">
-                                <img src="{{ asset($photos[1]) }}"
-                                    alt="Foto secundaria"
-                                    class="w-full h-[170px] object-cover cursor-pointer"
-                                    @click="showModal = true; activeSlide = 1">
-                                <img src="{{ asset($photos[2]) }}"
-                                    alt="Foto terciaria"
-                                    class="w-full h-[170px] object-cover cursor-pointer"
-                                    @click="showModal = true; activeSlide = 2">
-                            </div>
-
-                        <!-- Caso: 4 fotos -->
-                        @elseif(count($photos) >= 4)
-                            <div class="col-span-3">
-                                <img src="{{ asset($photos[0]) }}"
-                                    alt="Foto principal"
-                                    class="w-full h-[350px] object-cover cursor-pointer"
-                                    @click="showModal = true; activeSlide = 0">
-                            </div>
-                            <div class="col-span-1 grid grid-rows-2 gap-2">
-                                <img src="{{ asset($photos[1]) }}"
-                                    alt="Foto secundaria"
-                                    class="w-full h-[170px] object-cover cursor-pointer"
-                                    @click="showModal = true; activeSlide = 1">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <img src="{{ asset($photos[2]) }}"
-                                        alt="Foto terciaria"
-                                        class="w-full h-[170px] object-cover cursor-pointer"
-                                        @click="showModal = true; activeSlide = 2">
-                                    <img src="{{ asset($photos[3]) }}"
-                                        alt="Foto cuarta"
-                                        class="w-full h-[170px] object-cover cursor-pointer"
-                                        @click="showModal = true; activeSlide = 3">
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- 📱 Modo Tablet / iPhone (Carrusel con flechas) -->
-                    <div class="lg:hidden relative w-full" x-data="{
-                    
-                        activeSlide: 0, 
-                        slides: {{ json_encode($photos) }},
-                        touchStartX: 0,
-                        touchEndX: 0,
-                        startSwipe(event) { this.touchStartX = event.touches[0].clientX; },
-                        endSwipe(event) { 
-                            this.touchEndX = event.changedTouches[0].clientX;
-                            let diff = this.touchStartX - this.touchEndX;
-                            if (Math.abs(diff) > 50) {
-                                if (diff > 0) { this.activeSlide = (this.activeSlide + 1) % this.slides.length; } 
-                                else { this.activeSlide = (this.activeSlide - 1 + this.slides.length) % this.slides.length; }
-                            }
-                        }
-                    }">
-                        <img :src="slides[activeSlide]"
-                            alt="Foto de {{ $training->title }}"
-                            class="w-full h-[300px] object-cover"
-                            @touchstart="startSwipe($event)"
-                            @click="showModal = true; activeSlide = 1"
-                            @touchend="endSwipe($event)">
-                        <!-- Indicadores -->
-                        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                            <template x-for="(photo, index) in slides" :key="index">
-                                <button @click="activeSlide = index" 
-                                    :class="activeSlide === index ? 'bg-orange-500' : 'bg-gray-300'"
-                                    class="w-2 h-2 rounded-full transition-all"></button>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- 📸 Modal de Imágenes -->
-                    <template x-if="showModal">
-                        <div class="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center" @click="showModal = false">
-                            <div class="relative w-full max-w-4xl mx-auto shadow-lg" @click.stop
-                                x-data="{ 
-                                    touchStartX: 0, 
-                                    touchEndX: 0, 
-                                    startSwipe(event) { this.touchStartX = event.touches[0].clientX; },
-                                    endSwipe(event) { 
-                                        this.touchEndX = event.changedTouches[0].clientX;
-                                        let diff = this.touchStartX - this.touchEndX;
-                                        if (Math.abs(diff) > 50) {
-                                            if (diff > 0) { next(); } 
-                                            else { prev(); }
-                                        }
-                                    }
-                                }"
-                                @touchstart="startSwipe($event)" 
-                                @touchend="endSwipe($event)"
-                            >
-
-                                <!-- ❌ Botón de Cerrar -->
-                                <button class="absolute top-4 right-4 p-2 rounded-full  z-50 focus:outline-none" type="button" @click="showModal = false">
-                                    <x-lucide-x class="w-6 h-6 text-gray-900" />
-                                </button>
-
-                                <!-- 📸 Contenedor de Imagen -->
-                                <div class="relative">
-                                    <img :src="slides[activeSlide]" alt="Foto del entrenamiento" class="w-full max-h-[80vh] object-contain">
-                                    
-                                    <!-- ⬅ Botón Anterior (solo en lg+) -->
-                                    <button class="hidden lg:flex absolute top-1/2 left-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md" 
-                                            @click.stop="prev()">
-                                        <x-lucide-chevron-left class="w-6 h-6 text-orange-500" />
-                                    </button>
-
-                                    <!-- ➡ Botón Siguiente (solo en lg+) -->
-                                    <button class="hidden lg:flex absolute top-1/2 right-4 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md" 
-                                            @click.stop="next()">
-                                        <x-lucide-chevron-right class="w-6 h-6 text-orange-500" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- Botón flotante dentro de la imagen (para tablets y celulares) -->
-                    <div class="absolute top-0 right-4 sm:right-6 lg:right-8 mt-4 z-10">
-                        <div class="relative">
-                            <!-- Botón de opciones -->
-                            <button class="bg-white text-black px-3 py-1 rounded-md shadow" onclick="toggleDropdown()">
-                                <i class="bi bi-three-dots-vertical"></i>
+                    <!-- Menú desplegable -->
+                    <ul id="dropdownMenu" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md hidden z-20">
+                        <li>
+                            <a href="{{ route('trainings.editAll', ['id' => $training->id]) }}" 
+                            class="block px-4 py-2 text-sm text-black hover:bg-gray-100 hover:rounded-t-md">
+                                Editar
+                            </a>
+                        </li>
+                        <li>
+                            <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 hover:rounded-b-md"
+                                    onclick="toggleModal()">
+                                Eliminar
                             </button>
+                        </li>
+                    </ul>
 
-                            <!-- Menú desplegable -->
-                            <ul id="dropdownMenu" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md hidden z-20">
-                                <li>
-                                <a href="{{ route('trainings.editAll', ['id' => $training->id]) }}" 
-                                        class="block px-4 py-2 text-sm text-black hover:bg-gray-100">
-                                        Editar
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 
-                                                focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" 
-                                            onclick="toggleModal()">
+                    <!-- Modal de Eliminación -->
+                    <div id="deleteModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+                        <div class="bg-[#1E1E1E] rounded-lg shadow-lg w-96 p-6 relative">
+                            <!-- ❌ Botón para cerrar -->
+                            <button onclick="toggleModal()" class="absolute top-4 right-4 text-white hover:text-gray-300">
+                                <x-lucide-x class="w-6 h-6" />
+                            </button> 
+                            <!-- 🏷️ Encabezado -->
+                            <h5 class="text-lg font-semibold text-orange-500">Confirmar Eliminación</h5>
+                            <!-- 📜 Contenido -->
+                            <p class="mt-4 text-white">¿Estás seguro de que deseas suspender este entrenamiento? Esta acción no se puede deshacer</p>
+                            <!-- ✅ Botones de acción -->
+                            <div class="mt-6 flex justify-end space-x-3">
+                                <button onclick="toggleModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                                    Cancelar
+                                </button>
+                                <form action="{{ route('trainings.destroyAll', $training->id) }}" method="POST" class="ml-3">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
                                         Eliminar
                                     </button>
-                                </li>
-                            </ul>
-                        </div>
+                                </form>
+                            </div>
+                        </div>  
                     </div>
-                </div>
-            @endif
+                </x-slot:actions>
+            </x-image-gallery>
         </div>
 
         <!-- 📍 Fila 2: Prinicpal -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 pb-4 px-4 md:pb-6">
-            <div class="md:col-span-2">
+            
+            <div class="sm:col-span-2 space-y-4">
                 <!-- 🏋️ Título del entrenamiento -->
                 <h1 class="text-2xl sm:text-3xl my-2 font-bold text-gray-900 flex items-center">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-sm flex items-center justify-center p-2 mr-2">
@@ -239,17 +98,16 @@
 
                 <div class="flex my-2 items-center space-x-1">
                     @for ($i = 1; $i <= 5; $i++)
-                        <x-lucide-star class="w-4 h-4 sm:w-5 sm:h-5 {{ $i <= $fullStars ? 'text-orange-500 fill-current' : ($hasHalfStar && $i == $fullStars + 1 ? 'text-orange-500' : 'text-gray-300') }}" />
+                        <x-lucide-star class="w-5 h-5 sm:w-6 sm:h-6 {{ $i <= $fullStars ? 'text-orange-500 fill-current' : ($hasHalfStar && $i == $fullStars + 1 ? 'text-orange-500' : 'text-gray-300') }}" />
                     @endfor
-                    <span class="text-gray-700 text-sm font-semibold">
-                        {{ number_format($averageRating, 1) }}
-                    </span>
+                
                 </div>
 
                 <!-- 📍 Ubicación -->
                 <p class="text-gray-600 text-xs sm:text-sm flex items-center space-x-1 my-2">
-                    <x-lucide-map-pin class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
+                    <x-lucide-map-pin class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                     <span>{{ $training->park->name }} - {{ $training->park->location }}</span>
+                    
                 </p>
             </div>
            
@@ -557,13 +415,13 @@
                 Cancelar
             </button>
             <form action="{{ route('trainings.destroyAll', $training->id) }}" method="POST" class="ml-3">
-    @csrf
-    @method('DELETE') <!-- 🔥 Esto asegura que Laravel reciba la petición como DELETE -->
-    <button type="submit" 
-            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
-        Eliminar
-    </button>
-</form>
+                @csrf
+                @method('DELETE') <!-- 🔥 Esto asegura que Laravel reciba la petición como DELETE -->
+                <button type="submit" 
+                        class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+                    Eliminar
+                </button>
+            </form>
         </div>
     </div>  
 </div>                                    

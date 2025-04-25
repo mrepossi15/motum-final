@@ -1,7 +1,7 @@
 <div 
     x-show="isLoading"
     x-cloak
-    class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999]"
 >
     <div class="flex flex-col items-center justify-center space-y-2">
         <h1 class="text-orange-500 font-semibold italic text-2xl">motum</h1>

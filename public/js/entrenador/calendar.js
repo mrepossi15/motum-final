@@ -1,12 +1,18 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const parkDropdownMenu = document.getElementById('parkDropdownMenu');
-    const parkDropdown = document.getElementById('parkDropdown');
-    const dropdownIcon = document.getElementById('dropdownIcon');
+    const openModalBtn = document.getElementById('openParkModal');
+    const closeModalBtn = document.getElementById('closeParkModal');
+    const modal = document.getElementById('parkModal');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const modalContent = document.getElementById('parkModalContent');
+    const parkOptions = document.querySelectorAll('.park-option');
+    const selectedParkName = document.getElementById('selectedParkName');
     const addTrainingButtonMobile = document.getElementById('add-training-button-mobile');
     const addTrainingButtonDesktop = document.getElementById('add-training-button-desktop');
     const calendarContainer = document.getElementById('calendar-container');
     const trainingsList = document.getElementById('trainings-list');
     const monthTitle = document.getElementById('month-title');
+    const clearFilterBtnDesktop = document.getElementById('clearFilterBtnDesktop');
+const selectedParkNameDesktop = document.getElementById('selectedParkNameDesktop');
 
     const state = {
         selectedParkId: 'all',
@@ -21,29 +27,98 @@ document.addEventListener('DOMContentLoaded', function () {
     state.currentWeekStart.setHours(0, 0, 0, 0);  // Reset the time to midnight
 
     loadWeek();
+    openModalBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        if (window.innerWidth < 768) {
+            setTimeout(() => {
+                modalContent.classList.remove('translate-y-full');
+                modalContent.classList.add('translate-y-0');
+            }, 10);
+        }
+    });
+    closeModalBtn.addEventListener('click', closeModal);
 
-    parkDropdown?.addEventListener('click', () => toggleDropdown());
+    function closeModal() {
+        if (window.innerWidth < 768) {
+            modalContent.classList.remove('translate-y-0');
+            modalContent.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
 
-    parkDropdownMenu?.addEventListener('click', (event) => {
-        if (event.target.tagName === 'A') {
-            const selectedValue = event.target.dataset.value;
-            const href = event.target.getAttribute('href');
-    
-            if (href && href.includes('/entrenador/agregar-parque')) return;
-            
-            event.preventDefault();
-            parkDropdown.querySelector('#dropdownText').textContent = event.target.textContent;
-            state.selectedParkId = selectedValue;
-            console.log("selectedParkId en state:", state.selectedParkId); // Verifica que se actualice correctamente
-            toggleDropdown(true);
+    parkOptions.forEach(button => {
+        button.addEventListener('click', () => {
+            state.selectedParkId = button.dataset.parkId;
+            selectedParkName.textContent = button.dataset.parkName;
             loadWeek();
+            closeModal();
+    
+            if (state.selectedParkId !== 'all') {
+                if (window.innerWidth >= 768) {
+                    clearFilterBtnDesktop.classList.remove('hidden');
+                    clearFilterBtn.classList.add('hidden');
+                } else {
+                    clearFilterBtn.classList.remove('hidden');
+                    clearFilterBtnDesktop.classList.add('hidden');
+                }
+            
+                selectedParkName.textContent = button.dataset.parkName;
+                selectedParkNameDesktop.textContent = button.dataset.parkName;
+            } else {
+                clearFilterBtn.classList.add('hidden');
+                clearFilterBtnDesktop.classList.add('hidden');
+            
+                selectedParkName.textContent = '';
+                selectedParkNameDesktop.textContent = '';
+            }
+        });
+    });
+
+    // Cerrar modal clic fuera
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
         }
     });
-    document.addEventListener('click', (e) => {
-        if (!parkDropdown.contains(e.target) && !parkDropdownMenu.contains(e.target)) {
-            toggleDropdown(true);
+
+    // Swipe para cerrar modal en mobile
+    const swipeBar = modalContent.querySelector('.h-1');
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    swipeBar.addEventListener('touchstart', e => {
+        touchStartY = e.touches[0].clientY;
+    });
+
+    swipeBar.addEventListener('touchmove', e => {
+        touchEndY = e.touches[0].clientY;
+    });
+
+    swipeBar.addEventListener('touchend', () => {
+        if (touchEndY - touchStartY > 50) {
+            closeModal();
         }
     });
+    clearFilterBtn.addEventListener('click', () => {
+        limpiarFiltro();
+    });
+    
+    clearFilterBtnDesktop.addEventListener('click', () => {
+        limpiarFiltro();
+    });
+
+    function limpiarFiltro() {
+        state.selectedParkId = 'all'; // ✅ Reseteo a "todos los parques"
+        selectedParkName.textContent = 'Mis Parques';
+        selectedParkNameDesktop.textContent = 'Mis Parques';
+        loadWeek();
+        clearFilterBtn.classList.add('hidden');
+        clearFilterBtnDesktop.classList.add('hidden');
+    }
 
     addTrainingButtonMobile.addEventListener('click', function () {
         console.log("selectedParkId en el botón:", state.selectedParkId); // Verifica el valor antes de redirigir
@@ -234,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
             return `
                 <a href="${trainingUrl}" class="block">
-    <div class="flex items-justify gap-4 p-4 border border-gray-200 cursor-pointer hover:scale-104 rounded-xl shadow-sm bg-white mb-4 hover:shadow-lg hover:bg-orange-50 transition">
+    <div class="flex items-justify gap-4 p-4 border border-gray-200 cursor-pointer hover:scale-104 rounded-xl shadow-sm bg-white mb-4 hover:shadow-lg  transition">
         
         <!-- 🖼️ Imagen -->
         <div class="w-[45%] md:w-[20%] flex-shrink-0">

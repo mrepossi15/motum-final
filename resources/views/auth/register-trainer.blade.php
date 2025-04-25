@@ -310,33 +310,36 @@
             </div>
 
             <!-- Navegación entre pasos -->
-            <div class="flex justify-between mt-4">
-                <!-- Botón de volver alineado a la izquierda -->
-                <div>
-                    <button type="button" @click="previousStep" x-show="step > 1" class="bg-gray-500 text-white p-3 rounded-md">
-                        <x-lucide-arrow-left class="w-5 h-5 text-white" />
-                    </button>
-                </div>
-
-                <!-- Botones de avanzar / omitir / registrar alineados a la derecha -->
-                <div class="flex space-x-4">
-                    <template x-if="step === 4">
-                        <button type="button" @click="nextStep" class="bg-orange-200 text-orange-700 px-4 py-2 rounded-md hover:bg-orange-300 transition">
-                            Omitir
+            <div class="fixed sm:static bottom-0 left-0 w-full sm:w-auto bg-white sm:bg-transparent z-50 py-4 md:px-0 px-4  border-t border-gray-200 ">
+                <div class="flex justify-between sm:justify-between items-center">
+                    <!-- Botón de volver alineado a la izquierda -->
+                    <div>
+                        <button type="button" @click="previousStep" x-show="step > 1" class="bg-gray-500 text-white p-3 rounded-md">
+                            <x-lucide-arrow-left class="w-5 h-5 text-white" />
                         </button>
-                    </template>
+                    </div>
 
-                    <template x-if="step < 5">
-                        <button type="button" @click="nextStep" class="bg-orange-500 text-white p-3 rounded-md hover:bg-orange-600 transition">
-                            <x-lucide-arrow-right class="w-5 h-5 text-white" />
-                        </button>
-                    </template>
+                    <!-- Botones de avanzar / omitir / registrar alineados a la derecha -->
+                    <div class="flex space-x-4">
+                        <template x-if="step === 4">
+                            <button type="button" @click="nextStep" class="bg-orange-200 text-orange-700 px-4 py-2 rounded-md hover:bg-orange-300 transition">
+                                Omitir
+                            </button>
+                        </template>
 
-                    <template x-if="step === 5">
-                        <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
-                            Registrar como Entrenador
-                        </button>
-                    </template>
+                        <template x-if="step < 5">
+                        <button type="button" @click="nextStep" class="flex items-center gap-1 bg-orange-500 text-white px-4 py-3 rounded-md hover:bg-orange-600 transition">
+                                <span>Siguiente</span>
+                                <x-lucide-arrow-right class="w-5 h-5" />
+                            </button>
+                        </template>
+
+                        <template x-if="step === 5">
+                            <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition">
+                                Registrar como Entrenador
+                            </button>
+                        </template>
+                    </div>
                 </div>
             </div>
         </form>
@@ -348,12 +351,12 @@
     </div>
     <!-- Modal de Edad mínima -->
     <x-modal 
-    open="showAgeModal" 
-    title="¡Atención!" 
-    description="Debés tener al menos 18 años para registrarte como entrenador."
-    textColor="text-red-600"
-    descriptionColor="text-gray-300"
-/>
+        open="showAgeModal" 
+        title="¡Atención!" 
+        description="Debés tener al menos 18 años para registrarte como entrenador."
+        textColor="text-red-500"
+        descriptionColor="text-gray-300"
+    />
 </div>
 
 <script>
@@ -364,6 +367,7 @@
             errors: {},
             existingUserError: false,
             isLoading: false,
+            showAgeModal: false,
 
             // Personal data
             first_name: oldValues.first_name || '',
